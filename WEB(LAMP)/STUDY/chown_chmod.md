@@ -38,7 +38,7 @@ The chown command changes the user and/or group ownership of for given file. The
           chown owner-user:owner-group directory
           chown options owner-user:owner-group file`
 
-chmod command: The syntax is:
+chmod command changes the permission of a given file or directory. The syntax is:
 
 
           `chmod permission file
@@ -47,9 +47,4 @@ chmod command: The syntax is:
 
           
 
-chmod command: The syntax is:
 
-
-chmod permission file
-chmod permission dir
-chmod UserAccessRightsPermission file
