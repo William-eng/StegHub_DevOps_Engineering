@@ -3,8 +3,15 @@ In order to complete this project, we need an AWS account and a server with Ubun
 
 STEP ONE: Create and EC2 instance on AWS. Using the AWS Management Console, we can set up an ubuntu server in our most preferred region and connect to the EC2 instance using SSH cryptographic key known as PEM(Privacy Enhanced Mail) file
 
+![running-instance](https://github.com/user-attachments/assets/77515dcc-5cb4-41a3-9bfd-720598fc92b6)
+
+![connect-to-server](https://github.com/user-attachments/assets/4138d977-20b0-43b7-8405-cebfdca40c0d)
+
+
 
 Next, we update the list of package and install the apache web server using the ubuntu package manager “apt” by running the command
+![install-apache](https://github.com/user-attachments/assets/0147f0cb-b65a-4bca-8026-232063a9eb85)
+
 
 
                     `sudo  apt update
@@ -12,6 +19,8 @@ Next, we update the list of package and install the apache web server using the 
  
 
 And verify that apache2 is running by verifying the command below
+![running-apache](https://github.com/user-attachments/assets/152bb044-64a8-4361-8690-6db89acf01c2)
+
 
 
                     `sudo systemctl status apache2`
@@ -19,6 +28,8 @@ And verify that apache2 is running by verifying the command below
 
 
 Once our server is running, we can locally access it on port 80 using the curl command or the public ip of our server on port 80 <public-ip>:80
+![index-html-page](https://github.com/user-attachments/assets/f7ae9181-fbe0-4755-86e6-45327992cf3d)
+
 
 STEP TWO: Installing MYSQL, this is the database  management system that stores and manages data for relational database we install and connect to the mysql database by the commands
 
@@ -26,6 +37,8 @@ STEP TWO: Installing MYSQL, this is the database  management system that stores 
                     `sudo  apt install mysql-server  #to install mysql `                                 
                     
                     `sudo mysql `  `# to connect to mysql `
+![install-mysql](https://github.com/user-attachments/assets/b7d0abd3-68e7-4a81-a762-7433f120bf61)
+                
 
 We then set the user's password in MySQL, you can use the ALTER USER  command. Here's how to do it:
 
@@ -51,11 +64,13 @@ STEP THREE: Installing PHP, PHP is the component of our setup that will display 
 
                     `sudo apt install php libapache2-mod-php php-mysql `
                     
+                    
 And to confirm the installation 
 
 
                     `php  -v
 `
+![install-php](https://github.com/user-attachments/assets/fd43d84d-181d-4c3f-a4a8-eeabfa3bec97)
 
 
 
@@ -77,6 +92,8 @@ Then, we create a new configuration file in the sites-available directory using 
 
 
                     `sudo vi /etc/apache2/sites-available/ lampProject`
+![site-available](https://github.com/user-attachments/assets/c8c29f75-0a37-4046-be8a-1727c9edb097)
+                    
 
 And paste the below config file in it
 
@@ -91,6 +108,8 @@ And paste the below config file in it
                             CustomLog ${APACHE_LOG_DIR}/lampProject_access.log combined
                         </VirtualHost>`
 
+![virtualhost-conf](https://github.com/user-attachments/assets/b97a3e6e-d70e-46fe-ba1f-d177cdd06b4e)
+
 
 save and quit with :wq. We can now enable virtual host, disable default website and check for syntax errors using the following commands respectively.
 
@@ -104,6 +123,9 @@ We need to create an index.html file in the _/var/www/lampProject _directory and
 
 STEP FIVE: Enable PHP on the website, by default, the index.html file will always take precedence over the index.php file, this is great for maintenance, but when the maintenance is done the settings can be adjusted by editing the /etc/apache2/mods-enabled/dir.conf file and changing index.html to index.php
 
+![changeindexfile](https://github.com/user-attachments/assets/c422fd3e-120a-4595-b054-8757ac1edc83)
+
+
 Save this file and reload apache. 
 Create the php file with _sudo vi /var/www/lampProject/index.php_ and add the command
 
@@ -112,6 +134,8 @@ Create the php file with _sudo vi /var/www/lampProject/index.php_ and add the co
                         phpinfo();`
 
 Save and reload the localhost page on port 80 and a php file will appear.
+![php-page](https://github.com/user-attachments/assets/8692fad5-7789-4248-88bd-360992a8a630)
+
 
 
 
