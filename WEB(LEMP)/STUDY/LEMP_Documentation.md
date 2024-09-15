@@ -101,11 +101,14 @@ On Ubuntu 20.04, Nginx has on server block enabled by default in the _/var/www/h
                      }
             
                      location ~ \.php$ {
-                        fastcgi_split_path_info ^(.+\.php)(/.+)$;
-                        fastcgi_pass unix:/var/run/php7.2-fpm-wordpress-site.sock;
-                        fastcgi_index index.php;
-                        include fastcgi.conf;
-                }
+                        include snippets/fastcgi.conf;
+                        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+                        
+                    }
+                      location ~ /\.ht {
+                                  deny all;
+                                  }
+                
             }           
 
 
