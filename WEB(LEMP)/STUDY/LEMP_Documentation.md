@@ -76,7 +76,37 @@ Now that we have php components installed, we need to configure nginx to use the
 # STEP FOUR: CONFIGURING NGINX TO USE PHP PROCESSOR
 While using Nginxwebserver, we can create an NGINX server block that will make use of the above FPM pool. 
 To do that, edit your NGINX configuration file and pass the path of pool’s socket file using the option fastcgi_pass inside location block for php.
-On Ubuntu 20.04, Nginx has on server block enabled by default in the _/var/www/html_ directory. Instead of using the default directory, we will create our domain near this in /var/www/projectLEMP directory
+On Ubuntu 20.04, Nginx has on server block enabled by default in the _/var/www/html_ directory. Instead of using the default directory, we will create our domain near this in /var/www/projectLEMP directory using the command;
+
+            sudo mkdir /var/www/projectLEMP
+   next we assign the directory to the current users permission with the command;
+
+            sudo chown -R $USER:$USER /var/www/projectLEMP
+ Then open the configuration file of nginx in sites-available directory and here we'll use the nano editor;
+
+             sudo nano /etc/nginx/sites-available/projectLEMP 
+  and paste this configuration command     
+
+  
+              server {
+                     listen       80;
+                     server_name  projectLEMP www.projectLEMP;
+                     root         /var/www/projectLEMP;
+            
+                     
+                     index index.html index.htm index.php;
+            
+                     location / {
+                                  try_files $uri $uri/ /index.php$is_args$args;
+                     }
+            
+                     location ~ \.php$ {
+                        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                        fastcgi_pass unix:/var/run/php7.2-fpm-wordpress-site.sock;
+                        fastcgi_index index.php;
+                        include fastcgi.conf;
+                }
+            }           
 
 
             
