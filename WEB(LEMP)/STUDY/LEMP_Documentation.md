@@ -73,8 +73,10 @@ To install the php-fpm and php-mysql packages, run;
 ![phpinsta](https://github.com/user-attachments/assets/7951738a-63b5-41a1-97fe-ef44454508df)
 Now that we have php components installed, we need to configure nginx to use them
 
-# STEP FOUR: 
-
+# STEP FOUR: CONFIGURING NGINX TO USE PHP PROCESSOR
+While using Nginxwebserver, we can create an NGINX server block that will make use of the above FPM pool. 
+To do that, edit your NGINX configuration file and pass the path of pool’s socket file using the option fastcgi_pass inside location block for php.
+On Ubuntu 20.04, Nginx has on server block enabled by default in the _/var/www/html_ directory. Instead of using the default directory, we will create our domain near this in /var/www/projectLEMP directory
 
 
             
