@@ -1,7 +1,7 @@
 # What is SQL Syntax?
 ---
 SQL syntax is a unique set of rules and guidelines to be followed while writing SQL statements. 
-All the SQL statements start with any of the keywords like SELECT, INSERT, UPDATE, DELETE, ALTER, DROP, CREATE, USE, SHOW and all the statements end with a semicolon (;).
+All the SQL statements start with any of the keywords like SELECT, INSERT, UPDATE, DELETE, ALTER, DROP, CREATE and all the statements end with a semicolon (;).
 ## Case Sensitivity
 ---
 The most important point to be noted here is that SQL is case insensitive, which means SELECT and Select have same meaning in SQL statements. Whereas, MySQL makes difference in table names.
@@ -73,6 +73,13 @@ Following is the syntax −
 
           UPDATE table_name
           SET column1 = value1, column2 = value2....columnN=valueN
+
+## SQL ALTER TABLE Statement (Rename)
+The ALTER TABLE statement is also used to change the name of a table as well. Use the syntax below −
+
+
+          ALTER TABLE table_name RENAME TO new_table_name;
+          
 
 ## SQL DELETE Statement
 Without deleting the entire table from the database, you can also delete a certain part of the data by applying conditions.
