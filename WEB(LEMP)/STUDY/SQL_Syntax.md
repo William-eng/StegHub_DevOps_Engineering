@@ -63,6 +63,8 @@ In order to retrieve the result-sets of the stored data from a database table, w
                 SELECT column1, column2....columnN FROM table_name;
 To retrieve the data from CUSTOMERS table, we use the SELECT statement as shown below.
 
+                SELECT * FROM CUSTOMERS;
+
 
 ## SQL UPDATE Statement
 ---
@@ -79,10 +81,10 @@ This is done using the DELETE FROM statement. Following is the syntax −
 ## DELETE FROM table_name WHERE  {CONDITION};
 The following code has a query, which will DELETE a customer, whose ID is 6.
 
-Open Compiler
-## DELETE FROM CUSTOMERS WHERE ID = 6;
+ 
+          DELETE FROM CUSTOMERS WHERE ID = 6;
 
-          SQL DROP TABLE Statement
+## SQL DROP TABLE Statement
 To delete a table entirely from a database when it is no longer needed, following syntax is used −
 
           DROP TABLE table_name;
