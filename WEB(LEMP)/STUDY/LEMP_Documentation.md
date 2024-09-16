@@ -278,4 +278,9 @@ Save and close the file when you are done editing.
 
 You can now access this page in your web browser by visiting the domain name or public IP address configured for your website, followed by /todo_list.php:
 
+            http://<Public_domain_or_IP>/todo_list.php
+![tablepage](https://github.com/user-attachments/assets/a642ec49-3501-4d5d-9be6-95197b720e06)
+
+
+
 
