@@ -219,6 +219,95 @@ We need a database where we will store our data. For this we will make use of mL
 so to make life easy, you will need to sign up for a shared clusters free account, which is ideal for our use case. Sign up here.
 Follow the sign up process, select AWS as the cloud provider, and choose a region near you.
 Complete a get started checklist as shown on the image below
+![Screenshot from 2024-09-20 21-28-05](https://github.com/user-attachments/assets/9ae68bd4-d763-4b4d-b359-8800f4aa5ba8)
+Allow access to the MongoDB database from anywhere (Not secure, but it is ideal for testing)
+
+IMPORTANT NOTE In the image below, make sure you change the time of deleting the entry from 6 Hours to 1 Week
+
+![allowip](https://github.com/user-attachments/assets/4df5e5ca-c43f-4ee5-97d9-1818ed08799f)
+
+We need to now create a MongoDB database and collection 
+
+![collection](https://github.com/user-attachments/assets/572d7534-4f45-4cb4-b994-f8570d69ede6)
+
+In the index.js file, we specified process.env to access environment variables, but we have not yet created this file. So we need to do that now. We create a file in your Todo directory and name it .env.
+We then need to add the connection string to access the database in it, just as below:
+
+            DB = 'mongodb+srv://<username>:<password>@<network-address>/<dbname>?retryWrites=true&w=majority'
+
+We must ensure to update <username>, <password>, <network-address> and <database> according to your setup
+
+Now we need to update the index.js to reflect the use of .env so that Node.js can connect to the database.
+
+Simply delete existing content in the file, and update it with the entire code below.
+
+To do that using vim, follow below steps
+
+- Open the file with vim index.js
+- Press esc
+- Type :
+- Type %d
+- Hit 'Enter'
+- The entire content will be deleted, then,
+
+Press i to enter the insert mode in vim
+Now, paste the entire code below in the file.
+
+      const express = require('express');
+      const bodyParser = require('body-parser');
+      const mongoose = require('mongoose');
+      const routes = require('./routes/api');
+      const path = require('path');
+      require('dotenv').config();
+      
+      const app = express();
+      
+      const port = process.env.PORT || 5000;
+      
+      //connect to the database
+      mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true })
+      .then(() => console.log(`Database connected successfully`))
+      .catch(err => console.log(err));
+      
+      //since mongoose promise is depreciated, we overide it with node's promise
+      mongoose.Promise = global.Promise;
+      
+      app.use((req, res, next) => {
+      res.header("Access-Control-Allow-Origin", "\*");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      next();
+      });
+      
+      app.use(bodyParser.json());
+      
+      app.use('/api', routes);
+      
+      app.use((err, req, res, next) => {
+      console.log(err);
+      next();
+      });
+      
+      app.listen(port, () => {
+      console.log(`Server running on port ${port}`)
+      });
+
+Using environment variables to store information is considered more secure and best practice to separate configuration and secret data from the application, instead of writing connection strings directly inside the index.js application file.
+
+Start your server using the command:
+
+      node index.js
+      
+We shall see a message 'Database connected successfully', if so - we have our backend configured. Now we are going to test it.
+
+![Database-Connected-Sucessfully](https://github.com/user-attachments/assets/050d7516-9721-4aed-ae9c-46bc2b5bec7b)
+
+## STEP FIVE : TESTING BACKEND CODE WITHOUT FRONTEND USING RESTful API
+So far we have written backend part of our To-Do application, and configured a database, but we do not have a frontend UI yet. We need ReactJS code to achieve that. But during development, we will need a way to test our code using RESTfulL API. Therefore, we will need to make use of some API development client to test our code.
+We should test all the API endpoints and make sure they are working. For the endpoints that require body, you should send JSON back with the necessary fields since it’s what we setup in our code.
+Now open your Postman, create a POST request to the API http://<PublicIP-or-PublicDNS>:5000/api/todos. This request sends a new task to our To-Do list so the application could store it in the database.
+
+
+Note: make sure your set header key Content-Type as application/json
 
 
 
