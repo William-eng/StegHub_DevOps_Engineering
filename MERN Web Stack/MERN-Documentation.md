@@ -359,6 +359,84 @@ The whole purpose of adding the proxy configuration in number 3 above is to make
 Now, ensure you are inside the Todo directory, and simply do:
 
                npm run dev
+
+ ![npmrundev](https://github.com/user-attachments/assets/a4669417-16aa-45e1-acaa-81469ade808a)
+              
 Your app should open and start running on localhost:3000
 
-Important note: In order to be able to access the application from the Internet you have to open TCP port 3000 on EC2 by adding a new Security Group rule. You already know how to do it.
+### Creating your React Components
+One of the advantages of react is that it makes use of components, which are reusable and also makes code modular. For our Todo app, there will be two stateful components and one stateless component. From your Todo directory run
+
+               cd client
+move to the src directory
+
+               cd src
+Inside your src folder create another folder called components
+
+               mkdir components
+Move into the components directory with
+
+               cd components
+Inside 'components' directory create three files Input.js, ListTodo.js and Todo.js.
+
+               touch Input.js ListTodo.js Todo.js
+Open Input.js file
+
+               vi Input.js
+Copy and paste the following
+
+
+         import React, { Component } from 'react';
+         import axios from 'axios';
+         
+         class Input extends Component {
+         
+         state = {
+         action: ""
+         }
+         
+         addTodo = () => {
+         const task = {action: this.state.action}
+         
+             if(task.action && task.action.length > 0){
+               axios.post('/api/todos', task)
+                 .then(res => {
+                   if(res.data){
+                     this.props.getTodos();
+                     this.setState({action: ""})
+                   }
+                 })
+                 .catch(err => console.log(err))
+             }else {
+               console.log('input field required')
+             }
+         
+         }
+         
+         handleChange = (e) => {
+         this.setState({
+         action: e.target.value
+         })
+         }
+         
+         render() {
+         let { action } = this.state;
+         return (
+         <div>
+         <input type="text" onChange={this.handleChange} value={action} />
+         <button onClick={this.addTodo}>add todo</button>
+         </div>
+         )
+         }
+         }
+         
+         export default Input
+
+         
+To make use of Axios, which is a Promise based HTTP client for the browser and node.js, you need to cd into your client from your terminal and run yarn add axios or npm install axios.
+
+Move to the src folder, Move to clients folder and Install Axios
+
+      npm install axios
+
+      
