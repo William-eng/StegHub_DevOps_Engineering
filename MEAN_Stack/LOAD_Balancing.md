@@ -53,29 +53,31 @@ Use Case: Useful when both the number of active connections and the server's spe
 ### Weighted Round Robin:
 Similar to round-robin but assigns a weight to each server based on capacity, directing more traffic to more powerful servers.
 Use Case: Ideal for environments where servers have varying resources (CPU, memory).
-### Weighted Least Connections:
 
+### Weighted Least Connections:
 A variation of the Least Connections algorithm, where each server is assigned a weight and the load balancer directs traffic to the server with the fewest connections relative to its weight.
 Use Case: Useful for environments with servers of unequal power.
-IP Hash:
 
+### IP Hash:
 Determines which server to forward a request to based on the hash of the client’s IP address.
 Use Case: Helps in session persistence, ensuring that a user’s requests go to the same server.
 Drawback: Doesn’t dynamically account for server health or load.
-Geographic Load Balancing (Geo-Load Balancing):
 
+### Geographic Load Balancing (Geo-Load Balancing):
 Directs traffic to the server closest to the user’s geographic location, improving latency and speed.
 Use Case: Ideal for globally distributed services where users are spread across multiple regions.
-Random:
 
+### Random:
 Distributes traffic randomly among the available servers.
 Use Case: Can be useful when the system is homogenous and server performance is identical.
-Source IP Affinity (Sticky Sessions):
 
+### Source IP Affinity (Sticky Sessions):
 Ensures that traffic from a particular client (based on their IP address) is always directed to the same server.
 Use Case: Critical for session-based applications where keeping a user on the same server ensures consistency.
 Drawback: Doesn’t handle dynamic server changes or load effectively.
-Priority Load Balancing:
 
+### Priority Load Balancing:
 Servers are prioritized, and requests are sent to the highest-priority server first. Only if the top-priority server becomes overloaded will requests be sent to lower-priority servers.
 Use Case: Useful when specific servers are designed to handle the bulk of the traffic, with others as backups.
+
+Ref: https://www.dnsstuff.com/what-is-server-load-balancing
