@@ -165,3 +165,147 @@ Copy and paste the code below into 'book.js'
         
         module.exports = mongoose.model('Book', bookSchema);
 
+
+        
+## STEP FOUR - ACCESS THE ROUTES WITH ANGULARJS
+AngularJS provides a web framework for creating dynamic views in your web applications. In this tutorial, we use AngularJS to connect our web page with Express and perform actions on our book register.
+
+Change the directory back to 'Books', Create a folder named public, add a file named script.js, copy and paste the Code below (controller configuration defined) into the script.js file.
+
+        angular.module('myApp', [])
+          .controller('myCtrl', function($scope, $http) {
+            function fetchBooks() {
+              $http.get('/book')
+                .then(response => {
+                  $scope.books = response.data;
+                })
+                .catch(error => {
+                  console.error('Error fetching books:', error);
+                });
+            }
+        
+            fetchBooks();
+        
+            $scope.del_book = function(book) {
+              $http.delete(`/book/${book.isbn}`)
+                .then(() => {
+                  fetchBooks();
+                })
+                .catch(error => {
+                  console.error('Error deleting book:', error);
+                });
+            };
+        
+            $scope.add_book = function() {
+              const newBook = {
+                name: $scope.Name,
+                isbn: $scope.Isbn,
+                author: $scope.Author,
+                pages: $scope.Pages
+              };
+        
+              $http.post('/book', newBook)
+                .then(() => {
+                  fetchBooks();
+                  // Clear form fields
+                  $scope.Name = $scope.Isbn = $scope.Author = $scope.Pages = '';
+                })
+                .catch(error => {
+                  console.error('Error adding book:', error);
+                });
+            };
+          });
+
+In 'public' folder, we create a file named index.html, copyy and paste the code below into index.html file.
+
+        
+    <!DOCTYPE html>
+    <html ng-app="myApp" ng-controller="myCtrl">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Book Management</title>
+      <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+      <script src="script.js"></script>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 5px; }
+        button { margin-top: 10px; padding: 5px 10px; }
+      </style>
+    </head>
+    <body>
+      <h1>Book Management</h1>
+      
+      <h2>Add New Book</h2>
+      <form ng-submit="add_book()">
+        <table>
+          <tr>
+            <td>Name:</td>
+            <td><input type="text" ng-model="Name" required></td>
+          </tr>
+          <tr>
+            <td>ISBN:</td>
+            <td><input type="text" ng-model="Isbn" required></td>
+          </tr>
+          <tr>
+            <td>Author:</td>
+            <td><input type="text" ng-model="Author" required></td>
+          </tr>
+          <tr>
+            <td>Pages:</td>
+            <td><input type="number" ng-model="Pages" required></td>
+          </tr>
+        </table>
+        <button type="submit">Add Book</button>
+      </form>
+    
+      <h2>Book List</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>ISBN</th>
+            <th>Author</th>
+            <th>Pages</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="book in books">
+            <td>{{book.name}}</td>
+            <td>{{book.isbn}}</td>
+            <td>{{book.author}}</td>
+            <td>{{book.pages}}</td>
+            <td><button ng-click="del_book(book)">Delete</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </body>
+    </html>
+
+We change the directory back up to 'Books' and start the server by running this command:
+
+    node server.js
+![Mongoconnected](https://github.com/user-attachments/assets/4d026bad-c6b1-4fee-9456-1cba3bb00ff9)
+
+The server is now up and running, we can connect it via port 3300. You can launch a separate Putty or SSH console to test what curl command returns locally.
+
+But for this we need to open TCP port 3300 in your AWS Web Console for your EC2 Instance. 
+
+Your Security group shall look like this:
+![Editrule3300](https://github.com/user-attachments/assets/87c437fe-a244-4444-b739-90cbc132f0e5)
+Now we can access our Book Register web application from the Internet with a browser using Public IP address or Public DNS name.
+
+Quick reminder how to get your server's Public IP and public DNS name:
+
+We can find it in your AWS web console in EC2 details
+Run _curl -s http://169.254.169.254/latest/meta-data/public-ipv4_ for Public IP address or _curl -s http://169.254.169.254/latest/meta-data/public-hostname_ for Public DNS name.
+
+This is how our Web Book Register Application will look like in browser
+
+![page3300](https://github.com/user-attachments/assets/1e35eceb-470f-4b2c-b30a-5624ad4ef5d3)
+
+
