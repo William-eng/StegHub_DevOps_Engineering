@@ -21,7 +21,13 @@
 
 - SELECT: Query data from a table.
 
-      SELECT * FROM users WHERE username = 'john_doe';
-      SELECT * FROM users LIMIT 5;
+      SELECT * FROM users WHERE username = 'john_doe'; # Select with a condition
+      SELECT * FROM users LIMIT 5;  # Select with a limit
 
 - INSERT: Add new records into a table.
+
+        INSERT INTO users (username, email) VALUES 
+         ('alice', 'alice@example.com'),
+        ('bob', 'bob@example.com');
+  
+
