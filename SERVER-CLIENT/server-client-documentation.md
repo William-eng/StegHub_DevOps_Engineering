@@ -61,7 +61,7 @@ To demonstrate a basic client-server using MySQL RDBMS, follow the below instruc
          sudo systemctl restart mysql
    Created a MySQL user for remote access:
 
-       CREATE USER 'remote_user'@'%' IDENTIFIED WITH mysql_native_password BY 'Password.1';
+       CREATE USER 'remote_user'@'%' IDENTIFIED WITH mysql_native_password BY '<Your-Strong-Password>';
        GRANT ALL PRIVILEGES ON *.* TO 'remote_user'@'%';
        FLUSH PRIVILEGES;
 
@@ -82,6 +82,7 @@ To demonstrate a basic client-server using MySQL RDBMS, follow the below instruc
    We connect the MySQL client from mysql-client to the MySQL server on mysql-server. From mysql-client, using the following command to connect:
 
          mysql -h <mysql-server Private IP> -u remote_user -p
+![remoteLogin](https://github.com/user-attachments/assets/ed4601cb-013b-46b0-849f-cd4ec4274ead)
 
    
 ## NOTE
@@ -101,7 +102,8 @@ We can test connection from our mysql-client
         Show databases;
 
 We should see an output similar to the below image, then we have successfully completed this project - we have deloyed a fully functional MySQL Client-Server set up. 
-![userpass](https://github.com/user-attachments/assets/de6c6430-c41f-4a19-bfa6-57310dc36afc)
+
+![showdatabase](https://github.com/user-attachments/assets/f97e73fc-63ae-4c25-9c04-42c8bb9efca9)
 
     
    
