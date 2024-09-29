@@ -65,6 +65,9 @@ To demonstrate a basic client-server using MySQL RDBMS, follow the below instruc
        GRANT ALL PRIVILEGES ON *.* TO 'remote_user'@'%';
        FLUSH PRIVILEGES;
 
+![userpass](https://github.com/user-attachments/assets/5a75b400-0a02-4609-a7b4-55de401b1f08)
+       
+
 ## 6. Setting Up MySQL Client
 
 - Login into the mysql-client instance.
@@ -79,6 +82,7 @@ To demonstrate a basic client-server using MySQL RDBMS, follow the below instruc
    We connect the MySQL client from mysql-client to the MySQL server on mysql-server. From mysql-client, using the following command to connect:
 
          mysql -h <mysql-server Private IP> -u remote_user -p
+
    
 ## NOTE
 We can test connection from our mysql-client
