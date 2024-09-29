@@ -53,6 +53,9 @@ To demonstrate a basic client-server using MySQL RDBMS, follow the below instruc
        bind-address = 0.0.0.0
        mysqlx-bind-address = 127.0.0.1
 
+![binAdress](https://github.com/user-attachments/assets/4207cc84-5133-4409-814a-0fa858bbe197)
+
+
    Restart MySQL:
 
          sudo systemctl restart mysql
@@ -94,6 +97,7 @@ We can test connection from our mysql-client
         Show databases;
 
 We should see an output similar to the below image, then we have successfully completed this project - we have deloyed a fully functional MySQL Client-Server set up. 
+![userpass](https://github.com/user-attachments/assets/de6c6430-c41f-4a19-bfa6-57310dc36afc)
 
     
    
