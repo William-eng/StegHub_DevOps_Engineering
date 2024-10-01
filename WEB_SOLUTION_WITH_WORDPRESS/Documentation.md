@@ -137,38 +137,79 @@ We will now Launch a second RedHat EC2 instance that will have a role - 'DB Serv
 - Update the repository
 
         sudo yum -y update
-Install wget, Apache and it's dependencies
-sudo yum -y install wget httpd php php-mysqlnd php-fpm php-json
-Start Apache
-sudo systemctl enable httpd sudo systemctl start httpd
-To install PHP and it's dependencies
-sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-sudo yum install yum-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-sudo yum module list php sudo yum module reset php
-sudo yum module enable php:remi-7.4
-sudo yum install php php-opcache php-gd php-curl php-mysqlnd
-sudo systemctl start php-fpm
-sudo systemctl enable php-fpm setsebool -P httpd_execmem 1
-Restart Apache
-sudo systemctl restart httpd
-Download wordpress and copy wordpress to /var/www/html
-mkdir wordpress
-cd wordpress
-sudo wget http://wordpress.org/latest.tar.gz
-sudo tar -xzvf latest.tar.gz
-sudo rm -rf latest.tar.gz
-cp wordpress/wp-config-sample.php wordpress/wp-config.php
-cp -R wordpress /var/www/html/
-Configure SELinux Policies
-sudo chown -R apache:apache /var/www/html/wordpress
-sudo chcon -t httpd_sys_rw_content_t /var/www/html/wordpress -R
-sudo setsebool -P httpd_can_network_connect=1
-       
+- Install wget, Apache and it's dependencies
 
-        
+       sudo yum -y install wget httpd php php-mysqlnd php-fpm php-json
+  ![nstall](https://github.com/user-attachments/assets/e35a8cd0-5011-4e55-9f90-3444324c216f)
+
+- Start Apache
+
+        sudo systemctl enable httpd
+        sudo systemctl start httpd
+  
+- To install PHP and it's dependencies
+
+        sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+      sudo yum install yum-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+      sudo yum module list php sudo yum module reset php
+      sudo yum module enable php:remi-7.4
+      sudo yum install php php-opcache php-gd php-curl php-mysqlnd
+      sudo systemctl start php-fpm
+      sudo systemctl enable php-fpm setsebool -P httpd_execmem 1
+- Restart Apache
+
+      sudo systemctl restart httpd
+![pfm](https://github.com/user-attachments/assets/e8e07a61-a2ae-428a-bc04-af78bad9a042)
+
+  
+- Download wordpress and copy wordpress to /var/www/html
+  
+            mkdir wordpress
+            cd wordpress
+            sudo wget http://wordpress.org/latest.tar.gz
+            sudo tar -xzvf latest.tar.gz
+            sudo rm -rf latest.tar.gz
+            cp wordpress/wp-config-sample.php wordpress/wp-config.php
+            cp -R wordpress /var/www/html/
+  
+- Configure SELinux Policies
+
+          sudo chown -R apache:apache /var/www/html/wordpress
+          sudo chcon -t httpd_sys_rw_content_t /var/www/html/wordpress -R
+          sudo setsebool -P httpd_can_network_connect=1
+                 
+![webserver do](https://github.com/user-attachments/assets/b2c6e729-8a36-4d3d-99be-be04ca8d543c)
+
+## STEP FOUR : Install MySQL on your DB Server EC2
 
 
+      sudo yum update
+      sudo yum install mysql-server        
 
+Verify that the service is up and running by using sudo systemctl status mysqld, if it is not running, restart the service and enable it so it will be running even after reboot:
+
+      sudo systemctl restart mysqld
+      sudo systemctl enable mysqld
+
+## Step FIVE : Configure DB to work with WordPress
+
+
+          sudo mysql
+          CREATE DATABASE wordpress;
+          CREATE USER `myuser`@`<Web-Server-Private-IP-Address>` IDENTIFIED BY 'mypass';
+          GRANT ALL ON wordpress.* TO 'myuser'@'<Web-Server-Private-IP-Address>';
+          FLUSH PRIVILEGES;
+          SHOW DATABASES;
+          exit
+![dbs0etup](https://github.com/user-attachments/assets/34ab8df7-1999-4ccb-94ae-a609291f7975)
+
+## Step SIX : Configure WordPress to connect to remote database.
+Hint: Do not forget to open MySQL port 3306 on DB Server EC2. For extra security, you shall allow access to the DB server ONLY from your Web Server's IP address, so in the Inbound Rule configuration specify source as /32
+
+We now install MySQL client and test that we can connect from our Web Server to our DB server by using mysql-client
+
+        sudo yum install mysql
+        sudo mysql -u admin -p -h <DB-Server-Private-IP-address>
 
      
 
