@@ -122,8 +122,47 @@ Let's Begin
               sudo mount -a
               sudo systemctl daemon-reload
 
+  22. We will now Verify our setup by running _df -h_, output must look like this:
 
+   ![Df](https://github.com/user-attachments/assets/2ac856d9-2cec-422a-a282-2a074ed14808)
 
+## STEP TWO: PREPARE THE DATABASE
+   
+We will now Launch a second RedHat EC2 instance that will have a role - 'DB Server' Repeat the same steps as for the Web Server, but instead of apps-lv we will create db-lv and mount it to /db directory instead of /var/www/html/.
+
+![dbsetup](https://github.com/user-attachments/assets/4e0bee37-72c7-401f-a121-c197ed252295)
+
+## STEP THREE : INSTALL WORDPRESS ON EC2 WEBSERVER
+
+- Update the repository
+
+        sudo yum -y update
+Install wget, Apache and it's dependencies
+sudo yum -y install wget httpd php php-mysqlnd php-fpm php-json
+Start Apache
+sudo systemctl enable httpd sudo systemctl start httpd
+To install PHP and it's dependencies
+sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+sudo yum install yum-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+sudo yum module list php sudo yum module reset php
+sudo yum module enable php:remi-7.4
+sudo yum install php php-opcache php-gd php-curl php-mysqlnd
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm setsebool -P httpd_execmem 1
+Restart Apache
+sudo systemctl restart httpd
+Download wordpress and copy wordpress to /var/www/html
+mkdir wordpress
+cd wordpress
+sudo wget http://wordpress.org/latest.tar.gz
+sudo tar -xzvf latest.tar.gz
+sudo rm -rf latest.tar.gz
+cp wordpress/wp-config-sample.php wordpress/wp-config.php
+cp -R wordpress /var/www/html/
+Configure SELinux Policies
+sudo chown -R apache:apache /var/www/html/wordpress
+sudo chcon -t httpd_sys_rw_content_t /var/www/html/wordpress -R
+sudo setsebool -P httpd_can_network_connect=1
        
 
         
