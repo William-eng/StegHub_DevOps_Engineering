@@ -1,0 +1,138 @@
+# Web Solution With WordPress
+In this project we will be tasked to prepare storage infrastructure on two Linux servers and implement a basic web solution using WordPress. WordPress is a free and open-source content management 
+system written in PHP and paired with MySQL or MariaDB as its backend Relational Database Management System (RDBMS).
+
+This consists of two parts:
+  1. Configure storage subsystem for Web and Database servers based on Linux OS. The focus of this part is to give you practical experience of working with disks,
+  partitions and volumes in Linux.
+
+  2. Install WordPress and connect it to a remote MySQL database server. This part of the project will solidify your skills of deploying Web and DB tiers of Web solution.
+
+As a DevOps engineer, our deep understanding of core components of web solutions and ability to troubleshoot them will play essential role in your further progress and development.
+
+NB: We will understand by implementing the Three tier Architecture with involves the (i) Presentation Layer  (ii) Business/Logic Layer (iii) Data Layer
+
+## Our 3-Tier Setup
+- A Laptop or PC to serve as a client
+- An EC2 Linux Server as a web server (This is where you will install WordPress)
+- An EC2 Linux server as a database (DB) server
+
+### We will use a RedHat Linux Based Distribution
+
+Let's Begin
+
+## STEP ONE : PREPARE A WEB SERVER
+  1. Launch an EC2 instance that will serve as "Web Server". Create 3 volumes in the same AZ as your Web Server EC2, each of 10 GiB.
+
+     ![webvol](https://github.com/user-attachments/assets/f2fe6ba7-ed36-41f5-90cd-221f7b7d7b19)
+
+  2. We will attach all three volumes one by one to our Web Server EC2 instance
+     - Open up the Linux terminal to begin configuration
+     - Use lsblk command to inspect what block devices are attached to the server. Notice names of your newly created devices. All devices in Linux reside in /dev/ directory. Inspect it with ls /dev/ and make sure you see all 3 newly created block devices there 
+
+      ![lsblk](https://github.com/user-attachments/assets/767dbe3e-1745-4d42-8922-0b3de5ae2d2d)
+
+      - We will use df -h command to see all mounts and free space on our server
+      - and gdisk utility to create a single partition on each of the 3 disks with the command:
+   
+                sudo gdisk /dev/xvdb # repeat for xvdc and xvdd
+    
+        ![gdisk](https://github.com/user-attachments/assets/02c7c985-479a-4d9f-941e-059385f2b002)
+        
+
+              
+  3. We will now use lsblk utility to view the newly configured partition on each of the 3 disks.
+
+  ![llkprt](https://github.com/user-attachments/assets/5a703f3a-7fff-4d93-94b3-7fdc9e6cdaef)
+
+   
+  4. We now install lvm2 package using _sudo yum install lvm2_. and run _sudo lvmdiskscan_ command to check for available partitions.
+
+     ![InstallLVM](https://github.com/user-attachments/assets/0f8ed4ef-a103-4373-8c68-8d4e1d8cd48d)
+     ![lvdm](https://github.com/user-attachments/assets/53e11b23-4d98-487d-8d57-3d9ae139aa60)
+
+  5. We will use pvcreate utility to mark each of 3 disks as physical volumes (PVs) to be used by LVM
+
+            sudo pvcreate /dev/xvdb1
+            sudo pvcreate /dev/xvdc1
+            sudo pvcreate /dev/xvdd1
+     
+  ![pvcreate](https://github.com/user-attachments/assets/f7741f07-2964-433c-a39a-115bca689963)
+  6. We will now verify that our Physical volume has been created successfully by running _sudo pvs_
+
+  ![sudoPVS](https://github.com/user-attachments/assets/1b0d94f7-19cd-4ca2-813e-334a462e611c)
+
+  7. We will now use _vgcreate_ utility to add all 3 PVs to a volume group (VG). Name the VG webdata-vg
+
+           sudo vgcreate webdata-vg /dev/xvdb1 /dev/xvdc1 /dev/xvdd1
+   
+  8. Verify that your VG has been created successfully by running _sudo vgs_
+
+     ![vgsgain](https://github.com/user-attachments/assets/91efb997-4e28-44fb-a9dc-b12fc0433c6a)
+
+     
+  9. We will now use _lvcreate_ utility to create 2 logical volumes. apps-lv (Use half of the PV size), and logs-lv Use the remaining space of the PV size.
+  10.  NOTE: apps-lv will be used to store data for the Website while, logs-lv will be used to store data for logs.
+
+              sudo lvcreate -n apps-lv -L 14G webdata-vg
+              sudo lvcreate -n logs-lv -L 14G webdata-vg
+  
+  11. We will now Verify that your Logical Volume has been created successfully by running _sudo lvs_
+
+      ![lvs](https://github.com/user-attachments/assets/7fb1f1a2-9c59-49c8-bbd9-e26d231dda08)
+
+  12. We wil now Verify the entire setup
+
+          sudo vgdisplay -v #view complete setup - VG, PV, and LV
+          sudo lsblk
+      
+  ![fullSetup](https://github.com/user-attachments/assets/e67ea0fd-e9ea-40df-be15-4f1e1150e7dc)
+
+  We will use _mkfs.ext4_ to format the logical volumes with ext4 filesystem
+
+      sudo mkfs -t ext4 /dev/webdata-vg/apps-lv
+      sudo mkfs -t ext4 /dev/webdata-vg/logs-lv
+  13. Create /var/www/html directory to store website files _sudo mkdir -p /var/www/html_
+  14. Create /home/recovery/logs to store backup of log data _sudo mkdir -p /home/recovery/logs_
+  15. Mount /var/www/html on apps-lv logical volume
+
+            sudo mount /dev/webdata-vg/apps-lv /var/www/html/
+
+  17. We will Use _rsync_ utility to backup all the files in the log directory /var/log into /home/recovery/logs (This is required before mounting the file system)
+
+          sudo rsync -av /var/log/ /home/recovery/logs/
+
+  18. We will Mount /var/log on logs-lv logical volume. (Note that all the existing data on /var/log will be deleted. That is why step 15 above is very important)
+
+          sudo mount /dev/webdata-vg/logs-lv /var/log
+
+  19. Restore log files back into /var/log directory
+
+          sudo rsync -av /home/recovery/logs/ /var/log
+  20. We will Update /etc/fstab file so that the mount configuration will persist after restart of the server. The UUID of the device will be used to update the /etc/fstab file;
+
+            sudo vi /etc/fstab
+
+  We will Update the /etc/fstab in this format using your own UUID and rememeber to remove the leading and ending quotes.
+
+  ![fstabfile](https://github.com/user-attachments/assets/3b2fc93d-fa08-4430-aa92-6caeece99fe4)
+
+  21. We will now Test the configuration and reload the daemon
+
+              sudo mount -a
+              sudo systemctl daemon-reload
+
+
+
+       
+
+        
+
+
+
+
+     
+
+
+     
+
