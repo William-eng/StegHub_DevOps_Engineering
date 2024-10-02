@@ -214,8 +214,32 @@ We now install MySQL client and test that we can connect from our Web Server to 
 
 - We need to Verify if we can successfully execute SHOW DATABASES; command and see a list of existing databases.
 - Change permissions and configuration so Apache could use WordPress:
+
+  ![showdata1](https://github.com/user-attachments/assets/a38e80f3-e12f-4354-ab70-c2a749c63793)
+Open port 3306 for MySQL DB server allowing access from Web Server Private IP 
+
+Log into your webserver ec2 instance and access your wordpress directory
+
+        sudo cd /var/www/html/wordpress
+        
+Configure wordpress to use your mysql database we created earlier, to do this , we have to access the wp-config file , this is where the configuration of wordpress is done
+
+          sudo vi wp-config.php
+
+  Replace the variables of DB user, DB host, DB password . DB host - this should be your mysql server ip address DB password ; your database password DB user ; the database user we created earlier . DB user should be wordpress
+        
 - Enable TCP port 80 in Inbound Rules configuration for your Web Server EC2 (enable from everywhere 0.0.0.0/0 or from your workstation's IP)
+
+  
 - Try to access from your browser the link to your WordPress http://<Web-Server-Public-IP-Address>/wordpress/
+- ![erfghgfds](https://github.com/user-attachments/assets/7d85e9cc-e1c3-4ba4-bb5e-bc0f03ec0e3c)
+
+
+  ![ordpresspost](https://github.com/user-attachments/assets/1845455f-adf9-4e9e-961a-ef81444af0b9)
+
+- ![welcome-wordpress](https://github.com/user-attachments/assets/15b28b7d-9704-4968-a531-0df4268f11fd)
+
+
 
   
      
