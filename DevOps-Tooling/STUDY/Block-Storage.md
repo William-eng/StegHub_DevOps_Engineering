@@ -41,4 +41,14 @@ Amazon S3 is AWS's object storage service designed for scalability, durability, 
 - Supports versioning, encryption, access control, and lifecycle policies.
 - Accessible via HTTP/S API, making it a perfect choice for cloud-native applications.
 
+## Difference Between Block Storage and Object Storage
+|Feature	|Block Storage	|Object Storage|
+|----------|--------|----------------|
+|Structure|	Data is stored in fixed-size |blocks	Data is stored as objects (data + metadata)|
+|Management	|OS or application manages file system|	Managed by storage system, no file system|
+|Access Method	|Mounted as a drive to a system	|Accessed via HTTP/S API (RESTful)|
+|Use Case|Databases, virtual machines,| transactional apps	Media files, backups, big data, archiving|
+|Performance	High performance, low latency|	Scalable, durable, but may have higher latency|
+|Scaling|	Limited to storage volume size|	Infinite scalability across multiple regions
+|Cost	|Generally more expensive	|Typically more cost-effective for large-scale storage
 
