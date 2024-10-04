@@ -62,9 +62,34 @@ Important note: In order for NFS server to be accessible from our client, we mus
 
 ![sg](https://github.com/user-attachments/assets/0a8e138a-5fe4-4057-aea1-6799439f3c58)
 
+# STEP TWO: CONFIGURE THE DATABASE
+1. Install MySQL server
+
+       sudo yum update
+       sudo yum install mysql-server
 
 
+         sudo systemctl restart mysqld
+         sudo systemctl enable mysqld
 
-
+2. Create a database and name it _tooling_
   
+         sudo mysql
+         CREATE DATABASE tooling;
+   
+4. Create a database user and name it _webaccess_
+   
+        CREATE USER 'webaccess'@'172.31.16.10/20' IDENTIFIED BY 'mypass';
+
+
+5. Grant permission to webaccess user on tooling database to do anything only from the webservers subnet cidr
+   
+         GRANT ALL PRIVILEGES ON tooling.* TO 'webaccess'@'172.31.16.10/20';
+         FLUSH PRIVILEGES;
+         SHOW DATABASES;
+         exit;
+
+![DBconf](https://github.com/user-attachments/assets/b2538714-ea74-45b0-95f0-59df5903d7a4)
+
+
 
