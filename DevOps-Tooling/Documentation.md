@@ -79,7 +79,7 @@ Important note: In order for NFS server to be accessible from our client, we mus
    
 4. Create a database user and name it _webaccess_
    
-        CREATE USER 'webaccess'@'172.31.16.10/20' IDENTIFIED BY 'mypass';
+        CREATE USER 'webaccess'@'%'172.31.16.10/20' IDENTIFIED BY 'mypass';
 
 
 5. Grant permission to webaccess user on tooling database to do anything only from the webservers subnet cidr
@@ -177,6 +177,8 @@ Note 2: If you encounter 403 Error - check permissions to your /var/www/html fol
     ![insertuser](https://github.com/user-attachments/assets/38b8bbc1-b7c6-4712-bae4-c047d9811d3e)
 
 12. Open the website in your browser http://<Web-Server-Public-IP-Address-or-Public-DNS-Name>/index.php and make sure you can login into the websute with myuser user.    
+
+![Screenshot from 2024-10-05 21-08-37](https://github.com/user-attachments/assets/1fa1ae00-273e-4736-bccd-fff7210c92fd)
 
 
 
