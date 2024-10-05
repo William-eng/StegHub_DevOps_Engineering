@@ -156,15 +156,27 @@ During the next steps we will do following:
 
 7. Locate the log folder for Apache on the Web Server and mount it to NFS server's export for logs. Repeat step №4 to make sure the mount point will persist after reboot.
 
+8. Fork the tooling source code from StegHub Github Account to your Github account. 
+![fork](https://github.com/user-attachments/assets/1f518323-0935-4035-826f-36e8e642f081)
+
+9. Deploy the tooling website's code to the Webserver. Ensure that the html folder from the repository is deployed to /var/www/html
+![clone](https://github.com/user-attachments/assets/d8c02c38-5d99-4c99-a831-aa716b0921c7)
 
 
+Note 1: Do not forget to open TCP port 80 on the Web Server.
 
+Note 2: If you encounter 403 Error - check permissions to your /var/www/html folder and also disable SELinux sudo setenforce 0 To make this change permanent - open following config file sudo vi /etc/sysconfig/selinux and set SELINUX=disabled, then restrt httpd.
 
+![page](https://github.com/user-attachments/assets/d428dd4d-1e51-46ec-8785-a9c40583c3f3)
 
+10. Update the website's configuration to connect to the database (in /var/www/html/functions.php file). Apply tooling-db.sql script to your database using this command mysql -h <databse-private-ip> -u <db-username> -p <db-pasword> < tooling-db.sql
+![reconfig tooling](https://github.com/user-attachments/assets/f4ad5949-c80f-483c-8221-b33bc9b30da1)
 
+11. Create in MySQL a new admin user with username: myuser and password: password:
 
+    ![insertuser](https://github.com/user-attachments/assets/38b8bbc1-b7c6-4712-bae4-c047d9811d3e)
 
-
+12. Open the website in your browser http://<Web-Server-Public-IP-Address-or-Public-DNS-Name>/index.php and make sure you can login into the websute with myuser user.    
 
 
 
