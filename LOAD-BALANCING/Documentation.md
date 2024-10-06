@@ -87,20 +87,41 @@ If you have configured everything correctly - your users will not even notice th
 - ![SERVERB](https://github.com/user-attachments/assets/29b15799-183d-40f7-a17d-efd6da0afed0)
 
 
+## Optional Step - Configure Local DNS Names Resolution
+Sometimes it is tedious to remember and switch between IP addresses, especially if you have a lot of servers under your management. What we can do, is to configure local domain name resolution. The easiest way is to use /etc/hosts file, although this approach is not very scalable, but it is very easy to configure and shows the concept well. So let us configure IP address to domain name mapping for our LB.
 
 
+           sudo vi /etc/hosts
+           
+           #Add 2 records into this file with Local IP address and arbitrary name for both of your Web Servers
+           
+           <WebServer1-Private-IP-Address> Web1
+           <WebServer2-Private-IP-Address> Web2
+
+- ![hostconfig](https://github.com/user-attachments/assets/342b6a8b-a32f-4a8a-812a-85b1fd2f52af)
+
+  Now you can update your LB config file with those names instead of IP addresses.
+
+           BalancerMember http://Web1:80 loadfactor=5 timeout=1
+           BalancerMember http://Web2:80 loadfactor=5 timeout=1
+  
+- ![setweb](https://github.com/user-attachments/assets/3c5082ce-aba9-44e1-adc5-559c13d41a99)
 
 
+You can try to curl your Web Servers from LB locally _curl http://Web1_ or _curl http://Web2_ - it shall work.
+
+Remember, this is only internal configuration and it is also local to your LB server, these names will neither be 'resolvable' from other servers internally nor from the Internet.
+   - ![curlweb2](https://github.com/user-attachments/assets/53410330-4eff-42ba-9110-25257c9e4583)
+   - ![Screenshot from 2024-10-06 20-04-01](https://github.com/user-attachments/assets/52b43054-f5a3-4dcc-98ef-8b8ccfac93de)
+
+     
+### Target Architecture
+Now your set up looks like this:
+
+- ![image-23-993x1024](https://github.com/user-attachments/assets/385582fb-d553-4f53-9982-e1272e31226e)
 
 
-
-
-
-
-
-
-    
-
+We have just implemented a Load balancing Web Solution for your DevOps team.
 
 
 
