@@ -52,6 +52,26 @@ the servers.
 
 - Microservices: Applications using microservices architecture typically benefit from horizontal scaling. With a Layer 7 Load Balancer, traffic can be routed to different services based on URLs or headers (e.g., /api/products goes to one service, while /api/users goes to another).
 
+![image-21-1024x681](https://github.com/user-attachments/assets/b03b705a-ab56-4b95-99e6-a7e2254ea1ea)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
