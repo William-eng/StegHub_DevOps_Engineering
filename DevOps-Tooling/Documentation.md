@@ -166,8 +166,7 @@ During the next steps we will do following:
 Note 1: Do not forget to open TCP port 80 on the Web Server.
 
 Note 2: If you encounter 403 Error - check permissions to your /var/www/html folder and also disable SELinux sudo setenforce 0 To make this change permanent - open following config file sudo vi /etc/sysconfig/selinux and set SELINUX=disabled, then restrt httpd.
-
-![page](https://github.com/user-attachments/assets/d428dd4d-1e51-46ec-8785-a9c40583c3f3)
+![loginN](https://github.com/user-attachments/assets/485a1385-1860-4180-8d25-5273483fa4a1)
 
 10. Update the website's configuration to connect to the database (in /var/www/html/functions.php file). Apply tooling-db.sql script to your database using this command mysql -h <databse-private-ip> -u <db-username> -p <db-pasword> < tooling-db.sql
 ![reconfig tooling](https://github.com/user-attachments/assets/f4ad5949-c80f-483c-8221-b33bc9b30da1)
@@ -177,6 +176,8 @@ Note 2: If you encounter 403 Error - check permissions to your /var/www/html fol
     ![insertuser](https://github.com/user-attachments/assets/38b8bbc1-b7c6-4712-bae4-c047d9811d3e)
 
 12. Open the website in your browser http://<Web-Server-Public-IP-Address-or-Public-DNS-Name>/index.php and make sure you can login into the websute with myuser user.    
+
+![Screenshot from 2024-10-06 12-26-45](https://github.com/user-attachments/assets/553ff4a4-e853-4410-ac5e-618740d11962)
 
 ![Screenshot from 2024-10-05 21-08-37](https://github.com/user-attachments/assets/1fa1ae00-273e-4736-bccd-fff7210c92fd)
 
