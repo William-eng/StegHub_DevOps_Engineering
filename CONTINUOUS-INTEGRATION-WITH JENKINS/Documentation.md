@@ -56,5 +56,62 @@ The installation is completed!
 - ![image-29-1024x680](https://github.com/user-attachments/assets/7caa0e64-72c7-4f80-960c-090b22b1275f)
 
 
+## STEP TWO: CONFIGURE JENKINS TO RETRIEVE SOURCE CODE FROM GITHUB USING WEBHOOKS
+In this part, we will configure a simple Jenkins job/project (these two terms can be used interchangeably). This job will will be triggered by GitHub webhooks and will execute a 'build' task to retrieve codes from GitHub and store it locally on Jenkins server.
+
+   1. Enable webhooks in your GitHub repository settings like this:
+
+- ![webhook](https://github.com/user-attachments/assets/c8defafb-9238-4784-abcc-2da0e466a1f2)
+
+   2. On our Jenkins web console, click "New Item" and create a "Freestyle project" like this :
+ 
+- ![newproj](https://github.com/user-attachments/assets/8dc1acd4-4440-470c-b701-7cf80b3ef3fc)
+
+ 
+- ![image-30-1024x584](https://github.com/user-attachments/assets/0eb883ab-d055-4cbd-a578-14bd4f840886)
+
+ 
+  To connect our GitHub repository, we will need to provide its URL or copy from the repository itself
+  
+- ![image-31-1024x498](https://github.com/user-attachments/assets/68045306-0f80-4a60-a808-d738f10767bf)
+
+In configuration of our Jenkins freestyle project choose Git repository, provide there the link to your Tooling GitHub repository and credentials (user/password) so Jenkins could access files in the repository.
+- ![newproj](https://github.com/user-attachments/assets/a47aa765-6c7e-4a81-aac1-8cb4a3765614)
+
+Save the configuration and let us try to run the build. For now we can only do it manually. Click "Build Now" button, if you have configured everything correctly, the build will be successfull and you will see it under #1
+
+- ![buildnow](https://github.com/user-attachments/assets/e30528e8-a6b2-4fff-887e-62c4e512f27f)
+
+We can open the build and check in "Console Output" if it has run successfully.
+
+If so - congratulations! You have just made your very first Jenkins build!
+
+But this build does not produce anything and it runs only when we trigger it manually. Let us fix it.
+
+3. Click "Configure" your job/project and add these two configurations
+Configure triggering the job from GitHub webhook:
+
+- ![gittrigger](https://github.com/user-attachments/assets/949bf3e6-1b5b-4d01-92b6-1ae49933822b)
+
+Configure "Post-build Actions" to archive all the files - files resulted from a build are called "artifacts".
+
+- ![ArchiveActifacts](https://github.com/user-attachments/assets/e0516a7a-c7a7-405c-8a93-f0ed79e127cd)
+  
+Now, go ahead and make some change in any file in your GitHub repository (e.g. README.MD file) and push the changes to the master branch.
+
+You will see that a new build has been launched automatically (by webhook) and you can see its results - artifacts, saved on Jenkins server.
+
+
+
+We have now configured an automated Jenkins job that receives files from GitHub by webhook trigger (this method is considered as 'push' because the changes are being 'pushed' and files transfer is initiated by GitHub). There are also other methods: trigger one job (downstreadm) from another (upstream), poll GitHub periodically and others.
+
+By default, the artifacts are stored on Jenkins server locally
+
+      ls /var/lib/jenkins/jobs/tooling_github/builds/<build_number>/archive/
+
+
+
+
+
 
 
