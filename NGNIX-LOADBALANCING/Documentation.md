@@ -60,9 +60,55 @@ Restart Nginx and make sure the service is up and running
 - ![ngrun](https://github.com/user-attachments/assets/c7ab42c1-afa4-4844-afd1-79dc9ffaf27c)
 
           
+## Part 2 - Register a new domain name and configure secured connection using SSL/TLS certificates
+
+Let us make necessary configurations to make connections to our Tooling Web Solution secured!
+
+In order to get a valid SSL certificate - we need to register a new domain name, we can do it using any Domain name registrar - a company that manages reservation of domain names. The most popular ones are: Godaddy.com, Namecheap,  Domain.com, Bluehost.com. 
+
+- We can Register a new domain name with any registrar of our choice in any domain zone (e.g. .com, .net, .org, .edu, .info, .xyz or any other)
+- We will now Assign an Elastic IP to your Nginx LB server and associate your domain name with this Elastic IP
+
+- ![associate-elastic-ip](https://github.com/user-attachments/assets/8a7d126e-d902-4fff-82e2-1292493e762f)
+
+### Why Elastic IP
+Every time we restart or stop/start your EC2 instance - we get a new public IP address. When we want to associate your domain name - it is better to have a static IP address that does not change after reboot. Elastic IP is the solution for this problem
+
+- We will now Update A record in your registrar to point to Nginx LB using Elastic IP address
+
+- ![namecheap](https://github.com/user-attachments/assets/118d1e19-4996-4941-a7d5-0b90f39b64dc)
 
 
 
+We will now Check that our Web Servers can be reached from our browser using new domain name using HTTP protocol - http://<your-domain-name.com>
+
+
+- ![mydomainpage](https://github.com/user-attachments/assets/31d3cdee-5049-42cb-b52a-69490ad5a44d)
+
+- We need now Configure Nginx to recognize your new domain name by Updating our nginx.conf with server_name www.<your-domain-name.com> instead of server_name www.domain.com
+
+- ![update domain](https://github.com/user-attachments/assets/18e07a6c-318c-47be-8942-7561785d3046)
+
+
+### Install certbot and request for an SSL/TLS certificate
+
+let's check that snapd service is active and running
+
+      sudo systemctl status snapd
+
+- ![snaprunnin](https://github.com/user-attachments/assets/37d8e0a8-5fcf-4bfd-bbbf-bb46d60eef29)
+
+We now install certbot
+
+
+    sudo snap install --classic certbot
+
+We will now Request our certificate ( by just following the certbot instructions - we will need to choose which domain we want our certificate to be issued for, domain name will be looked up from nginx.conf file so make sure you have updated it in the nginx config file.
+
+    sudo ln -s /snap/bin/certbot /usr/bin/certbot
+    sudo certbot --nginx
+
+- ![certificate](https://github.com/user-attachments/assets/1f9c1d37-8ee8-4c64-bfb2-67e0b1a8d6bf)
 
 
 
