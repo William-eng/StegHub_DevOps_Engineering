@@ -111,15 +111,31 @@ We will now Request our certificate ( by just following the certbot instructions
 - ![certificate](https://github.com/user-attachments/assets/1f9c1d37-8ee8-4c64-bfb2-67e0b1a8d6bf)
 
 
+We will now Test secured access to our Web Solution by trying to reach https://<your-domain-name.com>
 
+We shall be able to access our website by using HTTPS protocol (that uses TCP port 443) and see a padlock pictogram in your browser's search string. Click on the padlock icon and you can see the details of the certificate issued for your website.
 
+- ![final](https://github.com/user-attachments/assets/4f98f6eb-9f78-45e5-95e1-af0ebf0c523b)
 
+- We need to now Set up periodical renewal of our SSL/TLS certificate
+By default, LetsEncrypt certificate is valid for 90 days, so it is recommended to renew it at least every 60 days or more frequently.
 
+We can test renewal command in dry-run mode
 
+    sudo certbot renew --dry-run
 
+Best pracice is to have a scheduled job that to run renew command periodically. Let us configure a cronjob to run the command twice a day.
 
+To do so, lets edit the crontab file with the following command:
 
+      crontab -e
+Add following line:
 
+      * */12 * * *   root /usr/bin/certbot renew > /dev/null 2>&1
+
+- ![cronjob](https://github.com/user-attachments/assets/9e8c04e6-2a81-4c3c-add5-59217894e0a2)
+
+We can always change the interval of this cronjob if twice a day is too often by adjusting schedule expression.
 
 
 
