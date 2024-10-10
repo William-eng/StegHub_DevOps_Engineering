@@ -188,9 +188,16 @@ We will now Setup our VSCode to connect to our instance. And run our playbook us
 
 ansible-playbook -i inventory/dev.yml playbooks/common.yml
 
+- ![sucess](https://github.com/user-attachments/assets/21c3edbe-8c73-477c-ad36-daca268a932d)
+  
+
 Note: We must Make sure we're in the ansible-config-mgt directory before we run the above command.
 
-We can go to each of the servers and check if wireshark has been installed by running which wireshark or wireshark --version
+We can go to each of the servers and check if wireshark has been installed by running which wireshark or _wireshark --version_
+
+- ![wireshark version](https://github.com/user-attachments/assets/0ccd6b6e-da89-41b3-9bc7-8e498a586d4d)
+
+- ![wireshark-again](https://github.com/user-attachments/assets/3c3b9719-c60f-4ad8-87af-fed3992544fc)
 
 
 
