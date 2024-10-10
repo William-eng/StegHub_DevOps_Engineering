@@ -178,12 +178,19 @@ Once our code changes appear in master branch - Jenkins will do its job and save
 - ![varlib](https://github.com/user-attachments/assets/ed9ec81a-c989-4ddb-a490-271be4794c67)
 
 
+## Step 7 - Run the first Ansible test
+Now, it is time to execute ansible-playbook command and verify if your playbook actually works:
 
+We will now Setup our VSCode to connect to our instance. And run our playbook using the command:
 
+        cd ansible-config-mgt
+        ansible-playbook -i inventory/dev.yml playbooks/common.yml
 
+ansible-playbook -i inventory/dev.yml playbooks/common.yml
 
+Note: We must Make sure we're in the ansible-config-mgt directory before we run the above command.
 
-
+We can go to each of the servers and check if wireshark has been installed by running which wireshark or wireshark --version
 
 
 
