@@ -109,17 +109,68 @@ We will Update our inventory/dev.yml file with this snippet of code:
         [lb]
         <Load-Balancer-Private-IP-Address> ansible_ssh_user=ubuntu
 
+- ![login-pair](https://github.com/user-attachments/assets/c5104892-a8da-44e2-b7b1-359b28058288)
 
 
+## Step 5 - Create a Common Playbook
+It is time to start giving Ansible the instructions on what we need to be performed on all servers listed in inventory/dev.
 
+In common.yml playbook we will write configuration for repeatable, re-usable, and multi-machine tasks that is common to systems within the infrastructure.
 
+And Update our playbooks/common.yml file with following code:
 
+        ---
+        - name: update web, nfs and db servers
+          hosts: webservers, nfs, db
+          become: yes
+          tasks:
+            - name: ensure wireshark is at the latest version
+              yum:
+                name: wireshark
+                state: latest
+           
+        
+        - name: update LB server
+          hosts: lb
+          become: yes
+          tasks:
+            - name: Update apt repo
+              apt: 
+                update_cache: yes
+        
+            - name: ensure wireshark is at the latest version
+              apt:
+                name: wireshark
+                state: latest
 
+Let's Examine the code above and try to make sense out of it. This playbook is divided into two parts, each of them is intended to perform the same task: install wireshark utility (or make sure it is updated to the latest version) on your RHEL 8 and Ubuntu servers. It uses root user to perform this task and respective package manager: yum for RHEL 8 and apt for Ubuntu.
 
+## Step 6 - Update GIT with the latest code
+Now all of our directories and files live on your machine and you need to push changes made locally to GitHub.
 
+In the real world, we will be working within a team of other DevOps engineers and developers. It is important to learn how to collaborate with help of GIT. In many organisations there is a development rule that do not allow to deploy any code before it has been reviewed by an extra pair of eyes - it is also called "Four eyes principle".
 
+Now we have a separate branch, we will need to know how to raise a Pull Request (PR), get your branch peer reviewed and merged to the master branch.
 
+We will now Commit our code into GitHub:
 
+1. Using git commands to add, commit and push our branch to GitHub.
+
+        git status
+        
+        git add <selected files>
+        
+        git commit -m "commit message"
+        git push origin <branch-name>
+- ![gitcommands](https://github.com/user-attachments/assets/59fb3059-b5ba-4ac0-959a-7a231beb0e38)
+
+   
+3. Create a Pull Request (PR)
+4. Wear the hat of another developer for a second, and act as a reviewer.
+5. If the reviewer is happy with our new feature development, merge the code to the master branch.
+Head back on your terminal, checkout from the feature branch into the master, and pull down the latest changes.
+
+Once our code changes appear in master branch - Jenkins will do its job and save all the files (build artifacts) to _/var/lib/jenkins/jobs/ansible/builds/<build_number>/archive/_ directory on Jenkins-Ansible server.
 
 
 
