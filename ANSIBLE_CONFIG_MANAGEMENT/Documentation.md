@@ -170,9 +170,12 @@ We will now Commit our code into GitHub:
 5. If the reviewer is happy with our new feature development, merge the code to the master branch.
 Head back on your terminal, checkout from the feature branch into the master, and pull down the latest changes.
 
+- ![mergepull](https://github.com/user-attachments/assets/749b44b8-ed64-443c-a910-ac5c8749aceb)
+  
+
 Once our code changes appear in master branch - Jenkins will do its job and save all the files (build artifacts) to _/var/lib/jenkins/jobs/ansible/builds/<build_number>/archive/_ directory on Jenkins-Ansible server.
 
-
+- ![varlib](https://github.com/user-attachments/assets/ed9ec81a-c989-4ddb-a490-271be4794c67)
 
 
 
