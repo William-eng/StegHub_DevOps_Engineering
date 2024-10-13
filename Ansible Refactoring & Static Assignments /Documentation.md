@@ -229,7 +229,8 @@ Now run the playbook against your uat inventory and see what happens:
 
       cd /home/ubuntu/ansible-config-mgt
       
-      ansible-playbook -i /inventory/uat.yml playbooks/site.yaml
+      ansible-playbook -i inventory/uat.yml playbooks/site.yml
+- ![ansible sucess](https://github.com/user-attachments/assets/c50e51e9-b6f3-465d-9436-b8e7a54b5cf0)
 
 We should be able to see both of your UAT Web servers configured and you can try to reach them from your browser:
 
@@ -240,6 +241,7 @@ or
 http://<Web1-UAT-Server-Public-IP-or-Public-DNS-Name>/index.php
 
 
+- ![uatweb](https://github.com/user-attachments/assets/d15033c1-2df1-4121-995b-c6576ee4218c)
 
 
 
