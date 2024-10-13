@@ -153,6 +153,7 @@ After removing unnecessary directories and files, the roles structure should loo
          [uat-webservers]
          <Web1-UAT-Server-Private-IP-Address> ansible_ssh_user='ec2-user'
          <Web2-UAT-Server-Private-IP-Address> ansible_ssh_user='ec2-user'
+- ![uat-webserver](https://github.com/user-attachments/assets/2fbc1ba4-dac8-4f8c-9d57-d2ab245af2bd)
 
 4. In /etc/ansible/ansible.cfg file uncomment roles_path string and provide a full path to your roles directory roles_path = /home/ubuntu/ansible-config-mgt/roles, so Ansible could know where to find configured roles.
 5. It is time to start adding some logic to the webserver role. Go into tasks directory, and within the main.yml file, start writing configuration tasks to do the following:
@@ -199,23 +200,44 @@ our main.yml may consist of following tasks:
         ansible.builtin.file:
           path: /var/www/html/html
           state: absent
+- ![updatemain](https://github.com/user-attachments/assets/e405b76b-3919-4f7f-adbf-a48cc4727c0f)
 
 
+## Step 4 - Reference 'Webserver' role
+Within the static-assignments folder, we will create a new assignment for uat-webservers uat-webservers.yml. This is where we will reference the role.
 
+      ---
+      - hosts: uat-webservers
+        roles:
+           - webserver
+We Remember that the entry point to our ansible configuration is the site.yml file. Therefore, we need to refer our uat-webservers.yml role inside site.yml.
 
+So, we should have this in site.yml
 
+      ---
+      - hosts: all
+      - import_playbook: ../static-assignments/common.yml
+      
+      - hosts: uat-webservers
+      - import_playbook: ../static-assignments/uat-webservers.yml
 
+## Step 5 - Commit & Test
 
+Let's Commit our changes, create a Pull Request and merge them to master branch, make sure webhook triggered two consequent Jenkins jobs, they ran successfully and copied all the files to your Jenkins-Ansible server into /home/ubuntu/ansible-config-mgt/ directory.
 
+Now run the playbook against your uat inventory and see what happens:
 
+      cd /home/ubuntu/ansible-config-mgt
+      
+      ansible-playbook -i /inventory/uat.yml playbooks/site.yaml
 
+We should be able to see both of your UAT Web servers configured and you can try to reach them from your browser:
 
+http://<Web1-UAT-Server-Public-IP-or-Public-DNS-Name>/index.php
 
+or
 
-
-
-
-
+http://<Web1-UAT-Server-Public-IP-or-Public-DNS-Name>/index.php
 
 
 
