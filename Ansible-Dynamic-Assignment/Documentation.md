@@ -112,11 +112,23 @@ site.yml should now look like this.
     - name: Webserver assignment
       import_playbook: ../static-assignments/webservers.yml
 
+## Community Roles
+Now it is time to create a role for MySQL database - it should install the MySQL package, create a database and configure users. But why should we re-invent the wheel? There are tons of roles that have already been developed by other open source engineers out there. These roles are actually production ready, and dynamic to accomodate most of Linux flavours. With Ansible Galaxy again, we can simply download a ready to use ansible role, and keep going.
 
+## Download Mysql Ansible Role
+We will be using a MySQL role developed by **geerlingguy**.
 
+**Hint**: To preserve our GitHub in actual state after you install a new role - make a commit and push to master your 'ansible-config-mgt' directory. Of course you must have git installed and configured on Jenkins-Ansible server and, for more convenient work with codes, you can configure Visual Studio Code to work with this directory. In this case, you will no longer need webhook and Jenkins jobs to update your codes on Jenkins-Ansible server, so you can disable it - we will be using Jenkins later for a better purpose.
+On Jenkins-Ansible server make sure that git is installed with git --version, then go to 'ansible-config-mgt' directory and run
 
+      git init
+      git pull https://github.com/<your-name>/ansible-config-mgt.git
+      git remote add origin https://github.com/<your-name>/ansible-config-mgt.git
+      git branch roles-feature
+      git switch roles-feature
 
-
+- ![gitini](https://github.com/user-attachments/assets/2d22136f-429b-46b0-bf69-2651675cfcff)
+- ![gitswitch](https://github.com/user-attachments/assets/198cb7e2-a402-4750-8b09-8560dd0f7669)
 
 
 
