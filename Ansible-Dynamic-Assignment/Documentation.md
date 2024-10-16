@@ -197,8 +197,13 @@ The same must work with apache LB, so you can switch it by setting respective en
 
 To test this, we can update inventory for each environment and run Ansible against each environment.
 
+ run the playbook command against the inventory/uat files
+ 
+                          ansible-playbook -i inventory/uat.yml playbooks/site.yml
 
 
+- ![ansplay-out](https://github.com/user-attachments/assets/7cf59de7-dc8e-40d0-aef1-33eb08b6a58b)
+- ![ansibleagalaxyout](https://github.com/user-attachments/assets/ed41704a-1127-4b4b-a945-1c4f7c036920)
 
 
 
