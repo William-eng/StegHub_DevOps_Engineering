@@ -339,19 +339,52 @@ Let's Fork the repository below into your GitHub account
 -  ![Artifactoryplugin](https://github.com/user-attachments/assets/f60954e0-e7e1-4d21-aa33-3479e8ac49e8)
 
   ## Phase 2 – Set up Ansible roles for artifactory
+- Create roles to install artifactory just the same way we set up apache, mysql and nginx in the previous project.
+- ![artifactory](https://github.com/user-attachments/assets/b90d78bd-acbc-4623-9a52-62faf9acd1de)
+
+and add the code below to static-assignments/artifactory.yml
+
+    ---
+    - hosts: artifactory
+      roles:
+         - artifactory
+      become: true
+
+- update the site.yml with
+
+                    ---
+                    - name: Include dynamic variables
+                      hosts: all
+                      become: yes
+                      tasks:
+                        - include_vars: ../dynamic-assignments/env-vars.yml
+                          tags:
+                            - always
+                    - import_playbook: ../static-assignments/artifactory.yml
+                      tags: 
+                        - artifactory
+
+Run the playbook against the inventory/ci.yml
+
+    # [jenkins]
+    # <Jenkins-Private-IP-Address>
+    
+    # [nginx]
+    # <Nginx-Private-IP-Address>
+    
+    # [sonarqube]
+    # 172.31.20.50 ansible_ssh_user=ubuntu
+    
+     [artifactory]
+    172.31.30.88 ansible_ssh_user='ubuntu'
 
 
+- ![updateartifactory](https://github.com/user-attachments/assets/f69ffdb8-b799-402b-a210-8ac97c8a8c19)
+- ![upodateartifactory](https://github.com/user-attachments/assets/e617030c-9f9d-44f5-bc2a-6579c9adfb03)
 
-We will use plot plugin to display tests reports, and code coverage information.
-The Artifactory plugin will be used to easily upload code artifacts into an Artifactory server.
-- In Jenkins UI configure Artifactory
-
-
-
-
-
-
-
+- Configure Artifactory plugin by going to manage jenkins > system configurations, scroll down to jfrog and click on add instance
+- Input the ID, artifactory url , username and password
+Click on test connection to test your url
 
 
 
