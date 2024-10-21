@@ -261,8 +261,10 @@ Now that we have a broad overview of a typical Jenkins pipeline. Let us get the 
 - Stage: Test SSH Connections : Verifies SSH connectivity to each server.
 - Stage: Run Ansible playbook : Executes the Ansible playbook. : - Uses the sshagent step to ensure the SSH key is available for Ansible. - Runs the ansiblePlaybook step with the specified parameters . #### To ensure jenkins properly connects to all servers, you will need to install another plugin known as ssh agent , after that, go to manage jenkins > credentials > global > add credentials , usee ssh username and password , fill out the neccesary details and save.
 ### Now back to your inventory/dev.yml , update the inventory with thier respective servers private ip address
+- ![dev yml](https://github.com/user-attachments/assets/a9c09e68-32a6-4535-9f93-08ad5c70c8b7)
 
-
+### Update the ansible playbook in playbooks/site.yml for the tooling web app deployment. Click on Build Now.
+- ![site yml](https://github.com/user-attachments/assets/25abb5e4-49fa-4d9a-8dbb-f911236f2219)
 
 
 
