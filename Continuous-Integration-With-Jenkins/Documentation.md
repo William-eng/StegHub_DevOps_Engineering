@@ -13,24 +13,151 @@ To do this , we'll follow the steps below :
 - Search for BLUE OCEAN PLUGIN and install
 - ![blueOcean](https://github.com/user-attachments/assets/9be29713-6c92-4699-95ff-3f257621d00c)
 
+## STEP THREE: Configuring the Blue Ocean plugin pipeline with our github repo
+To do this, we'll follow the step below:
+- Open the blue oceans plugin and create a new pipeline
+- Select github
+- Connect github with jenkins using your github personal access token
+- - ![connecttoGithub](https://github.com/user-attachments/assets/4af122c4-298b-4215-852a-ce7756d4e393)
+- Select the repository
+- Create the pipeline
+- ![create-pipeline](https://github.com/user-attachments/assets/70f0650d-88cc-4dec-9d69-037a28909265)
+
+At this point we may not have a Jenkinsfile in the Ansible repository, so Blue Ocean will attempt to give us some guidance to create one. But we do not need that. We will rather create one ourselves. So, click on Administration to exit the Blue Ocean console.
+- ![nojenkinsfile](https://github.com/user-attachments/assets/4eedc2b4-c287-48e1-92df-3b5a6b2518d7)
+
+## Let us create our Jenkinsfile
+Inside the Ansible project, we will create a new directory deploy and start a new file Jenkinsfile inside the directory.
+
+and Add the code snippet below to start building the Jenkinsfile gradually. This pipeline currently has just one stage called Build and the only thing we are doing is using the shell script module to echo Building Stage
+
+    pipeline {
+        agent any
+    
+    
+      stages {
+        stage('Build') {
+          steps {
+            script {
+              sh 'echo "Building Stage"'
+            }
+          }
+        }
+        }
+    }
+- ![addjenkins](https://github.com/user-attachments/assets/650c1229-dc4f-4fb6-9bec-d6e175e2c5c0)
+    
+Now let's go back into the Ansible pipeline in Jenkins, and select configure
+- ![jenkinsconfigure](https://github.com/user-attachments/assets/8a273d3a-45a5-4e48-babb-3a551475eed0)
+
+we then Scroll down to Build Configuration section and specify the location of the Jenkinsfile at deploy/Jenkinsfile
+- ![addJenkinspath](https://github.com/user-attachments/assets/a11dbe34-214e-4192-b79d-813ba809f3a6)
 
 
+Save and go Back to the pipeline again, this time click "Build now"
+- ![build](https://github.com/user-attachments/assets/59c5d71f-62f8-42d0-bb16-ba1dbc0aa9fa)
 
 
+This will trigger a build and we will be able to see the effect of our basic Jenkinsfile configuration by going through the console output of the build.
 
+To really appreciate and feel the difference of Cloud Blue UI, it is recommended to try triggering the build again from Blue Ocean interface.
 
+1. Click on Blue Ocean 
+2. Select your project
+3. Click on the play button against the branch 
+Notice that this pipeline is a multibranch one. This means, if there were more than one branch in GitHub, Jenkins would have scanned the repository to discover them all and we would have been able to trigger a build for each branch.
 
+Let us see this in action.
 
+Create a new git branch and name it feature/jenkinspipeline-stages
+Currently we only have the Build stage. Let us add another stage called Test. Paste the code snippet below and push the new changes to GitHub.
 
+      pipeline {
+        agent any
+    
+      stages {
+        stage('Build') {
+          steps {
+            script {
+              sh 'echo "Building Stage"'
+            }
+          }
+        }
+    
+        stage('Test') {
+          steps {
+            script {
+              sh 'echo "Testing Stage"'
+            }
+          }
+        }
+        }
+    }
+- ![newbranch](https://github.com/user-attachments/assets/3be6f1ba-ead3-4948-b84b-eae23f933fdc)
 
+To make your new branch show up in Jenkins, we need to tell Jenkins to scan the repository.
+- Click on the "Administration" button 
+- Navigate to the Ansible project and click on "Scan repository now" 
+- Refresh the page and both branches will start building automatically. You can go into Blue Ocean and see both branches there too. 
+- In Blue Ocean, you can now see how the Jenkinsfile has caused a new step in the pipeline launch build for the new branch. 
+- ![featurebranch](https://github.com/user-attachments/assets/3457b33e-707c-4a37-a7ff-e5db07d40035)
 
+### additional Tasks to perform tp better understand the whole process.
 
+- Let's create a pull request to merge the latest code into the main branch, after merging the PR, go back into your terminal and switch into the main branch.Pull the latest change.
+- ![mainupdate](https://github.com/user-attachments/assets/191296bf-c8ee-4f97-8bec-d96bcb78ee47)
 
+- Create a new branch, add more stages into the Jenkins file to simulate below phases. (Just add an echo command like we have in build and test stages)
+  i. Package
+  ii. Deploy
+  iii. Clean up
 
-
-
-
-
+      pipeline {
+          agent any
+      
+          stages {
+              stage('Build') {
+                  steps {
+                      script {
+                          sh 'echo "Building Stage"'
+                      }
+                  }
+              }
+      
+              stage('Test') {
+                  steps {
+                      script {
+                          sh 'echo "Testing Stage"'
+                      }
+                  }
+              }
+      
+              stage('Package') {
+                  steps {
+                      script {
+                          sh 'echo "Packaging Stage"'
+                      }
+                  }
+              }
+      
+              stage('Deploy') {
+                  steps {
+                      script {
+                          sh 'echo "Deploying Stage"'
+                      }
+                  }
+              }
+      
+              stage('Clean up') {
+                  steps {
+                      script {
+                          sh 'echo "Cleaning Up Stage"'
+                      }
+                  }
+              }
+          }
+      }
+- ![newbran](https://github.com/user-attachments/assets/a5f6e0b5-433f-47ee-9c63-ad744d1de86a)
 
 
 
