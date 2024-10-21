@@ -266,35 +266,85 @@ Now that we have a broad overview of a typical Jenkins pipeline. Let us get the 
 ### Update the ansible playbook in playbooks/site.yml for the tooling web app deployment. Click on Build Now.
 - ![site yml](https://github.com/user-attachments/assets/25abb5e4-49fa-4d9a-8dbb-f911236f2219)
 
+- ![successful-build](https://github.com/user-attachments/assets/239305bc-9e4c-492b-92c8-5b779ee62d8d)
+
+## Parameterizing Jenkinsfile For Ansible Deployment
+- let's Update our `/inventory/sit.yml file with the code below
+
+                [tooling]
+              <SIT-Tooling-Web-Server-Private-IP-Address>
+              
+              [todo]
+              <SIT-Todo-Web-Server-Private-IP-Address>
+              
+              [nginx]
+              <SIT-Nginx-Private-IP-Address>
+              
+              [db:vars]
+              ansible_user=ec2-user
+              ansible_python_interpreter=/usr/bin/python
+              
+              [db]
+              <SIT-DB-Server-Private-IP-Address>
+
+- There are always several environments that need configuration, such as CI, site, and pentest environments etc. To manage and run these environments dynamically, we need to update the Jenkinsfile.
+
+                 parameters {
+          string(name: 'inventory', defaultValue: 'dev',  description: 'This is the inventory file for the environment to deploy configuration')
+        }
+- In the Ansible execution section, remove the hardcoded inventory/dev and replace with `${inventory}
+
+From now on, each time we hit on execute, it will expect an input.
+
+- ![image-78-1024x476](https://github.com/user-attachments/assets/a0004491-1dd7-4b42-aed9-e18288662c4a)
+
+Notice that the default value loads up, but we can now specify which environment we want to deploy the configuration to. Simply type sit and hit Run
+
+- ![buildparamet](https://github.com/user-attachments/assets/1175da7d-26cf-4351-9f98-d40f0a7e0774)
 
 
 
+- update the jenkins file to included the ansible tags before it runs playbook
+- Click on build with parameters and update the inventory field to sit and the the ansible_tags to webserver
+
+        string(name: 'ansible_tags', defaultValue: 'webserver', description: 'Tags for the Ansible playbook')
+- ![updateWEBSER](https://github.com/user-attachments/assets/a78a4b6f-6c75-4ad4-bcfa-534a725e45dc)
+
+## STEP FIVE: CI/CD Pipeline for TODO application
+We already have tooling website as a part of deployment through Ansible. Here we will introduce another PHP application to add to the list of software products we are managing in our infrastructure. The good thing with this particular application is that it has unit tests, and it is an ideal application to show an end-to-end CI/CD pipeline for a particular application.
+
+Our goal here is to deploy the application onto servers directly from Artifactory rather than from git. If you have not updated Ansible with an Artifactory role, simply use this guide to create an Ansible role for Artifactory (ignore the Nginx part). 
+
+### Phase 1 - Prepare Jenkins
+Let's Fork the repository below into your GitHub account
+
+    https://github.com/StegTechHub/php-todo.git
+- On you Jenkins server, install PHP, its dependencies and Composer tool (Feel free to do this manually at first, then update your Ansible accordingly later)
+  
+          sudo apt update
+          sudo apt install -y zip libapache2-mod-php phploc php-{xml,bcmath,bz2,intl,gd,mbstring,mysql,zip}
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+          php -r "unlink('composer-setup.php');"
+          php -v
+          composer -v
+
+  - ![composer](https://github.com/user-attachments/assets/f4779c20-812c-4364-ba44-a0fe7968f299)
+  
+### - Install the required jenkins plugin, which is plot and Artifactory plugins
+- Plot Plugin Installation : We will use plot plugin to display tests reports, and code coverage information.
+- ![plotplugin](https://github.com/user-attachments/assets/78deacb6-e6ef-49c7-bdac-63f617844671)
+
+-  Artifactory Plugin Installation : The Artifactory plugin will be used to easily upload code artifacts into an Artifactory server.
+-  ![Artifactoryplugin](https://github.com/user-attachments/assets/f60954e0-e7e1-4d21-aa33-3479e8ac49e8)
+
+  ## Phase 2 – Set up Ansible roles for artifactory
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+We will use plot plugin to display tests reports, and code coverage information.
+The Artifactory plugin will be used to easily upload code artifacts into an Artifactory server.
+- In Jenkins UI configure Artifactory
 
 
 
