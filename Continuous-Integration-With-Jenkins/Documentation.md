@@ -384,11 +384,13 @@ Run the playbook against the inventory/ci.yml
 
 - Configure Artifactory plugin by going to manage jenkins > system configurations, scroll down to jfrog and click on add instance
 - Input the ID, artifactory url , username and password
-Click on test connection to test your url
+- Click on test connection to test your url
 
 
 
 
+- Visit your <your-artifactory-ip-address:8081
+- Sign in using the default artifactory credentials : admin and password
 
 
 
