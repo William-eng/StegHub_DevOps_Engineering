@@ -392,21 +392,95 @@ Run the playbook against the inventory/ci.yml
 - Visit your <your-artifactory-ip-address:8081
 - Sign in using the default artifactory credentials : admin and password
 
+- ![articatorytest](https://github.com/user-attachments/assets/6a6dd681-6879-43ca-9393-75ede3026db5)
+- Create a local repository and call it _todo-dev-local_, set the repository type to generic
+- ![newartifactoryrepo](https://github.com/user-attachments/assets/24c9f4cc-2d83-4ae9-b8a9-cc00d99fdce8)
+
+- Update the database configuration in roles/mysql/vars/main.yml to create a new database and user for the Todo App. use the details below :
+
+                Create database homestead;
+                CREATE USER 'homestead'@'%' IDENTIFIED BY 'sePret^i';
+                GRANT ALL PRIVILEGES ON * . * TO 'homestead'@'%';
+- ![Screenshot from 2024-10-22 23-19-11](https://github.com/user-attachments/assets/526c15a1-c56f-4755-a261-3e9aa3c59ca3)
 
 
+- Create a Multibranch pipeline for the Php Todo App.
+- ![multibrach-pipeline](https://github.com/user-attachments/assets/1f9e8296-81f2-4987-8c4a-43ba0fcb3e6a)
+
+- Create a .env.sample file and update it with the credentials to connect the database, use sample the code below :
 
 
+                       APP_ENV=local
+                      APP_DEBUG=true
+                      APP_KEY=SomeRandomString
+                      APP_URL=http://localhost
+                      
+                      DB_HOST=172.31.24.250
+                      DB_DATABASE=homestead
+                      DB_USERNAME=homestead
+                      DB_PASSWORD=sePret^i
+                      
+                      CACHE_DRIVER=file
+                      SESSION_DRIVER=file
+                      QUEUE_DRIVER=sync
+                      
+                      REDIS_HOST=127.0.0.1
+                      REDIS_PASSWORD=null
+                      REDIS_PORT=6379
+                      
+                      MAIL_DRIVER=smtp
+                      MAIL_HOST=mailtrap.io
+                      MAIL_PORT=2525
+                      MAIL_USERNAME=null
+                      MAIL_PASSWORD=null
+                      MAIL_ENCRYPTION=null
+
+# install mysql client on jenkins server
+                        sudo yum install mysql -y 
+- Update Jenkinsfile with proper pipeline configuration
+                            pipeline {
+                           agent any
+                       
+                         stages {
+                       
+                            stage("Initial cleanup") {
+                                 steps {
+                                   dir("${WORKSPACE}") {
+                                     deleteDir()
+                                   }
+                                 }
+                               }
+                         
+                           stage('Checkout SCM') {
+                             steps {
+                                   git branch: 'main', url: 'https://github.com/William-eng/php-todo.git'
+                             }
+                           }
+                       
+                           stage('Prepare Dependencies') {
+                             steps {
+                                    sh 'mv .env.sample .env'
+                                    sh 'composer install'
+                                    sh 'php artisan migrate'
+                                    sh 'php artisan db:seed'
+                                    sh 'php artisan key:generate'
+                             }
+                           }
+                         }
+                       }
 
 
+- Ensure that all neccesary php extensions are already installed .
+- Run the pipeline build , you will notice that the database has been populated with tables using a method in laravel known as migration and seeding.
+
+- ![phpinstall](https://github.com/user-attachments/assets/65f0da50-a2ac-41a7-940c-c67a3a399680)
+
+- Update the Jenkinsfile to include Unit tests step
+
+                         stage('Execute Unit Tests') {
+                      steps {
+                             sh './vendor/bin/phpunit'
+                      }
 
 
-
-
-
-
-
-
-
-
-
-
+  
