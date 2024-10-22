@@ -475,6 +475,41 @@ Run the playbook against the inventory/ci.yml
 
 - ![phpinstall](https://github.com/user-attachments/assets/65f0da50-a2ac-41a7-940c-c67a3a399680)
 
+        #!/bin/bash
+
+            # Variables for versions
+            PHPUNIT_VERSION="9.5.10"
+            PHPLOC_VERSION="6.0.0"
+            
+            # Download and install PHPUnit
+            echo "Downloading PHPUnit..."
+            wget -O phpunit.phar https://phar.phpunit.de/phpunit-${PHPUNIT_VERSION}.phar
+            
+            echo "Making PHPUnit executable..."
+            chmod +x phpunit.phar
+            
+            echo "Moving PHPUnit to /usr/local/bin..."
+            sudo mv phpunit.phar /usr/local/bin/phpunit
+            
+            echo "Checking PHPUnit version..."
+            phpunit --version
+            
+            # Download and install PHPLoc
+            echo "Downloading PHPLoc..."
+            wget -O phploc.phar https://phar.phpunit.de/phploc-${PHPLOC_VERSION}.phar
+            
+            echo "Making PHPLoc executable..."
+            chmod +x phploc.phar
+            
+            echo "Moving PHPLoc to /usr/local/bin..."
+            sudo mv phploc.phar /usr/local/bin/phploc
+            
+            echo "Checking PHPLoc version..."
+            phploc --version
+            
+            echo "Installation of PHPUnit and PHPLoc completed successfully!"
+
+
 - Update the Jenkinsfile to include Unit tests step
 
                          stage('Execute Unit Tests') {
