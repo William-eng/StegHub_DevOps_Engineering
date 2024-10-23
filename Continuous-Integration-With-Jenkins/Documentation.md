@@ -782,19 +782,174 @@ SonarQube is a tool that can be used to create quality gates for software projec
 - Create a group sonar
 
       sudo groupadd sonar
+- Now add a user with control over the /opt/sonarqube directory
+
+         sudo useradd -c "user to run SonarQube" -d /opt/sonarqube -g sonar sonar 
+        sudo chown sonar:sonar /opt/sonarqube -R
+
+- Open SonarQube configuration file
+
+        sudo nano /opt/sonarqube/conf/sonar.properties
+- Find the following lines: #sonar.jdbc.username= , #sonar.jdbc.password= , uncomment them and add the username and password we earlier created for postgres
+- ![sonaredit](https://github.com/user-attachments/assets/d52657f4-eb80-4b58-aeca-4c405df8a8f4)
+
+- Edit the sonar script file and set RUN_AS_USER
+
+        sudo nano /opt/sonarqube/bin/linux-x86-64/sonar.sh
+        
+- ![runasuser](https://github.com/user-attachments/assets/8e122123-d3a3-4671-9982-f26dc4499c4e)
+
+- Now, to start SonarQube we need to do following:
+
+   -Switch to sonar user
+
+              sudo su sonar
+   - Move to the script directory
+ 
+                   cd /opt/sonarqube/bin/linux-x86-64/
+   - Run the script to start SonarQube ,
 
 
+             ./sonar.sh start
+    - and Check SonarQube running status:
+ 
+              ./sonar.sh status
 
+- ![sonar-running](https://github.com/user-attachments/assets/3b3ef136-981d-4492-a8e1-1fea1501af30)
 
+- To check SonarQube logs, navigate to /opt/sonarqube/logs/sonar.log directory
 
+                    tail /opt/sonarqube/logs/sonar.log
+  - ![sonarlog](https://github.com/user-attachments/assets/171244fa-9941-40ef-bd84-53355fba0062)
 
+- Configure SonarQube to run as a systemd service, To do this, Stop the currently running SonarQube service
 
+                      ./sonar.sh stop
+- Create a systemd service file for SonarQube to run as System Startup.
+ 
+                       sudo nano /etc/systemd/system/sonar.service
 
+- Add the configuration below for systemd to determine how to start, stop, check status, or restart the SonarQube service.
 
+                        [Unit]
+                     Description=SonarQube service
+                     After=syslog.target network.target
+                     
+                     [Service]
+                     Type=forking
+                     
+                     ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
+                     ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+                     
+                     User=sonar
+                     Group=sonar
+                     Restart=always
+                     
+                     LimitNOFILE=65536
+                     LimitNPROC=4096
+                     
+                     [Install]
+                     WantedBy=multi-user.target
 
+- Save exit. now you can go ahead and control the service using systemctl
 
+                    sudo systemctl start sonar
+                  sudo systemctl enable sonar
+                  sudo systemctl status sonar
 
+  - ![sonarrunning](https://github.com/user-attachments/assets/b89f0c32-d4d6-4d64-a0d0-daccdf86c18a)
 
+- Visit sonarqube config file and uncomment the line of sonar.web.port=9000
+
+          sudo nano /opt/sonarqube/conf/sonar.properties
+
+- Open port 9000 in your security group for the sonarqube server and access your <ip-address>:9000  
+
+- ![Sonarpage](https://github.com/user-attachments/assets/e4f36625-f6b8-4880-bbb5-ceef5b6fae50)
+
+## Configure SonarQube and Jenkins For Quality Gate :
+- In jenkins , install the sonarqubescanner plugin
+
+- Go to jenkins global configuration and add sonarqube server as shown below
+- ![sonarscan](https://github.com/user-attachments/assets/7592dcfb-7c1c-455f-8280-ddf91c17e660)
+
+- Generate authentication token in SonarQube by User > My Account > Security > Generate Tokens
+- ![sonatoken](https://github.com/user-attachments/assets/d8d52d7e-0a5f-4ea5-b6d3-a1ebcb9efa86)
+
+- Configure Quality Gate Jenkins Webhook in SonarQube – The URL should point to your Jenkins server http://{JENKINS_HOST}/sonarqube-webhook/ , go to Administration > Configuration > Webhooks > Create
+- ![qualitygate](https://github.com/user-attachments/assets/7a3a17ad-b1f6-4944-8849-0612426fce0b)
+
+- Setup SonarQube scanner from Jenkins – Global Tool Configuration
+
+  - ![sonartool](https://github.com/user-attachments/assets/e5682d81-8312-419f-868c-c886253cfe95)
+
+- Update Jenkins Pipeline to include SonarQube scanning and Quality Gate and run Jenkinsfile
+
+          stage('SonarQube Quality Gate') {
+                environment {
+                    scannerHome = tool 'SonarQubeScanner'
+                }
+                steps {
+                    withSonarQubeEnv('sonarqube') {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+        
+                }
+            }
+
+NOTE: The above step will fail because we have not updated `sonar-scanner.properties
+Configure SonarQube in Jenkins:
+
+Go to Jenkins Dashboard → Manage Jenkins → Configure System.
+Scroll down to the SonarQube Servers section.
+Click Add SonarQube.
+Name: Give it a name (e.g., sonarqube).
+Server URL: Enter the SonarQube server URL (e.g., http://<your-sonarqube-server-ip>:9000).
+Server Authentication Token: If your SonarQube server requires authentication, provide a token from SonarQube (you can create one under User Settings → Security → Tokens in SonarQube).
+Click Apply or Save.
+Configure SonarQube Scanner in Jenkins:
+
+Go to Jenkins Dashboard → Manage Jenkins → Global Tool Configuration.
+Scroll down to SonarQube Scanner.
+Click Add SonarQube Scanner and provide the details:
+Name: Set a name for this scanner installation (e.g., SonarQubeScanner).
+Install automatically: You can check this if you want Jenkins to automatically install the latest version.
+SonarQube Scanner Executable: If you want to provide a specific scanner executable, you can set the path here.
+Click Apply or Save
+
+- Configure sonar-scanner.properties - From the step above, Jenkins will install the scanner tool on the Linux server. You will need to go into the tools directory on the server to configure the properties file in which SonarQube will require to function during pipeline execution.
+
+        cd /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/SonarQubeScanner/conf/
+
+- Open sonar-scanner.properties file
+
+        sudo vi sonar-scanner.properties
+- Add configuration related to php-todo project
+
+        sonar.host.url=http://<SonarQube-Server-IP-address>:9000
+        sonar.projectKey=php-todo
+        #----- Default source code encoding
+        sonar.sourceEncoding=UTF-8
+        sonar.php.exclusions=**/vendor/**
+        sonar.php.coverage.reportPaths=build/logs/clover.xml
+        sonar.php.tests.reportPath=build/logs/junit.xml
+
+**HINT**: 
+To know what exactly to put inside the sonar-scanner.properties file, SonarQube has a configurations page where you can get some directions.
+
+- To further examine the configuration of the scanner tool on the Jenkins server - navigate into the tools directory
+
+                          cd /var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/SonarQubeScanner/bin
+
+- List the content to see the scanner tool sonar-scanner. That is what we are calling in the pipeline script.
+
+         ls -latr
+
+- ![ls-ltr](https://github.com/user-attachments/assets/1b09733b-0b95-486a-afcd-2981861df06b)
+
+- Run your pipeline script and View the Quailty gate for the Php-Todo app in Sonarqube
+
+  
 
 
 
