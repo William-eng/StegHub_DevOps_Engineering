@@ -949,7 +949,163 @@ To know what exactly to put inside the sonar-scanner.properties file, SonarQube 
 
 - Run your pipeline script and View the Quailty gate for the Php-Todo app in Sonarqube
 
+- ![deploy](https://github.com/user-attachments/assets/7d1e5a54-7ef1-47ac-bf36-0e36591dd6d4)
+- But we are not completely done yet!
+
+The quality gate we just included has no effect. Why? Well, because if you go to the SonarQube UI, you will realise that we just pushed a poor-quality code onto the development environment.
+- ![sonarbudg](https://github.com/user-attachments/assets/0be62c54-cc98-4e40-9e7e-63ca6b79629a)
   
+- Navigate to php-todo project in SonarQube
+- There are bugs, and there is 0.0% code coverage. (code coverage is a percentage of unit tests added by developers to test functions and objects in the code)
+
+- If you click on php-todo project for further analysis, you will see that there is 6 hours' worth of technical debt, code smells and security issues in the code.
+
+- ![debt](https://github.com/user-attachments/assets/00167a71-ca55-4a1e-bd8b-397fc6f5a736)
+- In the development environment, this is acceptable as developers will need to keep iterating over their code towards perfection. But as a DevOps engineer working on the pipeline, we must ensure that the quality gate step causes the pipeline to fail if the conditions for quality are not met.
+
+ ## Conditionally deploy to higher environments
+
+In the real world, developers will work on feature branch in a repository (e.g., GitHub or GitLab). There are other branches that will be used differently to control how software releases are done. You will see such branches as:
+
+- Develop
+- Master or Main (The * is a place holder for a version number, Jira Ticket name or some description. It can be something like Release-1.0.0)
+- Feature/*
+- Release/*
+- Hotfix/*
+- etc.
+
+
+- There is a very wide discussion around release strategy, and git branching strategies which in recent years are considered under what is known as GitFlow (Have a read and keep as a bookmark - it is a possible candidate for an interview discussion, so take it seriously!)
+
+- Assuming a basic gitflow implementation restricts only the develop branch to deploy code to Integration environment like sit.
+
+Let us update our Jenkinsfile to implement this:
+
+- First, we will include a When condition to run Quality Gate whenever the running branch is either develop, hotfix, release, main, or master
+
+
+        when { branch pattern: "^develop*|^hotfix*|^release*|^main*", comparator: "REGEXP"}
+
+- Then we add a timeout step to wait for SonarQube to complete analysis and successfully finish the pipeline only when code quality is acceptable.
+
+      timeout(time: 1, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
+        }
+
+- The complete stage will now look like this:
+
+        stage('SonarQube Quality Gate') {
+          when { branch pattern: "^develop*|^hotfix*|^release*|^main*", comparator: "REGEXP"}
+            environment {
+                scannerHome = tool 'SonarQubeScanner'
+            }
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dproject.settings=sonar-project.properties"
+                }
+                timeout(time: 1, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+To test, create different branches and push to GitHub. You will realise that only branches other than develop, hotfix, release, main, or master will be able to deploy the code.
+
+If everything goes well, you should be able to see something like this:
+
+
+- ![webhooks](https://github.com/user-attachments/assets/5529624f-8cde-4157-9116-661bb1261750)
+
+Notice that with the current state of the code, it cannot be deployed to Integration environments due to its quality. In the real world, DevOps engineers will push this back to developers to work on the code further, based on SonarQube quality report. Once everything is good with code quality, the pipeline will pass and proceed with sipping the codes further to a higher environment.
+
+## Introduce Jenkins agents/slaves
+
+Jenkins architecture is fundamentally "Master+Agent". The master is designed to do co-ordination and provide the GUI and API endpoints, and the Agents are designed to perform the work. The reason being that workloads are often best "farmed out" to distributed servers.
+
+- Let's add 2 more servers to be used as Jenkins slave. Launch 2 more instances for Jenkins slave and install java in them
+
+                        # install  java on slave nodes
+                          sudo yum install java-11-openjdk-devel -y
+                          
+                          #verify Java is installed
+                          java --version
+
+- Configure Jenkins to run its pipeline jobs randomly on any available slave nodes. Let's Configure the new nodes on Jenkins Server. Navigate to Dashboard > Manage Jenkins > Nodes, click on New node and enter a Name and click on create.
+
+- To connect to slave_one, click on the slave_one and completed this fields and save.
+
+    - Name: nodeA
+    - Remote root directory: /opt/build (This can be any directory for the builds)
+    - Labels: nodeA and save
+    - Click back on Slave_one to configure and navigate to status
+    - Use any options. But since i am making use of a UNIX system ,I would use the first option.
+
+
+- ![nodeA](https://github.com/user-attachments/assets/16a17f5f-20d7-410f-802b-e221d72f7743)
+
+- ![command2connect](https://github.com/user-attachments/assets/7f51e33f-0e7c-4a68-93ba-e5278b2e4c54)
+
+- In the Slave_one terminal, enter the following
+
+       sudo mkdir /opt/build
+        sudo chmod 777 /opt/build
+            curl -sO http://54.197.201.140:8080/jnlpJars/agent.jar
+            java -jar agent.jar -url http://54.197.201.140:8080/ -secret 4899020e167af2a29a6f2cd5c7153d400190c7516929d4d6177111d9f14ccc50 -name                nodeA -workDir "/opt/build "
+- Go to dashboard > manage jenkins > security > Agents
+
+- Set the TCP port for inbound agents to fixed and set the port at 5000 ( or any one you choose )
+
+- ![port5000](https://github.com/user-attachments/assets/aa178d44-993b-4dbe-8002-0cbb2ff3db1e)
+         
+- Go to the security group on jenkins ec2 instance and open port 5000
+
+- go back to slave terminal and run the command
+- Verify that slave is connected in jenkins
+
+- ![connectedNode](https://github.com/user-attachments/assets/0852f342-ac4c-44c6-8026-087997726432)
+
+- Configure webhook between Jenkins and GitHub to automatically run the pipeline when there is a code push. The PHP -Todo repo, click on settings > Webhooks. Enter /github-webhook/ and in content type, select application/json and save
+
+- ![addwebhook](https://github.com/user-attachments/assets/6a9085cd-3f21-4114-8ff6-e7b990ce0d71)
+
+## Optional Step
+Using ansible roles, Install wireshark in the pentest env server. here are a list of ansible roles you could use :
+
+- https://github.com/ymajik/ansible-role-wireshark (Ubuntu)
+- https://github.com/wtanaka/ansible-role-wireshark (RedHat)
+  
+- Add the roles to your ansible configuration managenment project
+
+- ![wireshark](https://github.com/user-attachments/assets/91eb29ec-0e8b-492b-b5d0-92c96c0ee3e3)
+
+- Push to your repository and allow your pipeline build and eploy ansible playbook tasks
+
+- ![104](https://github.com/user-attachments/assets/7db9820a-2667-4a7d-b698-2f5f9834572e)
+- ![wiresharkinstalled](https://github.com/user-attachments/assets/bdb32be7-ef22-433f-af73-eb7c5af31d04)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
