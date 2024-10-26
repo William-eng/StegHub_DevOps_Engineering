@@ -316,16 +316,45 @@ We will use instance to create an ami for launching instances in Auto-scaling gr
 
 ## Setting up self-signed certificate for the apache webserver instance
 
+yum install -y mod_ssl
+
+openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/citatech.key -x509 -days 365 -out /etc/pki/tls/certs/citatech.crt
+
+cat <<EOL > /etc/httpd/conf.d/your_domain_or_ip.conf
+<VirtualHost *:443>
+    ServerName your_domain_or_ip
+    DocumentRoot /var/www/ssl-test
+    SSLEngine on
+    SSLCertificateFile /etc/pki/tls/certs/apache-selfsigned.crt
+    SSLCertificateKeyFile /etc/pki/tls/private/apache-selfsigned.key
+</VirtualHost>
+EOL
 
 
 
+### Use these references to understand more
+[IP ranges](https://ipinfo.io/ips)
 
+[Nginx reverse proxy server](https://www.nginx.com/resources/glossary/reverse-proxy-server/)
 
+[Understanding ec2 user data
+](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
+[Manually installing the Amazon EFS client](https://docs.aws.amazon.com/efs/latest/ug/installing-amazon-efs-utils.html#installing-other-distro)
 
+[creating target groups for AWS Loadbalancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)
 
+[Self-Signed SSL Certificate for Apache](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-apache-on-centos-8)
 
+[Create a Self-Signed SSL Certificate for Nginx](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-on-centos-7)
 
+### Create AMIs from the 3 instances
+- To create an AMI (Amazon Machine Image) from the 3 instances , you need to go to the instance page > select the instance > actions > images and templates > create image. Repeat same process for bastion, nginx and webservers
 
+-![createImage](https://github.com/user-attachments/assets/b973410b-acda-4040-8fb4-464795ab9fce)
+- ![Amis](https://github.com/user-attachments/assets/a000ffc5-3df6-4ee1-be56-c0262928ff78)
+
+## Configure Load balancers and Target Groups
+1. Create Target group for NGINX, tooling amd wordpress targets
 
 
 
