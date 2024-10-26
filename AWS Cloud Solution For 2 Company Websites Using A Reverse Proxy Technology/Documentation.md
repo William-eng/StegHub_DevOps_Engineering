@@ -181,33 +181,140 @@ leave all as default and add the key policy
 
 - ![managementkeycreated](https://github.com/user-attachments/assets/916e9325-36d3-425a-b502-3421ea86acf1)
 
+- To ensure that your databases are highly available and also have failover support in case one availability zone fails, we will configure a multi-AZ set up of RDS MySQL database instance. In our case, since we are only using 2 AZs, we can only failover to one, but the same concept applies to 3 Availability Zones.
+
+- To configure RDS, follow steps below:
+
+Create a subnet group and add 2 private subnets (data Layer)
+
+- ![dbsubnet](https://github.com/user-attachments/assets/ef551d66-54d5-48e6-8a26-e7acfa09f536)
+-![subnetsetup](https://github.com/user-attachments/assets/09519097-ee8e-4e44-80ff-8c1f0c0610f1)
+- ![Screenshot from 2024-10-26 12-38-48](https://github.com/user-attachments/assets/63474711-9005-4ab7-b334-507b58608a9c)
+
+2. Create the DataBase by navigating to amazon rds > databases > create database and follow the diagram below
+
+- ![Screenshot from 2024-10-26 12-47-50](https://github.com/user-attachments/assets/0ece4aa0-4420-4f6a-b03a-7771882102e4)
+- ![Screenshot from 2024-10-26 12-45-55](https://github.com/user-attachments/assets/e26aa33d-d815-49db-b666-eb8b6e9a949e)
+- ![Screenshot from 2024-10-26 12-45-11](https://github.com/user-attachments/assets/dd671a82-a069-473f-9e74-911273a31e90)
+- ![Screenshot from 2024-10-26 12-45-29](https://github.com/user-attachments/assets/aabf6cf0-fe45-4e0a-8a80-9adc64983add)
+- ![Screenshot from 2024-10-26 12-46-12](https://github.com/user-attachments/assets/6a3bbeb6-cb19-4c42-9207-9eebba5dc046)
+- ![Screenshot from 2024-10-26 12-48-28](https://github.com/user-attachments/assets/0a39ca24-a817-43e4-b5b6-006e21dde6ff)
+- ![Screenshot from 2024-10-26 12-49-07](https://github.com/user-attachments/assets/badc352d-34dc-4e12-a607-1cc66ece227a)
+
+## Set Up Compute Resources for Bastion
+### Provision the EC2 Instances for Bastion
+- Create an EC2 Instance based on Red Hat Enterprise Linux (AMI) (You can search for this ami, RHEL-8.7.0_HVM-20230215-x86_64-13-Hourly2-GP2 ) per each Availability Zone in the same Region and same AZ where you created Nginx server
+
+Ensure that it has the following software installed
+. python
+. ntp (we used chrnony instead, The is because the ntp package is not available in the repositories for our Enterprise Linux 9 system. Instead of ntp, chrony can be used, which is the default NTP implementation in newer versions of RHEL and its derivatives, including Enterprise Linux 9.)
+. net-tools
+. vim
+. wget
+. telnet
+. epel-release
+. htop
 
 
+We will use instance to create an ami for launching instances in Auto-scaling groups so all the installations will be done before creating the ami from the instance
 
+## Bastion ami installation
 
+    sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+    sudo yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-89.rpm 
+    sudo yum install wget vim python3 telnet htop git mysql net-tools chrony -y 
+    sudo systemctl start chronyd 
+    sudo systemctl enable chronyd
 
+## Nginx ami installation
 
+     sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+     
+     sudo yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-9.rpm
+     
+     sudo yum install wget vim python3 telnet htop git mysql net-tools chrony -y
+     
+     sudo systemctl start chronyd
+     
+     sudo systemctl enable chronyd
 
+## configure selinux policies for the nginx servers
 
+    sudo setsebool -P httpd_can_network_connect=1
+    sudo setsebool -P httpd_can_network_connect_db=1
+    sudo setsebool -P httpd_execmem=1
+    sudo setsebool -P httpd_use_nfs 1
 
+## This section will install amazon efs utils for mounting the target on the Elastic file system
 
+     git clone https://github.com/aws/efs-utils
+     
+     cd efs-utils
+     
+     sudo yum install -y make
+     
+     yum install -y rpm-build
+     
+     # openssl-devel is needed by amazon-efs-utils-2.0.4-1.el9.x86_64
+     sudo yum install openssl-devel -y
+     
+     # Cargo command needs to be installed as it is necessary for building the Rust project included in the source.
+     sudo yum install cargo -y
+     
+     make rpm 
+     
+     yum install -y  ./build/amazon-efs-utils*rpm
 
+## Setting up self-signed certificate for the nginx instance
 
+     sudo mkdir /etc/ssl/private
+     
+     sudo chmod 700 /etc/ssl/private
+     
+     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/citatech.key -out /etc/ssl/certs/citatech.crt
+     
+     sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
 
+## Webserver ami installation
 
+     sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+     
+     sudo yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-9.rpm
+     
+     sudo yum install wget vim python3 telnet htop git mysql net-tools chrony -y
+     
+     sudo systemctl start chronyd
+     
+     sudo systemctl enable chronyd
 
+## configure selinux policies for the webservers
 
+     sudo setsebool -P httpd_can_network_connect=1
+     sudo setsebool -P httpd_can_network_connect_db=1
+     sudo setsebool -P httpd_execmem=1
+     sudo setsebool -P httpd_use_nfs 1
 
+## This section will install amazon efs utils for mounting the target on the Elastic file system
 
+      git clone https://github.com/aws/efs-utils
+      
+      cd efs-utils
+      
+      sudo yum install -y make
+      
+      yum install -y rpm-build
+      
+      # openssl-devel is needed by amazon-efs-utils-2.0.4-1.el9.x86_64
+      sudo yum install openssl-devel -y
+      
+      # Cargo command needs to be installed as it is necessary for building the Rust project included in the source.
+      sudo yum install cargo -y
+      
+      make rpm 
+      
+      yum install -y  ./build/amazon-efs-utils*rpm
 
-
-
-
-
-
-
-
-
+## Setting up self-signed certificate for the apache webserver instance
 
 
 
