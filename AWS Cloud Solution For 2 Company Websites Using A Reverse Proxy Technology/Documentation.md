@@ -579,6 +579,35 @@ Tooling userdata ( Repeat same steps as you did for wordpress user-data for tool
                 sudo systemctl restart httpd
                 sudo systemctl status httpd
 
+## CONFIGURE AUTOSCALING FOR NGINX
+- Select the right launch template
+- Select the VPC
+- Select both public subnets
+- Enable Application Load Balancer for the AutoScalingGroup (ASG)
+- Select the target group you created before
+- Ensure that you have health checks for both EC2 and ALB
+- The desired capacity is 2
+- Minimum capacity is 2
+- Maximum capacity is 4
+- Set scale out if CPU utilization reaches 90%
+- Ensure there is an SNS topic to send scaling notifications
+  
+ ## Create Auto Scaling Group for Bastion
+- ![autoscaling](https://github.com/user-attachments/assets/7f986124-b362-4a30-a3b9-ebe77c468250)
+
+- ![bastionautoscaling](https://github.com/user-attachments/assets/eb386b26-bf1c-4e29-ab47-7912fb3804f6)
+
+- ![healthcheck](https://github.com/user-attachments/assets/75162a12-c4f0-417d-a786-d169e620879f)
+
+- ![capacity](https://github.com/user-attachments/assets/d1df0e15-0b7d-4098-b016-5417b9255806)
+
+- ![snstopic](https://github.com/user-attachments/assets/b832e234-786c-414b-aeb2-7c893cad1fcf)
+
+Access RDS through Bastion connection to craete database for wordpress and tooling.
+
+Copy the RDS endpoint to be used as host
+
+- ![connect](https://github.com/user-attachments/assets/4fec4517-6099-4d67-a346-76ccae826226)
 
 
 
