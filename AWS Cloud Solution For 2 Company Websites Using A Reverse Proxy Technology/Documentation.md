@@ -356,9 +356,33 @@ EOL
 ## Configure Load balancers and Target Groups
 1. Create Target group for NGINX, tooling amd wordpress targets
 
+- ![target group1](https://github.com/user-attachments/assets/ff46b7a2-f253-4847-a994-d179974b0591)
 
+- ![targetgroup2](https://github.com/user-attachments/assets/19d83f15-9b1e-4728-8680-7ae309d94775)
 
+- ![alltargetgroup](https://github.com/user-attachments/assets/df20554d-f14a-481c-b014-9e723b0eed2c)
 
+2. Configure Application Load Balancer (ALB)
+
+External Application Load Balancer To Route Traffic To NGINX
+
+Nginx EC2 Instances will have configurations that accepts incoming traffic only from Load Balancers. No request should go directly to Nginx servers. With this kind of setup, we will benefit from intelligent routing of requests from the ALB to Nginx servers across the 2 Availability Zones. We will also be able to offload SSL/TLS certificates on the ALB instead of Nginx. Therefore, Nginx will be able to perform faster since it will not require extra compute resources to validate certificates for every request.
+
+Create an Internet facing ALB, Ensure that it listens on HTTPS protocol (TCP port 443) Ensure the ALB is created within the appropriate VPC | AZ | Subnets Choose the Certificate from ACM Select Security Group Select Nginx Instances as the target group
+
+- ![loadbalancer1](https://github.com/user-attachments/assets/245de1f6-6d9e-48a5-9411-cee246b72e06)
+
+- ![Loadbalancer2](https://github.com/user-attachments/assets/0b1a75e4-64a1-48ef-9fb2-4bfbd8872bcf)
+
+- ![Loadbalancer3](https://github.com/user-attachments/assets/a91d18b3-7ef3-47a9-b148-cb6b09ba8307)
+
+- ![Loadbalancer4](https://github.com/user-attachments/assets/ce9b8752-3a37-48ff-b580-2cd9676749df)
+
+- ![Loadbalancer5](https://github.com/user-attachments/assets/e45db0db-8316-4d12-b38e-6cc5092ed464)
+
+- ![Loadbalancer6](https://github.com/user-attachments/assets/fdd3897b-f669-47f2-9e22-a6212404ad88)
+
+- ![Loadbalancer7](https://github.com/user-attachments/assets/2e38a31e-4f7b-451e-97e2-2159f5f65890)
 
 
 
