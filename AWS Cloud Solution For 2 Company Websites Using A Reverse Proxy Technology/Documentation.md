@@ -385,39 +385,199 @@ Create an Internet facing ALB, Ensure that it listens on HTTPS protocol (TCP por
 - ![Loadbalancer7](https://github.com/user-attachments/assets/2e38a31e-4f7b-451e-97e2-2159f5f65890)
 
 
+Application Load Balancer To Route Traffic To Webservers
+
+Since the webservers are configured for auto-scaling, there is going to be a problem if servers get dynamically scalled out or in. Nginx will not know about the new IP addresses, or the ones that get removed. Hence, Nginx will not know where to direct the traffic.
+
+To solve this problem, we must use a load balancer. But this time, it will be an internal load balancer. Not Internet facing since the webservers are within a private subnet, and we do not want direct access to them.
+
+Create an Internal ALB Ensure that it listens on HTTPS protocol (TCP port 443) Ensure the ALB is created within the appropriate VPC | AZ | Subnets Choose the Certificate from ACM Select Security Group Select webserver Instances as the target group
+
+- ![InternalLoadbalancer1](https://github.com/user-attachments/assets/5f154459-0611-4900-a1e3-bb4d1a40cfdf)
+
+- ![InternalLoadbalancer2](https://github.com/user-attachments/assets/c210827f-50a4-43d9-a10c-be8ce9342632)
+  
+- ![ALBCreated](https://github.com/user-attachments/assets/09174f87-8a99-4498-86ff-5f872bfddf5f)
+
+The default target configured on the listener while creating the internal load balancer is to forward traffic to wordpress on port 443. Hence, we need to create a rule to route traffic to tooling as well.
+
+1. Select internal load balancer from the list of load balancers created: *Choose the load balancer where you want to add the rule.*
+2.  Listeners Tab: *Click on the Listeners tab.* Select the listener (HTTPS:443) and click Manage listener. 3. Add Rules: * Click on Add rule. 4. Configure the Rule: *Give the rule a name and click next* Add a condition by selecting Host header. *Enter the hostnames for which you want to route traffic. (tooling.com and www.tooling.com).* Choose the appropriate target group for the hostname.
+
+- ![rule](https://github.com/user-attachments/assets/7c7d92c8-df29-4e88-9948-045714cc8ef4)
+
+- ![toolingcondition](https://github.com/user-attachments/assets/3d771b43-8579-413b-ba6c-5c1adb4f6ca7)
+
+- ![toolingconditionSet](https://github.com/user-attachments/assets/4e82943f-cc29-4803-912c-d995d3292965)
+
+- ![toolingconditionl](https://github.com/user-attachments/assets/900ecd8f-4ecb-4984-b695-13298d695216)
+
+- ![toolingcondition5](https://github.com/user-attachments/assets/821b2ce8-f050-455b-811c-2495b787b396)
+
+- ![toolingcondition6](https://github.com/user-attachments/assets/739358ef-8f43-4261-a976-e911d7683452)
+
+
+PREPARE LAUNCH TEMPLATE FOR NGINX (ONE PER SUBNET)
+
+1. Make use of the AMI to set up a launch template
+2. Ensure the Instances are launched into a public subnet.
+3. Assign appropriate security group.
+4. Configure userdata to update yum package repository and install nginx. Ensure to enable auto- assign public IP in the Advance Network Configuration. you can access  the userdata below and edit it with your details
+
+- ![AMI1](https://github.com/user-attachments/assets/2ae7aa98-1e7f-458d-8135-8c240d915e99)
+
+- ![NgnixAMI](https://github.com/user-attachments/assets/707f4d8b-5f42-41a4-8426-39a66dba243d)
 
 
 
 
+We need to update the reverse.conf file by updating proxy_pass value to the end point of the internal load balancer (DNS name) before using the userdata so as to clone the updated repository
 
 
 
+                #!/bin/bash
+                sudo yum install -y nginx
+                sudo systemctl start nginx
+                sudo systemctl enable nginx
+                
+                mkdir -p /etc/ssl/certs /etc/ssl/private
+   
+                cat <<EOL > /etc/nginx/nginx.conf
+                user nginx;
+                worker_processes auto;
+                error_log /var/log/nginx/error.log;
+                pid /run/nginx.pid;
+
+                include /usr/share/nginx/modules/*.conf;
+                
+                events {
+                    worker_connections 1024;
+                }
+                
+                http {
+                    log_format  main  '\$remote_addr - \$remote_user [\$time_local] "\$request" '
+                                      '\$status \$body_bytes_sent "\$http_referer" '
+                                      '"\$http_user_agent" "\$http_x_forwarded_for"';
+                
+                    access_log  /var/log/nginx/access.log  main;
+                
+                    sendfile            on;
+                    tcp_nopush          on;
+                    tcp_nodelay         on;
+                    keepalive_timeout   65;
+                    types_hash_max_size 2048;
+                
+                    default_type        application/octet-stream;
+                
+                    include /etc/nginx/conf.d/*.conf;
+                
+                    server {
+                        listen       80;
+                        listen       443 http2 ssl;
+                        listen       [::]:443 http2 ssl;
+                        root          /var/www/html;
+                        server_name  *.liberttinnii.xyz;
+                
+                        ssl_certificate /etc/ssl/certs/ktrontech.crt;
+                        ssl_certificate_key /etc/ssl/private/ktrontech.key;
+                        ssl_dhparam /etc/ssl/certs/dhparam.pem;
+                
+                        location /healthstatus {
+                            access_log off;
+                            return 200;
+                        }
+                
+                        location / {
+                            proxy_set_header             Host \$host;
+                            proxy_pass                  https://internal-Ktrontech-Internal-LoadBalancer-1704792078.us-east-1.elb.amazonaws.com;
+                        }
+                    }
+                }
+                EOL
+                
+                systemctl restart nginx
+
+Repeat the same setting for Bastion, the difference here is the userdata input, AMI and security group with the userdata.
+
+    #!/bin/bash
+    sudo yum install -y mysql
+    sudo yum install -y git tmux 
+    sudo yum install -y ansible
+
+NB: Both Wordpress and Tooling make use of Webserver AMI.
+
+Update the mount point to the file system, this should be done on access points for tooling and wordpress respectively., to get the mount point for each access points,
+
+Go to EFS > access points and select wordpress, click on attach, and there you can seen the command to attach the access points mount points
+
+- ![toolingaccesspoint](https://github.com/user-attachments/assets/7d3a80d3-ec1c-4925-bf10-67193d1789cf)
+
+     sudo mount -t efs -o tls,accesspoint=fsap-065070992a8bcd118 fs-0782c677414d9f126:/ efs
+
+The RDS end point is also needed. Go to RDS > Databases > select the database you created earlier
+1. Create Template 
+
+- ![rds](https://github.com/user-attachments/assets/ea5ba458-3ab6-4e34-8b73-855db37c3465)
+
+- ![toolinguserdata](https://github.com/user-attachments/assets/c69749d6-c8bb-4564-b97e-d8009fa6cf90)
 
 
 
+                #!/bin/bash
+                sudo mkdir /var/www/
+                sudo mount -t efs -o tls,accesspoint=fsap-065070992a8bcd118 fs-0782c677414d9f126:/  /var/www/
+                sudo yum install -y httpd 
+                sudo systemctl start httpd
+                sudo systemctl enable httpd
+                sudo yum module reset php -y
+                sudo yum module enable php:remi-7.4 -y
+                sudo yum install -y php php-common php-mbstring php-opcache php-intl php-xml php-gd php-curl php-mysqlnd php-fpm php-json
+                sudo systemctl start php-fpm
+                sudo systemctl enable php-fpm
+                wget http://wordpress.org/latest.tar.gz
+                tar xzvf latest.tar.gz
+                rm -rf latest.tar.gz
+                sudo cp wordpress/wp-config-sample.php wordpress/wp-config.php
+                mkdir /var/www/html/
+                sudo cp -R /wordpress/* /var/www/html/
+                cd /var/www/html/
+                sudo touch healthstatus
+                sudo sed -i "s/localhost/ktrontechdatabase.c18co0o2qbmr.us-east-1.rds.amazonaws.com/g" wp-config.php 
+                sudo sed -i "s/username_here/admin/g" wp-config.php 
+                sudo sed -i "s/password_here/Willy211#/g" wp-config.php 
+                sudo sed -i "s/database_name_here/ktrontechdatabase/g" wp-config.php 
+                chcon -t httpd_sys_rw_content_t /var/www/html/ -R
+                sudo systemctl restart httpd
+                sudo systemctl status httpd
+Tooling userdata ( Repeat same steps as you did for wordpress user-data for tooling, difference is, get the tooling access points mount point command instead)
+
+- ![toolingtemplate](https://github.com/user-attachments/assets/d5c030fa-ab17-4eda-8ddd-f0eaeaf15f8d)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                #!/bin/bash
+                sudo mkdir /var/www/
+                sudo mount -t efs -o tls,accesspoint=fsap-065070992a8bcd118 fs-0782c677414d9f126://var/www/
+                sudo yum install -y httpd 
+                sudo systemctl start httpd
+                sudo systemctl enable httpd
+                sudo yum module reset php -y
+                sudo yum module enable php:remi-7.4 -y
+                sudo yum install -y php php-common php-mbstring php-opcache php-intl php-xml php-gd php-curl php-mysqlnd php-fpm php-json
+                sudo systemctl start php-fpm
+                sudo systemctl enable php-fpm
+                git clone https://github.com/citadelict/tooling2.git
+                sudo mkdir /var/www/html
+                sudo cp -rf tooling2/html/*  /var/www/html/
+                cd tooling2
+                mysql -h ktrontechdatabase.c18co0o2qbmr.us-east-1.rds.amazonaws.com -u admin -p Willy211# toolingdb < tooling-db.sql
+                cd /home/ec2-user
+                sudo touch healthstatus
+                cd /var/www/html
+                sudo sed -i "s/$db = mysqli_connect('mysql.tooling.svc.cluster.local', 'admin', 'admin', 'tooling');/$db = mysqli_connect('ktrontechdatabase.c18co0o2qbmr.us-east-1.rds.amazonaws.com', 'admin', 'Willy211#', 'toolingdb');/g" functions.php
+                chcon -t httpd_sys_rw_content_t /var/www/html/ -R
+                sudo systemctl restart httpd
+                sudo systemctl status httpd
 
 
 
