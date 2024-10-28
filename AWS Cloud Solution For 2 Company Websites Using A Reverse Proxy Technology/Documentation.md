@@ -609,18 +609,64 @@ Copy the RDS endpoint to be used as host
 
 - ![connect](https://github.com/user-attachments/assets/4fec4517-6099-4d67-a346-76ccae826226)
 
+- ![DATABASE](https://github.com/user-attachments/assets/337556cf-6f03-4bdc-aa47-1da74596e7bd)
 
 
+## Create Auto Scaling Group for Nginx
+
+- Go to Auto Scaling Groups in the EC2 Dashboard.
+
+- Click Create Auto Scaling group and follow these steps:
+
+Auto Scaling group name: nginx-auto-scaling-group
+- Launch Template: Select nginx-launch-template.
+Network:
+- Select the VPC in which to launch your instances.
+- Choose Subnets where the nginx instances will launch
+  
+### - Configure Scaling Policies:
+- Desired Capacity: Set the initial number of instances i.e 2.
+- Minimum Capacity: Minimum number of instances to maintain i.e 2
+- Maximum Capacity: Maximum number of instances to allow i.e 4
+
+- Choose EC2 health checks or ELB health checks if using a load balancer.
+- Review and Create:
+
+- Review the settings and click Create Auto Scaling Group.
+### -Attach a Load Balancer 
+- To distribute traffic across your instances, you may attach an Application Load Balancer (ALB) to the ASG:
+
+- In the Auto Scaling Group dashboard, choose Edit next to Load balancing.
+- Select your existing ALB or create a new one and attach it to the ASG.
+
+## Repeat the Nginx Auto Scaling Group steps above for Wordpress and Tooling with their right launch template
+
+- ![88](https://github.com/user-attachments/assets/b7dece77-1bf6-4a2e-9c15-773168b59acf)
+
+## Configuring DNS with Route53
+- Earlier in this project we registered a free domain with Hostinger and configured a hosted zone in Route53. But that is not all that needs to be done as far as DNS configuration is concerned.
+
+- We need to ensure that the main domain for the WordPress website can be reached, and the subdomain for Tooling website can also be reached using a browser.
+
+- Create other records such as CNAME, alias and A records.
+
+**NOTE**: You can use either CNAME or alias records to achieve the same thing. But alias record has better functionality because it is a faster to resolve DNS record, and can coexist with other records on that name. Read https://support.dnsimple.com/articles/differences-between-a-cname-alias-url/#:~:text=The%20A%20record%20maps%20a,a%20name%20to%20another%20name.&text=The%20ALIAS%20record%20maps%20a,the%20HTTP%20301%20status%20code to get to know more about the differences.
+
+- Create an alias record for the root domain and direct its traffic to the ALB DNS name.
+
+- Create an alias record for _liberttinnii.xyz.online_ and direct its traffic to the ALB DNS name.
+
+- ![Screenshot from 2024-10-28 13-02-03](https://github.com/user-attachments/assets/9da4501a-e592-4ee7-84cb-ce5f1a66a3d9)
+
+Test your websites.
+Now let us access our tooling website via a browser using our DNS name
+
+![website](https://github.com/user-attachments/assets/25bdb3f4-c25e-4ec7-800c-6842bb27d94a)
+
+## Let's access our wordpress website
 
 
-
-
-
-
-
-
-
-
+![93](https://github.com/user-attachments/assets/5c61316e-930c-40a3-bdf5-f522bb67e7bc)
 
 
 
