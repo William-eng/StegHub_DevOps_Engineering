@@ -50,27 +50,49 @@ Follow the prompt, by inputing your access key id, access key and region and pre
       
 - ![boto3](https://github.com/user-attachments/assets/eb0e0d25-ec2b-4e09-ad4f-b060f3314081)
 
-### Terraform must store state about your managed infrastructure and configuration. This state is used by Terraform to map real world resources to your configuration, keep track of metadata, and to improve performance for large infrastructures.
+### 5. Terraform must store state about your managed infrastructure and configuration. This state is used by Terraform to map real world resources to your configuration, keep track of metadata, and to improve performance for large infrastructures.
 
+This state is stored by default in a local file named _"terraform.tfstate"_, but it can also be stored remotely, which works better in a team environment.
 
+### 6. Create a S3 bucket resource to store terraform state remotely.  
+-We can create it on the console or using the sdk we just install
+- Enter a Bucket name, AWS Region, Enable Bucket Versioning, Add a Tag and click create bucket.
 
+            aws s3api create-bucket --bucket ktrontech-dev-terraform-bucket && \
+            aws s3api put-bucket-tagging --bucket ktrontech-dev-terraform-bucket --tagging 'TagSet=[{Key=Owner,Value=Ktrontech}]' && \
+            aws s3api put-bucket-versioning --bucket ktrontech-dev-terraform-bucket --versioning-configuration Status=Enabled
 
+- ![creatings3bucket](https://github.com/user-attachments/assets/0d79c6e3-4754-4257-b9c9-1d652d2b6a94)
 
+- ![awss3](https://github.com/user-attachments/assets/b46a60d2-2b76-4a90-8374-217a8166c951)
 
+## Install terraform
+To install terraform on Ubuntu 24.04, follow the steps below :
 
+            # Ensure that your system is up to date and you have installed the gnupg, software-properties-common, and curl packages installed. 
+            sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+            
+            # Install the HashiCorp GPG key.
+            wget -O- https://apt.releases.hashicorp.com/gpg | \
+            gpg --dearmor | \
+            sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+            
+            # Verify the key's fingerprint.
+            gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+            --fingerprint
 
+            # The lsb_release -cs command finds the distribution release codename for your current system, such as buster, groovy, or sid.
 
+            echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+            https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+            sudo tee /etc/apt/sources.list.d/hashicorp.list
 
+            # Download the package information from HashiCorp.
+            sudo apt update
 
-
-
-
-
-
-
-
-
-
+            # Install Terraform from the new repository.
+            sudo apt-get install terraform
 
 
 
