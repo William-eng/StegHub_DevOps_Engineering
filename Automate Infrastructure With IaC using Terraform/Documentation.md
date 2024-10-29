@@ -95,10 +95,15 @@ To install terraform on Ubuntu 24.04, follow the steps below :
             sudo apt-get install terraform
 
 
+- ![teraform1](https://github.com/user-attachments/assets/adfa6846-78e3-4cfc-bf3d-5f9398f76cb6)
 
+### Confirm installation
 
+- ![teraform1](https://github.com/user-attachments/assets/be44817f-8a91-463b-a5bf-c112bc15dce1)
 
-
+    terraform --version
+- ![nstalledTerraform](https://github.com/user-attachments/assets/b8e6570c-bf3e-4c4c-ace2-e659ae170e32)
+    
 
 
 
