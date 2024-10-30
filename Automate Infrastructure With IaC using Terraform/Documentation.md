@@ -134,7 +134,7 @@ Let us create a directory structure
         enable_dns_support             = "true"
         enable_dns_hostnames           = "true"
         tags = {
-            "name" = "ktrontechVPC"
+            Name = "ktrontechVPC"
             }
       }
 
@@ -179,7 +179,7 @@ Let us create the first 2 public subnets.Add below configuration to the main.tf 
                 map_public_ip_on_launch    = true
                 availability_zone          = "eu-central-1a"
                 tags = {
-                      "name" = "ktrontech-publicsubnet1"
+                      Name = "ktrontech-publicsubnet1"
                     }
             
             }
@@ -191,94 +191,418 @@ Let us create the first 2 public subnets.Add below configuration to the main.tf 
                 map_public_ip_on_launch    = true
                 availability_zone          = "eu-central-1b"
                 tags = {
-                      "name" = "ktrontech-publicsubnet2"
+                      Name = "ktrontech-publicsubnet2"
                  }
             }
 
 
 7. Run _terraform plan_ to check the intending infrusture and terraform apply to create the infrastructure.
 
+- ![terraformApply](https://github.com/user-attachments/assets/32628b86-fa89-4cda-b50a-e1bee035e0dc)
+
+- ![VPC](https://github.com/user-attachments/assets/862e3463-f4e5-413d-83bf-b98869434b68)
+
+- ![subnetvpc](https://github.com/user-attachments/assets/1debfd49-cb8d-4927-b87d-292d0ef1af9e)
+
+## Observations:
+
+- **Hard coded values**: Remember our best practice hint from the beginning? Both the availability_zone and cidr_block arguments are hard coded. We should always endeavour to make our work dynamic.
+- **Multiple Resource Blocks**: Notice that we have declared multiple resource blocks for each subnet in the code. This is bad coding practice. We need to create a single resource block that can dynamically create resources without specifying multiple blocks. Imagine if we wanted to create 10 subnets, our code would look very clumsy. So, we need to optimize this by introducing a count argument.
+Now let us improve our code by refactoring it.
+
+First, destroy the current infrastructure. Since we are still in development, this is totally fine. Otherwise, DO NOT DESTROY an infrastructure that has been deployed to production.
+
+To destroy whatever has been created run terraform destroy command, and type yes after evaluating the plan.
+
+- ![Tdestroy](https://github.com/user-attachments/assets/3ca7db33-9774-46c7-a19b-14068f7b4491)
+- ![Tdestroy2](https://github.com/user-attachments/assets/85f60a5a-cab4-4cdf-86b4-76b397e07108)
+
+## Fixing The Problems By Code Refactoring
+As stated ealier, while the code above worked fine, the process is inefficient and not dynamic. Some o :f the problems we will be solving includes the following
+
+- Fixing Hard Coded Values
+- Fixing multiple resource blocks
+- Let’s make cidr_block dynamic
+- 
+### Fixing the Hard Coded Values
+
+We will introduce variables, and remove hard coding.
+
+- Starting with the provider block, declare a variable named region, give it a default value (if you don't declare a default value, you will be prompted each time you run terraform plan/apply), and update the provider section by referring to the declared variable.
+
+          variable "region" {
+          default = "eu-central-1"
+               }
+      
+          provider "aws" {
+              region = var.region
+          }
+- Do the same to cidr value in the vpc block, and all the other arguments.
+
+                   variable "vpc_cidr" {
+                default = "172.16.0.0/16"
+                 }
+            
+            
+                variable "enable_dns_support" {
+                    default = "true"
+                }
+            
+            
+                variable "enable_dns_hostnames" {
+                    default ="true" 
+                }
+            
+                variable "preferred_number_of_public_subnets" {
+                default = 2
+                }
+  
+            variable "enable_classiclink" {
+                    default = "false"
+                    }
+               variable "enable_classiclink_dns_support" {
+                    default = "false"
+                    }
+  
+                # Create VPC
+                resource "aws_vpc" "main" {
+                cidr_block                     = var.vpc_cidr
+                enable_dns_support             = var.enable_dns_support 
+                enable_dns_hostnames           = var.enable_dns_support
+                enable_classiclink             = var.enable_classiclink
+                enable_classiclink_dns_support = var.enable_classiclink
+            
+                }
 
+### Fixing multiple resource blocks
+- Terraform has a functionality that allows us to pull data which exposes information to us. For example, every region has Availability Zones (AZ). Different regions have from 2 to 4 Availability Zones. With over 20 geographic regions and over 70 AZs served by AWS, it is impossible to keep up with the latest information by hard coding the names of AZs. Hence, we will explore the use of Terraform's Data Sources to fetch information outside of Terraform. In this case, from AWS
 
+- Let us fetch Availability zones from AWS, and replace the hard coded value in the subnet’s availability_zone section.\
 
+          # Get list of availability zones
+      
+          data "aws_availability_zones" "available" {
+          state = "available"
+           }
 
+To make use of this new data resource, we will need to introduce a count argument in the subnet block: Something like this.
 
 
+         # Create public subnet1
+          resource "aws_subnet" "public" { 
+              count                   = 2
+              vpc_id                  = aws_vpc.main.id
+              cidr_block              = "172.16.1.0/24"
+              map_public_ip_on_launch = true
+              availability_zone       = data.aws_availability_zones.available.names[count.index]
+      
+          }
 
+Let us quickly understand what is going on here.
 
+- The count tells us that we need 2 subnets. Therefore, Terraform will invoke a loop to create 2 subnets.
+- The data resource will return a list object that contains a list of AZs. Internally, Terraform will receive the data like this
 
+       ["eu-central-1a", "eu-central-1b"]
 
+Each of them is an index, the first one is index 0, while the other is index 1. If the data returned had more than 2 records, then the index numbers would continue to increment.
 
+Therefore, each time Terraform goes into a loop to create a subnet, it must be created in the retrieved AZ from the list. Each loop will need the index number to determine what AZ the subnet will be created. That is why we have data.aws_availability_zones.available.names[count.index] as the value for availability_zone. When the first loop runs, the first index will be 0, therefore the AZ will be eu-central-1a. The pattern will repeat for the second loop.
 
+But we still have a problem. If we run Terraform with this configuration, it may succeed for the first time, but by the time it goes into the second loop, it will fail because we still have cidr_block hard coded. The same cidr_block cannot be created twice within the same VPC. So, we have a little more work to do.
 
+ ## Let's make cidr_block dynamic.
 
+We will introduce a function _cidrsubnet()_ to make this happen. It accepts 3 parameters. Let us use it first by updating the configuration, then we will explore its internals.
 
 
 
+    # Create public subnet1
+    resource "aws_subnet" "public" { 
+        count                   = 2
+        vpc_id                  = aws_vpc.main.id
+        cidr_block              = cidrsubnet(var.vpc_cidr, 4 , count.index)
+        map_public_ip_on_launch = true
+        availability_zone       = data.aws_availability_zones.available.names[count.index]
+        tags = {
+          Name = "ktrontech-public-subnet-${count.index}"
+        }
+    }
 
+A closer look at cidrsubnet - this function works like an algorithm to dynamically create a subnet CIDR per AZ. Regardless of the number of subnets created, it takes care of the cidr value per subnet.
 
+Its parameters are cidrsubnet(prefix, newbits, netnum)
 
+- The prefix parameter must be given in CIDR notation, same as for VPC.
+- The newbits parameter is the number of additional bits with which to extend the prefix. For example, if given a prefix ending with /16 and a newbits value of 4, the resulting subnet address will have length /20
+- The netnum parameter is a whole number that can be represented as a binary integer with no more than newbits binary digits, which will be used to populate the additional bits added to the prefix
 
+You can experiment how this works by entering the terraform console and keep changing the figures to see the output.
 
+- On the terminal, run _terraform console_
+- type _cidrsubnet("172.16.0.0/16", 4, 0)_
+- Hit enter
+- See the output
+- Keep change the numbers and see what happens.
+- To get out of the console, type exit
 
+- ![console](https://github.com/user-attachments/assets/dcac065f-acfa-4ca7-af98-fa2a71bef2ef)
 
+## The final problem to solve is removing hard coded count value.
 
+If we cannot hard code a value we want, then we will need a way to dynamically provide the value based on some input. Since the data resource returns all the AZs within a region, it makes sense to count the number of AZs returned and pass that number to the count argument.
 
+To do this, we can introuduce length() function, which basically determines the length of a given list, map, or string.
 
+Since data.aws_availability_zones.available.names returns a list like ["eu-central-1a", "eu-central-1b", "eu-central-1c"] we can pass it into a lenght function and get number of the AZs.
 
+length(["eu-central-1a", "eu-central-1b", "eu-central-1c"])
 
+Open up terraform console and try it
 
+- ![console2](https://github.com/user-attachments/assets/18faa9da-3f0c-4b2c-a41e-d1b69c3b8c73)
 
+Now we can simply update the public subnet block like this
 
+      # Create public subnet1
+          resource "aws_subnet" "public" { 
+              count                   = length(data.aws_availability_zones.available.names)
+              vpc_id                  = aws_vpc.main.id
+              cidr_block              = cidrsubnet(var.vpc_cidr, 4 , count.index)
+              map_public_ip_on_launch = true
+              availability_zone       = data.aws_availability_zones.available.names[count.index]
+      
+          }
 
+**Observations:**
 
+What we have now, is sufficient to create the subnet resource required. But if you observe, it is not satisfying our business requirement of just 2 subnets. The length function will return number 3 to the count argument, but what we actually need is 2.
+Now, let us fix this.
 
+- Declare a variable to store the desired number of public subnets, and set the default value
 
+        variable "preferred_number_of_public_subnets" {
+            default = 2
+      }
 
 
+- Next, update the count argument with a condition. Terraform needs to check first if there is a desired number of subnets. Otherwise, use the data returned by the lenght function. See how that is presented below.
 
+      # Create public subnets
+      resource "aws_subnet" "public" {
+        count  = var.preferred_number_of_public_subnets == null ? length(data.aws_availability_zones.available.names) : var.preferred_number_of_public_subnets   
+        vpc_id = aws_vpc.main.id
+        cidr_block              = cidrsubnet(var.vpc_cidr, 4 , count.index)
+        map_public_ip_on_launch = true
+        availability_zone       = data.aws_availability_zones.available.names[count.index]
+      
+      }
 
+Now lets break it down:
 
+- The first part var.preferred_number_of_public_subnets == null checks if the value of the variable is set to null or has some value defined.
+- The second part ? and length(data.aws_availability_zones.available.names) means, if the first part is true, then use this. In other words, if preferred number of public subnets is null (Or not known) then set the value to the data returned by lenght function.
+- The third part : and var.preferred_number_of_public_subnets means, if the first condition is false, i.e preferred number of public subnets is not null then set the value to whatever is definied in var.preferred_number_of_public_subnets
+Now the entire configuration should now look like this
 
+# Get list of availability zones
+data "aws_availability_zones" "available" {
+state = "available"
+}
 
+variable "region" {
+      default = "eu-central-1"
+}
 
+variable "vpc_cidr" {
+    default = "172.16.0.0/16"
+}
 
+variable "enable_dns_support" {
+    default = "true"
+}
 
+variable "enable_dns_hostnames" {
+    default ="true" 
+}
 
+variable "enable_classiclink" {
+    default = "false"
+}
 
+variable "enable_classiclink_dns_support" {
+    default = "false"
+}
 
+  variable "preferred_number_of_public_subnets" {
+      default = 2
+}
 
+provider "aws" {
+  region = var.region
+}
+
+# Create VPC
+resource "aws_vpc" "main" {
+  cidr_block                     = var.vpc_cidr
+  enable_dns_support             = var.enable_dns_support 
+  enable_dns_hostnames           = var.enable_dns_support
+  enable_classiclink             = var.enable_classiclink
+  enable_classiclink_dns_support = var.enable_classiclink
+
+}
+
+
+# Create public subnets
+resource "aws_subnet" "public" {
+  count  = var.preferred_number_of_public_subnets == null ? length(data.aws_availability_zones.available.names) : var.preferred_number_of_public_subnets   
+  vpc_id = aws_vpc.main.id
+  cidr_block              = cidrsubnet(var.vpc_cidr, 4 , count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+
+}
+
+
+- ![terraformApplycount2](https://github.com/user-attachments/assets/43978e55-c97a-459d-9432-ae737a5cb523)
+
+- ![ManagementConsolecount2](https://github.com/user-attachments/assets/e16e85b0-0429-46d8-a975-1295021c2741)
+
+**Note**: You should try changing the value of preferred_number_of_public_subnets variable to null and notice how many subnets get created.
+
+- ![countnull2](https://github.com/user-attachments/assets/cd127f67-a0ff-4d66-a311-ed3b48ca71e9)
+- ![countnull](https://github.com/user-attachments/assets/62e83c87-8257-4e84-b651-1b7f5de06bed)
+
+## Introducing variables.tf & terraform.tfvars
+
+Instead of havng a long lisf of variables in _main.tf_ file, we can actually make our code a lot more readable and better structured by moving out some parts of the configuration content to other files.
+
+We will put all variable declarations in a separate file
+1. And provide non default values to each of them
+2. Create a new file and name it variables.tf
+3. Copy all the variable declarations into the new file.
+4. Create another file, name it terraform.tfvars
+5. Set values for each of the variables.
+
+### Main.tf
+
+      # Get list of availability zones
+      data "aws_availability_zones" "available" {
+      state = "available"
+      }
+      
+      provider "aws" {
+        region = var.region
+      }
+      
+      # Create VPC
+      resource "aws_vpc" "main" {
+        cidr_block                     = var.vpc_cidr
+        enable_dns_support             = var.enable_dns_support 
+        enable_dns_hostnames           = var.enable_dns_support
+        enable_classiclink             = var.enable_classiclink
+        enable_classiclink_dns_support = var.enable_classiclink
+      
+      }
+      
+      # Create public subnets
+      resource "aws_subnet" "public" {
+        count  = var.preferred_number_of_public_subnets == null ? length(data.aws_availability_zones.available.names) : var.preferred_number_of_public_subnets   
+        vpc_id = aws_vpc.main.id
+        cidr_block              = cidrsubnet(var.vpc_cidr, 4 , count.index)
+        map_public_ip_on_launch = true
+        availability_zone       = data.aws_availability_zones.available.names[count.index]
+      }
 
+### variables.tf
 
+      variable "region" {
+            default = "eu-central-1"
+      }
+      
+      variable "vpc_cidr" {
+          default = "172.16.0.0/16"
+      }
+      
+      variable "enable_dns_support" {
+          default = "true"
+      }
+      
+      variable "enable_dns_hostnames" {
+          default ="true" 
+      }
+      
+      variable "enable_classiclink" {
+          default = "false"
+      }
+      
+      variable "enable_classiclink_dns_support" {
+          default = "false"
+      }
+      
+        variable "preferred_number_of_public_subnets" {
+            default = null
+      }
+- ![variable tff](https://github.com/user-attachments/assets/ecfc9c3b-4650-4be6-b4e9-9a4a7891e6c8)
 
+### terraform.tfvars
 
+      region = "eu-central-1"
+      
+      vpc_cidr = "172.16.0.0/16" 
+      
+      enable_dns_support = "true" 
+      
+      enable_dns_hostnames = "true"  
+      
+      enable_classiclink = "false" 
+      
+      enable_classiclink_dns_support = "false" 
+      
+      preferred_number_of_public_subnets = 2
 
+- ![variable tf](https://github.com/user-attachments/assets/fdf530df-9f08-43d6-ac43-3536c595a25d)
 
+You should also have this file structure in the PBL folder.
 
+└── PBL
+    ├── main.tf
+    ├── terraform.tfstate
+    ├── terraform.tfstate.backup
+    ├── terraform.tfvars
+    └── variables.tf
 
+- ![treee](https://github.com/user-attachments/assets/ff8cf5f8-d58b-43b1-b309-8d171cc9f997)
+  
+### Run terraform plan and ensure everything works
+- ![plan1](https://github.com/user-attachments/assets/5ee56264-0f27-4adf-b526-09036f57b8a3)
 
+![plan2](https://github.com/user-attachments/assets/e0f2db1a-54da-4ccc-96c0-ccb6002f70e0)
 
+![plan3](https://github.com/user-attachments/assets/42cc9cc1-1b0a-41df-b4b7-63e8e99ed962)
 
+### terraform apply
+- run _terraform apply_ to create the infrastructure
+![apply1](https://github.com/user-attachments/assets/c4e8d7c6-cd00-47fe-9d94-f96dc27f5199)
 
+- ![apply2](https://github.com/user-attachments/assets/030137bf-478b-4533-baac-a26ee131c723)
 
+- ![apply3](https://github.com/user-attachments/assets/92250a32-0b81-487b-bc42-5886b46a8d24)
 
+- ![applysubnet](https://github.com/user-attachments/assets/94866fc7-96ea-4287-991a-257241c43d51)
 
+- ![applyVPC](https://github.com/user-attachments/assets/aa8aa2a0-ad1b-4302-9d06-afb1d71124bb)
 
+### Destroy the Infrastructures
+Use the command _terraform destroy_ to terminate all infrastructures
 
+- ![destroy1](https://github.com/user-attachments/assets/08b39154-03e1-491b-9328-5c398b0f916d)
 
+![destroy2](https://github.com/user-attachments/assets/688198a8-a103-4990-b172-369b3cf8398b)
 
+![destroy3](https://github.com/user-attachments/assets/4df41777-8cb9-4536-a2d2-3725ce5e870b)
 
-
-
-
-
-
-
-
-
-
-
-
+![destroy4](https://github.com/user-attachments/assets/5855c003-4b83-4352-9376-b8588f816436)
 
 
 
