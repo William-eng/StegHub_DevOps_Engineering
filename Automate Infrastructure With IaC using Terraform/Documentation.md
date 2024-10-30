@@ -104,23 +104,99 @@ To install terraform on Ubuntu 24.04, follow the steps below :
     terraform --version
 - ![nstalledTerraform](https://github.com/user-attachments/assets/b8e6570c-bf3e-4c4c-ace2-e659ae170e32)
     
+# VPC | Subnets | Security Groups
+Let us create a directory structure
+
+1. Open your Visual Studio Code and create a folder called PBL
+2. Create a file in the folder, name it main.tf
+- ![main tf](https://github.com/user-attachments/assets/dec07bb6-2783-40a0-9a22-dcd3b56495ef)
+
+# VPC resource section
+3. Add AWS as a provider, and a resource to create a VPC in the main.tf file. The provider block informs Terraform that we intend to build infrastructure within AWS.
+- Resource block will create a VPC.
 
 
+      terraform {
+        required_providers {
+          aws = {
+            source  = "hashicorp/aws"
+            version = "~> 5.0"
+          }
+        }
+      }
+      provider "aws" {
+        region = "us-east-1"
+      }
+      
+      # Create VPC
+      resource "aws_vpc" "main" {
+        cidr_block                     = "10.0.0.0/16"
+        enable_dns_support             = "true"
+        enable_dns_hostnames           = "true"
+        tags = {
+            "name" = "ktrontechVPC"
+            }
+      }
 
 
+Note: You can change the configuration above to create your VPC in other region that is closer to you. The same applies to all configuration snippets that will follow.
+
+4. The next thing we need to do, is to download necessary plugins for Terraform to work. These plugins are used by providers and provisioners. At this stage, we only have provider in our main.tffile. So, Terraform will just download plugin for AWS provider. Navigate to the PBL folder
+
+- ![Dependencies](https://github.com/user-attachments/assets/91c8fe6b-efc0-417d-a7e2-dd04564edecb)
+5. Let's verify what terraform intends to create ,
+
+      terraform plan
+- ![terraformPlan](https://github.com/user-attachments/assets/1e07c42e-e332-4b05-9dc7-6d05cea7eb21)
+### Observations:
+
+1. A new file is created terraform.tfstate This is how Terraform keeps itself up to date with the exact state of the infrastructure. It reads this file to know what already exists, what should be added, or destroyed based on the entire terraform code that is being developed.
+
+2. If you also observed closely, you would realise that another file gets created during planning and apply. But this file gets deleted immediately. terraform.tfstate.lock.info This is what Terraform uses to track, who is running its code against the infrastructure at any point in time. This is very important for teams working on the same Terraform repository at the same time. The lock prevents a user from executing Terraform configuration against the same infrastructure when another user is doing the same - it allows to avoid duplicates and conflicts.
+Its content is usually like this. (We will discuss more about this later)
+
+                {
+                    "ID":"e5e5ad0e-9cc5-7af1-3547-77bb3ee0958b",
+                    "Operation":"OperationTypePlan","Info":"",
+                    "Who":"dare@Dare","Version":"0.13.4",
+                    "Created":"2020-10-28T19:19:28.261312Z",
+                    "Path":"terraform.tfstate"
+                }
+It is a json format file that stores information about a user: user's ID, what operation he/she is doing, timestamp, and location of the state file.
+   
+## Subnets resource section
+According to our architectural design, 6 subnets are required:
+
+2 public subnets
+2 private subnets for webservers
+2 private subnets for data layer
+Let us create the first 2 public subnets.Add below configuration to the main.tf file:
+
+            # Create public subnets1
+                resource "aws_subnet" "public1" {
+                vpc_id                     = aws_vpc.main.id
+                cidr_block                 = "172.16.0.0/24"
+                map_public_ip_on_launch    = true
+                availability_zone          = "eu-central-1a"
+                tags = {
+                      "name" = "ktrontech-publicsubnet1"
+                    }
+            
+            }
+            
+            # Create public subnet2
+                resource "aws_subnet" "public2" {
+                vpc_id                     = aws_vpc.main.id
+                cidr_block                 = "172.16.1.0/24"
+                map_public_ip_on_launch    = true
+                availability_zone          = "eu-central-1b"
+                tags = {
+                      "name" = "ktrontech-publicsubnet2"
+                 }
+            }
 
 
-
-
-
-
-
-
-
-
-
-
-
+7. Run _terraform plan_ to check the intending infrusture and terraform apply to create the infrastructure.
 
 
 
