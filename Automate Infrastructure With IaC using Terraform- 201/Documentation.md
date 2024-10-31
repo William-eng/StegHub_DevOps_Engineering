@@ -1430,8 +1430,10 @@ At this point, you shall have pretty much all the infrastructure elements ready 
 
 - ![Tapply13](https://github.com/user-attachments/assets/0f6f8179-0e82-4141-9375-bb33cbf583c9)
 
+- ![Tapply14](https://github.com/user-attachments/assets/3c22371c-6b6f-4215-8296-8ff695e6f5f6)
 
 
+- ![Tdes](https://github.com/user-attachments/assets/67242ff4-88c9-4a8a-85f8-7e10ebeacc6c)
 
 
 
