@@ -1403,6 +1403,7 @@ Open the _terraform.tfvars_ file and add the code below:
 
 At this point, you shall have pretty much all the infrastructure elements ready to be deployed automatically. Try to plan and apply your Terraform codes, explore the resources in AWS console and make sure you destroy them right away to avoid massive costs.
 
+- ![created](https://github.com/user-attachments/assets/111eae27-6e4f-42b6-b040-1e2c2da3b5b0)
 
 - ![Tapply1](https://github.com/user-attachments/assets/a09a2d2a-c83d-49e6-96a8-7a0da1f7e04f)
 
@@ -1433,7 +1434,7 @@ At this point, you shall have pretty much all the infrastructure elements ready 
 - ![Tapply14](https://github.com/user-attachments/assets/3c22371c-6b6f-4215-8296-8ff695e6f5f6)
 
 
-- ![Tdes](https://github.com/user-attachments/assets/67242ff4-88c9-4a8a-85f8-7e10ebeacc6c)
+- ![destroy](https://github.com/user-attachments/assets/b5bbcf5a-fab8-4cc0-9797-3a549cb4ed27)
 
 
 
