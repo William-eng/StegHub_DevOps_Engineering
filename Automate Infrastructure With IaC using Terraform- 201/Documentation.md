@@ -535,7 +535,18 @@ Create a file and name it security.tf, copy and paste the code below:
 ## 2. Create Certificate From Amazon Cerificate Manager
 Create cert.tf file and add the following code snippets to it.
 
-NOTE: Read through to change the domain name to your own domain name including any other name that needs to be changed.
+**NOTE**: Read through to change the domain name to your own domain name including any other name that needs to be changed.
+
+The entire section create a certificate, public zone, and validate the certificate using DNS method. Create the certificate using a wildcard for all the domains created in _liberttinnii.xyz_.
+
+- ![hostedZone](https://github.com/user-attachments/assets/36cf9c82-faaf-4d33-b205-3bcaef100fe2)
+
+
+
+
+**NOTE**: You'd have to create a hosted zone from the AWS management console first before making reference to the created hosted zone in the code below;
+
+
 
           # The entire section creates a certificate, public zone, and validates the certificate using DNS method.
           
@@ -1393,6 +1404,31 @@ Open the _terraform.tfvars_ file and add the code below:
 At this point, you shall have pretty much all the infrastructure elements ready to be deployed automatically. Try to plan and apply your Terraform codes, explore the resources in AWS console and make sure you destroy them right away to avoid massive costs.
 
 
+- ![Tapply1](https://github.com/user-attachments/assets/a09a2d2a-c83d-49e6-96a8-7a0da1f7e04f)
+
+- ![Tapply2](https://github.com/user-attachments/assets/00b9d580-1deb-4f9e-a2b2-ffa91d9c4d3c)
+
+- ![Tapply3](https://github.com/user-attachments/assets/09f2867c-e14f-4f67-af07-5e5f9c8315cf)
+
+- ![Tapply4](https://github.com/user-attachments/assets/29299c2c-f1c1-4a26-8fe3-18f9412c53a7)
+
+- ![Tapply5](https://github.com/user-attachments/assets/773a75da-7177-4b66-bfb9-7c05d9c33382)
+
+- ![Tapply6](https://github.com/user-attachments/assets/b6041d91-765e-4cbd-8ed2-2c8077f76d49)
+
+- ![Tapply7](https://github.com/user-attachments/assets/530e10c4-6b99-4ff2-aa4d-c6134e2b68ce)
+
+- ![Tapply8](https://github.com/user-attachments/assets/604adeee-3c17-4be9-8a2e-f6381a3ba64b)
+
+- ![Tapply9](https://github.com/user-attachments/assets/3a8602c0-0020-4130-bca1-7c162adf43bc)
+
+- ![Tapply10](https://github.com/user-attachments/assets/b84627aa-b821-4aa7-8ae9-0ffc38c5bc00)
+
+- ![Tapply11](https://github.com/user-attachments/assets/e9e1beab-e97a-4b1c-a98f-032e37447e8a)
+
+- ![Tapply12](https://github.com/user-attachments/assets/0afab8b9-522f-4d86-b5b7-da6fa28a0567)
+
+- ![Tapply13](https://github.com/user-attachments/assets/0f6f8179-0e82-4141-9375-bb33cbf583c9)
 
 
 
