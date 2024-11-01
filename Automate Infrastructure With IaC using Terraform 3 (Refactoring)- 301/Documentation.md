@@ -102,12 +102,12 @@ Before doing anything if you opened AWS now to see what happened you should be a
 
 - _.tfstatefile_ is now inside the S3 bucket
 
+- 
+DynamoDB table which we create has an entry which includes state file status
 
+- 
 
-
-
-
-
+Navigate to the DynamoDB table inside AWS and leave the page open in your browser. Run terraform plan and while that is running, refresh the browser and see how the lock is being handled:
 
 
 
