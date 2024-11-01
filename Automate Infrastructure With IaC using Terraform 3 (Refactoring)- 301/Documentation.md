@@ -137,26 +137,106 @@ Terraform will automatically read the latest state from the S3 bucket to determi
 
 Now, head over to the S3 console again, refresh the page, and click the grey “Show” button next to “Versions.” You should now see several versions of your terraform.tfstate file in the S3 bucket:
 
+- ![Version1](https://github.com/user-attachments/assets/dd14d254-cdea-4226-afea-2756caa19eb0)
+
+With help of remote backend and locking configuration that we have just configured, collaboration is no longer a problem.
+
+However, there is still one more problem: **Isolation Of Environments**. Most likely we will need to create resources for different environments, such as: _Dev, sit, uat, preprod, prod,_ etc.
+
+This separation of environments can be achieved using one of two methods:
+
+a. **Terraform Workspaces** b. **Directory** based separation using terraform.tfvars file
+
+## When to use Workspaces or Directory?
+To separate environments with significant configuration differences, use a directory structure. Use workspaces for environments that do not greatly deviate from each other, to avoid duplication of your configurations. Try both methods in the sections below to help you understand which will serve your infrastructure best.
+
+## Security Groups refactoring with dynamic block
+
+For repetitive blocks of code you can use dynamic blocks in Terraform,
+
+Refactor Security Groups creation with dynamic blocks.
+
+we can have a local.tf like this 
+
+      locals {
+        ingress_rules = [
+          {
+            description = "HTTP"
+            port        = 80
+            protocol    = "tcp"
+            cidr_blocks = ["0.0.0.0/0"]
+          },
+          {
+            description = "SSH"
+            port        = 22
+            protocol    = "tcp"
+            cidr_blocks = ["0.0.0.0/0"]
+          }
+        ]
+      
+        egress_rules = [
+          {
+            port        = 0
+            protocol    = "-1"
+            cidr_blocks = ["0.0.0.0/0"]
+          }
+        ]
+      }
+and we can incorporate this in our security group rule
+
+      resource "aws_security_group" "example" {
+        name        = "example-security-group"
+        description = "Security group with dynamic ingress and egress rules"
+        vpc_id      = "your-vpc-id"
+      
+        dynamic "ingress" {
+          for_each = local.ingress_rules
+          content {
+            description = ingress.value.description
+            from_port   = ingress.value.port
+            to_port     = ingress.value.port
+            protocol    = ingress.value.protocol
+            cidr_blocks = ingress.value.cidr_blocks
+          }
+        }
+      
+        dynamic "egress" {
+          for_each = local.egress_rules
+          content {
+            from_port   = egress.value.port
+            to_port     = egress.value.port
+            protocol    = egress.value.protocol
+            cidr_blocks = egress.value.cidr_blocks
+          }
+        }
+      }
 
 
 
+## EC2 refactoring with Map and Lookup
+
+Remember, every piece of work you do, always try to make it dynamic to accommodate future changes. Amazon Machine Image (AMI) is a regional service which means it is only available in the region it was created. But what if we change the region later, and want to dynamically pick up AMI IDs based on the available AMIs in that region? This is where we will introduce Map and Lookup functions.
+
+Map uses a key and value pairs as a data structure that can be set as a default type for variables.
+
+      variable "images" {
+          type = "map"
+          default = {
+              us-east-1 = "image-1234"
+              us-west-2 = "image-23834"
+          }
+      }
+
+To select an appropriate AMI per region, we will use a lookup function which has following syntax: _lookup(map, key, [default])_.
+
+**Note**: A default value is better to be used to avoid failure whenever the map data has no key.
+
+      resource "aws_instace" "web" {
+          ami  = "${lookup(var.images, var.region), "ami-12323"}
+      }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Now, the lookup function will load the variable images using the first parameter. But it also needs to know which of the key-value pairs to use. That is where the second parameter comes in. The key us-east-1 could be specified, but then we will not be doing anything dynamic there, but if we specify the variable for region, it simply resolves to one of the keys. That is why we have used _var.region_ in the second parameter.
 
 
 
