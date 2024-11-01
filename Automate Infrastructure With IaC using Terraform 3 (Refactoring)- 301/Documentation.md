@@ -238,9 +238,17 @@ To select an appropriate AMI per region, we will use a lookup function which has
 
 Now, the lookup function will load the variable images using the first parameter. But it also needs to know which of the key-value pairs to use. That is where the second parameter comes in. The key us-east-1 could be specified, but then we will not be doing anything dynamic there, but if we specify the variable for region, it simply resolves to one of the keys. That is why we have used _var.region_ in the second parameter.
 
+      resource "aws_db_instance" "read_replica" {
+        count               = var.create_read_replica == true ? 1 : 0
+        replicate_source_db = aws_db_instance.this.id
+      }
 
+- true #condition equals to 'if true'
+- ? #means, set to '1`
+- : #means, otherwise, set to '0'
 
-
+## Terraform Modules and best practices to structure your .tf codes
+By this time, you might have realized how difficult is to navigate through all the Terraform blocks if they are all written in a single long .tf file. As a DevOps engineer, you must produce reusable and comprehensive IaC code structure, and one of the tool that Terraform provides out of the box is **Modules**.
 
 
 
