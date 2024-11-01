@@ -102,22 +102,40 @@ Before doing anything if you opened AWS now to see what happened you should be a
 
 - _.tfstatefile_ is now inside the S3 bucket
 
-- 
+- ![statefile](https://github.com/user-attachments/assets/30cfd32a-e7fd-4fef-96d6-c947668c4098)
+
 DynamoDB table which we create has an entry which includes state file status
 
-- 
+- ![DynamoDB](https://github.com/user-attachments/assets/8c40cfc4-10e5-4f79-b0a3-d4eddc397d96)
+
 
 Navigate to the DynamoDB table inside AWS and leave the page open in your browser. Run terraform plan and while that is running, refresh the browser and see how the lock is being handled:
 
+- ![DBrun](https://github.com/user-attachments/assets/290567a1-5657-46dd-bea5-ce8f459ff612)
+
+After _terraform plan_ completes, refresh DynamoDB table.
+
+- ![plannn](https://github.com/user-attachments/assets/e2e885f4-52d7-42e9-8daf-35c4437d6ece)
+
+5. Add Terraform Output
+Before you run _terraform apply_ let us add an output so that the S3 bucket Amazon Resource Names ARN and DynamoDB table name can be displayed.
+
+Create a new file and name it output.tf and add below code.
+
+        output "s3_bucket_arn" {
+          value       = aws_s3_bucket.terraform_state.arn
+          description = "The ARN of the S3 bucket"
+        }
+        output "dynamodb_table_name" {
+          value       = aws_dynamodb_table.terraform_locks.name
+          description = "The name of the DynamoDB table"
+        }
 
 
+6. Let us run _terraform apply_
+Terraform will automatically read the latest state from the S3 bucket to determine the current state of the infrastructure. Even if another engineer has applied changes, the state file will always be up to date.
 
-
-
-
-
-
-
+Now, head over to the S3 console again, refresh the page, and click the grey “Show” button next to “Versions.” You should now see several versions of your terraform.tfstate file in the S3 bucket:
 
 
 
