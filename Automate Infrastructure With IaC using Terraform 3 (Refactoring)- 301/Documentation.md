@@ -250,45 +250,111 @@ Now, the lookup function will load the variable images using the first parameter
 ## Terraform Modules and best practices to structure your .tf codes
 By this time, you might have realized how difficult is to navigate through all the Terraform blocks if they are all written in a single long .tf file. As a DevOps engineer, you must produce reusable and comprehensive IaC code structure, and one of the tool that Terraform provides out of the box is **Modules**.
 
+Modules serve as containers that allow to logically group Terraform codes for similar resources in the same domain (e.g., Compute, Networking, AMI, etc.). One root module can call other child modules and insert their configurations when applying Terraform config. This concept makes your code structure neater, and it allows different team members to work on different parts of configuration at the same time.
+
+You can also create and publish your modules to Terraform Registry for others to use and use someone's modules in your projects.
+
+Module is just a collection of .tf and/or .tf.json files in a directory.
+
+You can refer to existing child modules from your root module by specifying them as a source, like this:
+
+      module "network" {
+        source = "./modules/network"
+      }
+
+Note that the path to 'network' module is set as relative to your working directory.
+
+Or you can also directly access resource outputs from the modules, like this:
+
+      resource "aws_elb" "example" {
+        # ...
+      
+        instances = module.servers.instance_ids
+      }
+In the example above, we will have to have module 'servers' to have output file to expose variables for this resource.
+
+## Refactor your project using Modules
+Take a look at our Project 17. You'll notice that we used a single, lengthy file to create all of our resources. However, this approach isn't ideal because it makes the codebase difficult to read and understand, and it can make future changes cumbersome and error-prone.
+
+## QUICK TASK:
+Break down your Terraform codes to have all resources in their respective modules. Combine resources of a similar type into directories within a 'modules' directory, for example, like this:
+
+      - modules
+        - ALB
+        - EFS
+        - RDS
+        - Autoscaling
+        - compute
+        - VPC
+        - security
+
+- ![11](https://github.com/user-attachments/assets/ebbaae4a-c5f0-4800-89d3-00ffb23c54a0)
+### Each module shall contain following files:
+
+      - main.tf (or %resource_name%.tf) file(s) with resources blocks
+      - outputs.tf (optional, if you need to refer outputs from any of these resources in your root module)
+      - variables.tf (as we learned before - it is a good practice not to hard code the values and use variables)
+
+It is also recommended to configure providers and backends sections in separate files.
+
+**NOTE**: It is not compulsory to use this naming convention.
+
+After you have given it a try, you can check out this https://github.com/darey-devops/PBL-project-18.git
+
+It is not compulsory to use this naming convention for guidiance or to fix your errors.
+
+In the configuration sample from the repository, you can observe two examples of referencing the module:
+
+a. Import module as a source and have access to its variables via var keyword:
+
+      module "VPC" {
+        source = "./modules/VPC"
+        region = var.region
+        ...
+
+b. Refer to a module's output by specifying the full path to the output variable by using module.%module_name%.%output_name% construction:
+
+    subnets-compute = module.network.public_subnets-1
+
+## Complete the Terraform configuration
+Complete the rest of the codes yourself, so, the resulted configuration structure in your working directory may look like this:
+
+       └── PBL
+           ├── modules
+           |   ├── ALB
+           |     ├── ... (module .tf files, e.g., main.tf, outputs.tf, variables.tf)
+           |   ├── EFS
+           |     ├── ... (module .tf files)
+           |   ├── RDS
+           |     ├── ... (module .tf files)
+           |   ├── autoscaling
+           |     ├── ... (module .tf files)
+           |   ├── compute
+           |     ├── ... (module .tf files)
+           |   ├── network
+           |     ├── ... (module .tf files)
+           |   ├── security
+           |     ├── ... (module .tf files)
+           ├── main.tf
+           ├── backends.tf
+           ├── providers.tf
+           ├── data.tf
+           ├── outputs.tf
+           ├── terraform.tfvars
+           └── variables.tf
 
 
+- ![Tree](https://github.com/user-attachments/assets/53e940e1-b5b1-4b4a-9fc4-02d018bcb5e0)
+  
+## Instantiating the Modules
 
+- ![initialising](https://github.com/user-attachments/assets/ee2d9dec-022a-4575-9788-b8f792ef24c4)
 
+## Validate your terraform codes
+You can make use of terraform validate to check your terraform codes for errors
+- ![Validate](https://github.com/user-attachments/assets/9a475297-4db9-4f91-8290-76e1ce9beab4)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## Run terraform plan
 
 
 
