@@ -356,8 +356,25 @@ You can make use of terraform validate to check your terraform codes for errors
 
 ## Run terraform plan
 
+- ![Applying1](https://github.com/user-attachments/assets/29d2b635-c4ca-4c86-81a0-05323d0ccfdf)
 
+- ![Planning2](https://github.com/user-attachments/assets/f2bde2e1-d859-4022-a348-b5a86c9a2e19)
 
+- ![Planning3](https://github.com/user-attachments/assets/2fc1cfca-9b65-49d1-a47b-1a3641c2f157)
+
+- ![Planning4](https://github.com/user-attachments/assets/6d08acd8-fce7-4684-a62e-3a5780b14408)
+
+- ![Planning5](https://github.com/user-attachments/assets/20f7db39-1b34-4b22-a731-2a09dcc20f1d)
+
+- ![Planning6](https://github.com/user-attachments/assets/e6551cd4-2c75-4c04-b05b-935093e77b56)
+
+- ![Planning7](https://github.com/user-attachments/assets/e684ae25-068e-48eb-bf25-2885fc2dcdeb)
+
+- ![Planning8](https://github.com/user-attachments/assets/28d57013-9845-451d-864a-afbe214cde30)
+
+- ![Planning9](https://github.com/user-attachments/assets/9b761ebe-62c3-4645-b27b-5d7d75fa770e)
+
+## Run terraform apply
 
 
 
