@@ -375,10 +375,54 @@ You can make use of terraform validate to check your terraform codes for errors
 - ![Planning9](https://github.com/user-attachments/assets/9b761ebe-62c3-4645-b27b-5d7d75fa770e)
 
 ## Run terraform apply
+- ![Creating1](https://github.com/user-attachments/assets/da44a7bb-b2af-4908-adf8-8cb1ece543f4)
+
+- ![Creating2](https://github.com/user-attachments/assets/acb8ef57-3df9-45ad-94cb-4c8a065103c6)
+
+- ![Creating3](https://github.com/user-attachments/assets/a5caf4cc-7387-4a82-88c5-5fa3148693a5)
+
+- ![applied](https://github.com/user-attachments/assets/1a1e0cea-f422-40c6-aa90-1a4359caa627)
+
+- ![Lauch template](https://github.com/user-attachments/assets/00176f45-00cc-4bbb-9c4d-ef6d29cde27b)
+
+- ![LoadBalancer](https://github.com/user-attachments/assets/3b19aa3d-3b7a-4d74-a7d7-d31902b95304)
+
+- ![Target Gro](https://github.com/user-attachments/assets/c70e2b40-50ef-4d28-827e-762da454ab1a)
+
+- ![Asg](https://github.com/user-attachments/assets/7ab6a138-439f-41c5-8cab-847cc72491c3)
+
+- ![Vpc](https://github.com/user-attachments/assets/6f58d0a9-ff4f-4ff6-a345-48efc253f698)
+
+- ![subneteee](https://github.com/user-attachments/assets/84de49b4-0f18-4350-b0d6-7a17da80d051)
+
+- ![Route taab](https://github.com/user-attachments/assets/7d95a32c-7a21-4ce2-aa89-63297471d4d6)
+
+- ![Igw](https://github.com/user-attachments/assets/cdcb6db3-2c13-4daa-b144-59cc8b29e2ff)
+
+- ![Accesspointt](https://github.com/user-attachments/assets/5a43019b-164a-4512-8da7-9372fbe73a34)
+
+- ![Inatance](https://github.com/user-attachments/assets/37083bb7-b6f4-4743-a55d-209a6d680d00)
 
 
+## Run terraform state list
 
+- ![statelist](https://github.com/user-attachments/assets/be0db9a1-366d-4aa8-909b-ada7d0d44dbb)
 
+Now, the code is much better organized, making it easier for our DevOps team members to read, edit, and reuse.
+
+BLOCKERS: Our website is currently unavailable because the userdata scripts added to the launch template lack the latest endpoints for EFS, ALB, and RDS. Additionally, our AMI is not properly configured. So, how do we address this?
+
+In the next project, Project 19, we will explore how to use Packer to create AMIs, Terraform to set up the infrastructure, and Ansible to configure it.
+
+We will also learn how to use Terraform Cloud for managing our backends.
+
+## Pro-tips:
+We can validate our code before running terraform plan using the terraform validate command. This will check if our code is syntactically correct and internally consistent.
+
+To ensure our configuration files are more readable and follow canonical formatting and style, we use the terraform fmt command. It applies Terraform language style conventions and formats our .tf files accordingly.
+
+## Conclusion
+We have successfully developed and refactored AWS Infrastructure as Code using Terraform.
 
 
 
