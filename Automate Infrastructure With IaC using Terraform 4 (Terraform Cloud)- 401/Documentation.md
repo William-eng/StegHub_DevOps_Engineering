@@ -134,6 +134,7 @@ Ensure to update Values with the correct ami name
     packer validate ubuntu.pkr.hcl
     packer validate web.pkr.hcl
 
+- ![packerfmt](https://github.com/user-attachments/assets/919ac00e-dd82-4a66-b762-fcc4b9a0d460)
 
 
 
