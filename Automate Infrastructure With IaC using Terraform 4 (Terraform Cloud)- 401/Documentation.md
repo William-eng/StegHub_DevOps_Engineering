@@ -136,19 +136,46 @@ Ensure to update Values with the correct ami name
 
 - ![packerfmt](https://github.com/user-attachments/assets/919ac00e-dd82-4a66-b762-fcc4b9a0d460)
 
+## Run the packer commands to build AMI for Bastion server, Nginx server and webserver
+## For Bastion
+
+           packer build bastion.pkr.hcl
+
+- ![bastion0](https://github.com/user-attachments/assets/106c94a8-20d3-44bb-a2e7-d4fde67e7196)
+- ![bastion1](https://github.com/user-attachments/assets/5383e594-6745-4c44-8b73-1d44c62bd77a)
+
+- ![bastion2](https://github.com/user-attachments/assets/3b3fb407-b169-4da9-ac8c-5903de5dd077)
+
+- ![bastion3](https://github.com/user-attachments/assets/d6094903-4da8-41e1-ac8d-ab9b522b24f6)
+
+- ![bastionpacker](https://github.com/user-attachments/assets/bb565426-acd3-46bf-ba80-e8b6c29606df)
 
 
+           
+
+## For Nginx
+
+           packer build nginx.pkr.hcl
 
 
+- ![packerNgnnix](https://github.com/user-attachments/assets/61d48528-9ec0-4585-a386-469424c8ae87)
+- ![ngnixpacker](https://github.com/user-attachments/assets/6369b82a-53be-4edb-a85b-09d71751ad70)
 
 
+## For Webservers
+
+     packer build web.pkr.hcl
+
+- ![wepacker1](https://github.com/user-attachments/assets/88240353-caea-4746-8066-2369eea04bba)
+- ![webserverpacker](https://github.com/user-attachments/assets/7655e584-8452-4d11-aa41-58e5ee49a648)
 
 
+## For Ubuntu (Jenkins, Artifactory and sonarqube Server)
 
+      packer build ubuntu.pkr.hcl
 
-
-
-
+- ![packerubuntu](https://github.com/user-attachments/assets/9b9c500c-66c9-4353-b27e-8a4da930cffb)
+- ![packerubuntu1](https://github.com/user-attachments/assets/cd96475d-a810-498d-9c4e-4129967780ab)
 
 
 
