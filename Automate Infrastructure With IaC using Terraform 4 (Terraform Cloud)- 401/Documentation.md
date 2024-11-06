@@ -177,18 +177,60 @@ Ensure to update Values with the correct ami name
 - ![packerubuntu](https://github.com/user-attachments/assets/9b9c500c-66c9-4353-b27e-8a4da930cffb)
 - ![packerubuntu1](https://github.com/user-attachments/assets/cd96475d-a810-498d-9c4e-4129967780ab)
 
+**The new AMI's from the packer build in the terraform script**
+- ![AMIs](https://github.com/user-attachments/assets/8034b35c-9299-47f1-8409-5ec3403a1e65)
+In the terraform director, update the terraform.auto.tfvars with the new AMIs IDs built with packer which terraform will use to provision Bastion, Nginx, Tooling and Wordpress server
 
+- ![tfvars](https://github.com/user-attachments/assets/8970b9bc-62db-4855-90b7-e924af3907ce)
 
+## 6. Run terraform plan and terraform apply from web console
+Switch to Runs tab and click on Queue plan manualy button.
 
+If planning has been successfull, you can proceed and confirm Apply - press Confirm and apply, provide a comment and Confirm plan
 
+- ![Screenshot from 2024-11-06 15-48-18](https://github.com/user-attachments/assets/22a498aa-0fbd-4de2-9b4d-4e9b94811a4c)
+- ![tttta](https://github.com/user-attachments/assets/4437aec5-e1d6-48ce-8de3-09637547d6f4)
+- ![tttapp](https://github.com/user-attachments/assets/4a4011f9-c8bd-44f7-ac1d-70dd76a11d2b)
 
+![targettt](https://github.com/user-attachments/assets/3f1a00f0-6941-4c02-b2b5-de2010c7040d)
 
+- ![lb](https://github.com/user-attachments/assets/5c1bee57-e264-423b-808c-ea418d7a1e2a)
 
+- ![kvpc](https://github.com/user-attachments/assets/6ef36aa4-4b49-4cfe-85b1-7cc45fb9d440)
 
+- ![ksubnet](https://github.com/user-attachments/assets/6cbf2337-108e-454c-9c13-b2c9bda7fa6d)
 
+- ![krtb](https://github.com/user-attachments/assets/5e4ba203-4bfa-47bc-be68-3cecb5e6fb02)
 
+- ![lauchtemp](https://github.com/user-attachments/assets/4cac9ba5-460a-4d1d-b681-24bff0ae6952)
 
+## 7. Test automated terraform plan
+By now, you have tried to launch plan and apply manually from Terraform Cloud web console. But since we have an integration with GitHub, the process can be triggered automatically. Try to change something in any of .tf files and look at Runs tab again - plan must be launched automatically, but to apply you still need to approve manually.
 
+Since provisioning of new Cloud resources might incur significant costs. Even though you can configure Auto apply, it is always a good idea to verify your plan results before pushing it to apply to avoid any misconfigurations that can cause 'bill shock'.
+
+Follow the steps below to set up automatic triggers for Terraform plans and apply operations using GitHub and Terraform Cloud:
+
+Configure a GitHub account as a Version Control System (VCS) provider in Terraform Cloud and follow steps
+Add a VCS provider
+
+Go to Version Control and click on Change source
+
+- ![Vcs1](https://github.com/user-attachments/assets/a8c8e6ee-ffd9-49ff-819b-f61572960791)
+
+Click on GitHub.com (Custom)
+
+Select the repository
+
+- ![VSC](https://github.com/user-attachments/assets/b84fcb2f-1524-4f7c-9ee1-85d281eda846)
+
+## Make a change to any Terraform configuration file (.tf file)
+Security group decription was edited in the variables.tf file and pushed to the repository on github that is linked to our Terraform Cloud workspace.
+
+Check Terraform Cloud
+Click on Runs tab in the Terraform Cloud workspace. Notice that a new plan has been automatically triggered as a result of the push.
+
+Note: First, try to approach this project on your own, but if you hit any blocker and could not move forward with the project, refer
 
 
 
