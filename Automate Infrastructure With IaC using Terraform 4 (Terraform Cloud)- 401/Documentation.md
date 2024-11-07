@@ -378,16 +378,29 @@ Alternatively, we can choose to export the token using environment varaiabel in 
 
 3. Create a configuration that uses the module.
 In your local machine, create a new directory for the Terraform configuration. Create a main.tf file to use the module. Then click on Copy configuration under Usage instructions and paste it into main.tf
+- ![initialised](https://github.com/user-attachments/assets/58655427-354a-4be7-a97b-fff0904299c0)
+
+ ### Create a workspace for the configuration, Select CLI-driven workflow Name the workspace s3-webapp-workspace
+- ![priv-workspace](https://github.com/user-attachments/assets/ac9e4d46-c965-4880-b2de-af62337840d4)
+Add the code block below to the terraform configuration file to setup the cloud integration.
+
+- ![newrepo](https://github.com/user-attachments/assets/e8035632-faf1-4134-a99d-f08e6cfd3527)
+
+- ![mainmodule](https://github.com/user-attachments/assets/f8c2a2db-dbe2-4929-9edb-fda53c7a8335)
+
+5. Deploy the infrastructure
+Run terraform apply to deploy the infrastructure.
+- ![createapply1](https://github.com/user-attachments/assets/597fe3c0-bd3e-494f-b900-60052b1d8140)
+- ![pla](https://github.com/user-attachments/assets/bb9a86b1-a253-4c86-be07-46c56ab751a1)
+
+- ![applied2](https://github.com/user-attachments/assets/6e042551-b322-4ecd-a613-c8214babf1b0)
+
+- ![bucket](https://github.com/user-attachments/assets/0de79165-c0f9-4572-b1b4-59682192d8ff)
 
 
+- ![destr1](https://github.com/user-attachments/assets/a189794f-82b2-45d0-9ba6-006cdbbb8056)
 
-
-
-
-
-
-
-
+- ![destr2](https://github.com/user-attachments/assets/d76d4845-2b98-4912-a858-a7d4d9b143d0)
 
 
 
