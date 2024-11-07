@@ -308,30 +308,76 @@ This will automatically apply after a successful plan
 
 Confirm notification has bben sent to the provided email address
 
+- ![emailnotification1](https://github.com/user-attachments/assets/70a13523-13a2-40ad-8957-1e3b73c98e76)
+- ![applyww](https://github.com/user-attachments/assets/d645b072-3a53-4ef9-965e-79ac7cf97939)
+
+Slack Notification:
+We will need to create a Webhook URL for the slack channel we want to send message to before creating the notification.
+
+Slack Notification Setup
+
+i. Visite https://api.slack.com/apps?new_app=1.
+
+ii. In the resulting popup, select Create an app > From scratch
+
+iii. Choose a name > select the workspace you would like to send your notifications > Create App
 
 
+- ![Screenshot from 2024-11-07 09-00-57](https://github.com/user-attachments/assets/f1ebc516-9100-48ed-a356-9240956466d3)
+
+iv. Click on install to <Selected slack workspace name> to install the Notification App
+
+v. Select Incoming Webhooks and copy the webhook URL.
+
+- ![slack-config](https://github.com/user-attachments/assets/df3ddbe5-a1d5-4513-82b6-baeb64360949)
 
 
+Now, let's create the slack notification (paste the webhook url)
 
+The bastion instance type was changed back to t3.small in order to test it
+- ![changes on bastion](https://github.com/user-attachments/assets/8e6a6ce1-60fb-480a-baa5-355bb40e59d2)
 
+- ![slacknotification](https://github.com/user-attachments/assets/5a83aa48-e937-47ab-8e58-98732d0ded8a)
 
+4. Apply destroy from Terraform Cloud web console.
 
+## Practice Task №2
+### Working with Private repository
+1. Create a simple Terraform repository (you can clone one from [here](https://github.com/hashicorp/learn-private-module-aws-s3-webapp)) that will be your module.
 
+- ![gitprreop](https://github.com/user-attachments/assets/456b9e21-1820-41fd-a220-c9a4e87674aa)
 
+Under the repository's tab, clicking on tag to create tag. click Create a new release and adding v1.0.0 to the tag version field setting the release title to First module release
 
+- ![taggithub](https://github.com/user-attachments/assets/1b151a84-2c6b-4794-9c2c-a7439e75b43c)
 
+2. Import the module into your private registry
+Go to Registery > Module > Add Module > select GitHub (Custom)
 
+- ![Screenshot from 2024-11-07 10-10-36](https://github.com/user-attachments/assets/fde63633-3a30-436e-bd88-f4390be01069)
 
+Click on configure credentials from here
+- ![Screenshot from 2024-11-07 10-12-53](https://github.com/user-attachments/assets/f56d76bf-c47a-423c-812a-9e29401476a1)
 
+Click on create an API toekn from here
 
+- ![TerToken](https://github.com/user-attachments/assets/5102beac-f923-4945-8fb9-ffb7ca57d741)
 
+Configure the token generated, in the Terraform CLI configuration file .terraformrc.
 
+        vim ~/.terraformrc
+Copy the credentials block below and paste it into the .terraformrc file. Ensure to replace the value of the token argument with the API token created.
 
+       credentials "app.terraform.io" {
+         # valid user API token
+         token = "xxxxxxxxx.atlasv1.zzzzzzzzzzzzzzzzz"
+       }
+Alternatively, we can choose to export the token using environment varaiabel in the CLI
 
+              export TERRAFORM_CLOUD_TOKEN="xxxxxxxxx.atlasv1.zzzzzzzzzzzzzzzzz"
 
-
-
-
+3. Create a configuration that uses the module.
+In your local machine, create a new directory for the Terraform configuration. Create a main.tf file to use the module. Then click on Copy configuration under Usage instructions and paste it into main.tf
 
 
 
