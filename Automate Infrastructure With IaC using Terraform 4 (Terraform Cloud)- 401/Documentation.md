@@ -234,41 +234,79 @@ Note: First, try to approach this project on your own, but if you hit any blocke
 
 
 
+## Configuring The Infrastructure With Ansible
+
+- After a successful execution of terraform apply, connect to the bastion server through ssh-agent to run ansible against the infrastructure.
+Run this commands to forward the ssh private key to the bastion server.
+
+          eval `ssh-agent -s`
+          ssh-add <private-key.pem>
+          ssh-add -l
+Update the nginx.conf.j2 file to input the internal load balancer dns name generated.
+
+- ![iloadbal](https://github.com/user-attachments/assets/7df016cb-e139-49d0-922c-96e3201f1a0e)
+
+Update the RDS endpoints, Database name, password and username in the setup-db.yml file for both the tooling and wordpress role.
+**For Tooling**
+- ![toolingdb](https://github.com/user-attachments/assets/9f8d194c-ca4b-45fb-914e-34e951fbbb9f)
+
+**For Wordpress**
+- ![wordpressdb](https://github.com/user-attachments/assets/a068b8c9-547e-4324-b7be-7347bf6c7515)
+
+Update the _EFS_ _Access point ID_ for both the _wordpress_ and _tooling_ role in the **main.yml**
+
+**For Tooling**
+- ![toolingefs](https://github.com/user-attachments/assets/2fb9824f-61fa-4a21-84de-f90cd8b9b4c7)
+
+**For Wordpress**
+
+- ![wordacess](https://github.com/user-attachments/assets/bcd7a4d5-696f-4425-b9b6-0a07b0012c16)
+
+- Access the bastion server with ssh agent
+
+       ssh -A ec2-user@<bastion-pub-ip>
+
+  Confirm ansible is installed on bastion server
+
+- ![ansibletsest](https://github.com/user-attachments/assets/d44ffdd6-98c9-46c8-9da6-9ec339c3d66f)
+
+- Verify the inventory
+
+      ansible-inventory -i inventory/aws_ec2.yml/ --graph
 
 
+- ![Ansible host](https://github.com/user-attachments/assets/b2b308e9-f407-4b94-a1e7-1271d73bafdf)
 
+Export the environment variable ANSIBLE_CONFIG to point to the ansible.cfg from the repo and run the ansible-playbook command:
 
+     export ANSIBLE_CONFIG=/home/ec2-user/terraform-cloud/ansible/roles/ansible.cfg
+     
+     ansible-playbook -i inventory/aws_ec2.yml playbook/site.yml
 
+## Practice Task №1
+1. Configure 3 branches in the terraform-cloud repository for dev, test, prod environments
+- ![diffbranch](https://github.com/user-attachments/assets/b7852a64-46fb-47ae-a3d8-6ffc2c01d0f0)
 
+2. Make necessary configuration to trigger runs automatically only for dev environment
+- Create a workspace each for the 3 environments (i.e, dev, test, prod).
 
+- ![branches](https://github.com/user-attachments/assets/0487a694-6fb9-4ae8-8b1f-29514f6c1592)
+  
+- Configure Auto-Apply for dev workspace to trigger runs automatically
+- Go to the dev workspace in Terraform Cloud > Navigate to Settings > Vsersion Control > Check boxes for Auto Apply
 
+- ![other-workspace](https://github.com/user-attachments/assets/1d818633-1444-4a06-944b-e0adabfd6e07)
 
+3. Create an Email and Slack notifications for certain events (e.g. started plan or errored run) and test it.
+Email Notification: In the dev workspace, Go to Settings > Notifications > Add a new notification
 
+- ![devemailnotification](https://github.com/user-attachments/assets/b1665a5a-25bc-4a6e-ac8d-cafc2d690bbd)
 
+The bastion instance type was changed to t3.small in order to test it
 
+This will automatically apply after a successful plan
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Confirm notification has bben sent to the provided email address
 
 
 
