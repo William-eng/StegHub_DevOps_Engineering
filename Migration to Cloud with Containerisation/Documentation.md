@@ -131,48 +131,103 @@ If you see a warning like below, it is acceptable to ignore:
 
 - ![dockernewuser](https://github.com/user-attachments/assets/994160ab-30fb-45b4-aff0-633d71a0fafc)
 
+## Connecting to the MySQL server from a second container running the MySQL client utility
+The good thing about this approach is that you do not have to install any client tool on your laptop, and you do not need to connect directly to the container running the MySQL server.
+
+Run the MySQL Client Container:
+
+        docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u <user-created-from-the-SQL-script> -p
+
+Flags used:
+
+- --name gives the container a name
+- -it runs in interactive mode and Allocate a pseudo-TTY
+- --rm automatically removes the container when it exits
+- --network connects a container to a network
+- -h a MySQL flag specifying the MySQL server Container hostname
+- -u user created from the SQL script
+- -p password specified for the user created from the SQL script
+
+- ![connectAppDOcker](https://github.com/user-attachments/assets/77898c16-f481-4483-8459-f95b096629c5)
+
+## Prepare database schema
+Now you need to prepare a database schema so that the Tooling application can connect to it.
+
+1. Clone the Tooling-app repository from [here](https://github.com/StegTechHub/tooling-02.git)
+
+         git clone https://github.com/StegTechHub/tooling-02.git
+
+2. On your terminal, export the location of the SQL file
+   
+        export tooling_db_schema=<path-to-tooling-schema-tile>/tooling_db_schema.sql
+
+3. Use the SQL script to create the database and prepare the schema. With the docker exec command, you can execute a command in a running container.
+
+        docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < $tooling_db_schema
+
+- ![setup1](https://github.com/user-attachments/assets/fce0f8b8-d7b1-444e-8d89-eeef930e734c)
+
+4. Update the db_conn.php file with connection details to the database
+
+        $servername = "mysqlserverhost";
+        $username = "<user>";
+        $password = "<client-secret-password>";
+        $dbname = "toolingdb";
+
+- ![db_php](https://github.com/user-attachments/assets/4e2783d4-3b2a-4509-96da-87e744e37d61)
+
+- Create a .env file in tooling-02/html/.env with connection details to the database.
+
+        MYSQL_IP=mysqlserverhost
+        MYSQL_USER=<username>
+        MYSQL_PASS=<client-secrete-password>
+        MYSQL_DBNAME=toolingdb
+
+- ![Screenshot from 2024-11-08 21-30-13](https://github.com/user-attachments/assets/42bb00c0-dc52-4464-80e1-973e448e3b22)
+
+Flags used:
+
+- MYSQL_IP: mysql ip address "leave as mysqlserverhost"
+- MYSQL_USER: mysql username for user exported as environment variable
+- MYSQL_PASS: mysql password for the user exported as environment varaible
+- MYSQL_DBNAME: mysql databse name "toolingdb"
 
 
+5. Run the Tooling App
+_Containerization_ of an application starts with creation of a file with a special name - _Dockerfile_ (without any extensions). This can be considered as a 'recipe' or 'instruction' that tells Docker how to pack your application into a container. In this project, we will build our container from a pre-created _Dockerfile_, but as a _DevOps_, we must also be able to write _Dockerfiles_.
 
+You can watch this [video](https://www.youtube.com/watch?v=hnxI-K10auY) to get an idea how to create your Dockerfile and build a container from it.
 
+And on this [page](https://docs.docker.com/build/building/best-practices/), you can find official Docker best practices for writing Dockerfiles.
 
+So, let us _containerize_ our _Tooling application_; here is the plan:
 
+- Make sure you have checked out your Tooling repo to your machine with Docker engine
+- First, we need to build the Docker image the tooling app will use. The Tooling repo you cloned above has a Dockerfile for this purpose. Explore it and make sure you understand the code inside it.
+- Run _docker build_ command
+- Launch the container with _docker run_
+- Try to access your application via port exposed from a container
+  
+**Let us begin**:
 
+Ensure you are inside the folder that has the Dockerfile and build your container:
 
+        docker build -t tooling:0.0.1 .
 
+In the above command, we specify a parameter -t, so that the image can be tagged tooling"0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the _Dockerfile_ in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the _Dockerfile_.
+- ![dockerbuild01](https://github.com/user-attachments/assets/c7149f86-6e9d-4649-b9c1-b8299d34e714)
 
+- ![dockerbulid02](https://github.com/user-attachments/assets/a8e728e2-9b26-4a06-ae78-492db76e88d1)
 
+6. Run the container:
 
+        docker run --network tooling_app_network -p 8085:80 -it tooling:0.0.1
+Let us observe those flags in the command.
 
+We need to specify the --network flag so that both the Tooling app and the database can easily connect on the same virtual network we created earlier.
+The -p flag is used to map the container port with the host port. Within the container, apache is the webserver running and, by default, it listens on port 80. You can confirm this with the CMD ["start-apache"] section of the Dockerfile. But we cannot directly use port 80 on our host machine because it is already in use. The workaround is to use another port that is not used by the host machine. In our case, port 8085 is free, so we can map that to port 80 running in the container.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![dockerRun](https://github.com/user-attachments/assets/cdcc19ac-d921-408d-9449-f42676915dd7)
 
 
 
