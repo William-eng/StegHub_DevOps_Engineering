@@ -272,11 +272,14 @@ The default email is _test@gmail.com_, the password is _12345_ or you can check 
 - ![databaseTooling](https://github.com/user-attachments/assets/0f2bcbcf-2d14-415f-8524-b59c78cb4d57)
 
 
+## Practice Task №1 - Implement a POC to migrate the PHP-Todo app into a containerized application.
+
+Download php-todo repository from [here](https://github.com/StegTechHub/php-todo)
+- ![step01](https://github.com/user-attachments/assets/1b2711d3-8571-4133-9ede-11611da00171)
 
 
-
-
-
+1. Write a Dockerfile for the TODO app
+Dokerfile
 
 
 
