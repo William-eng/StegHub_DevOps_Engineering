@@ -222,6 +222,7 @@ In the above command, we specify a parameter -t, so that the image can be tagged
 6. Run the container:
 
         docker run --network tooling_app_network -p 8085:80 -it tooling:0.0.1
+   
 Let us observe those flags in the command.
 
 We need to specify the --network flag so that both the Tooling app and the database can easily connect on the same virtual network we created earlier.
@@ -229,10 +230,46 @@ The -p flag is used to map the container port with the host port. Within the con
 
 - ![dockerRun](https://github.com/user-attachments/assets/cdcc19ac-d921-408d-9449-f42676915dd7)
 
+**Note**: _You will get an error. But you must troubleshoot this error and fix it. Below is your error message_.
+
+        AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.18.0.3. Set the 'ServerName' directive globally to suppress this message
+**Hint**: _You must have faced this error in some of the past projects. It is time to begin to put your skills to good use. Simply do a google search of the error message, and figure out where to update the configuration file to get the error out of your way_.
+
+If everything works, you can open the browser and type http://localhost:8085
 
 
+## Troubleshooting
+Using the ENV instruction in the Dockerfile like this:
+
+        ENV MYSQL_IP=$MYSQL_IP // your running mysql container
+        ENV MYSQL_USER=$MYSQL_USER
+        ENV MYSQL_PASS=$MYSQL_PASS
+        ENV MYSQL_DBNAME=$MYSQL_DBNAME
+did not work as intended for dynamically injecting values from .env file at build time. Here’s why:
+
+Build-Time Context: When Docker builds an image, it does not have access to environment variables from the host system or any .env file unless you explicitly pass them in. The variables $MYSQL_IP, $MYSQL_USER, $MYSQL_PASS, and $MYSQL_DBNAME will not be replaced with values from a .env file or the host environment because Docker does not interpret these at build time.
+
+Result of Current ENV Usage: As a result, when we use ENV like ENV MYSQL_IP=$MYSQL_IP, Docker interprets this as setting the environment variable MYSQL_IP to an empty string unless those variables are explicitly passed to Docker at build time using the --build-arg option.
+
+To dynamically pass environment variables from a .env file or shell environment, consider this approache:
+
+### Using --env-file for Runtime Variables
+For runtime environment variables, you should pass them when running the container, not at build time. This allows for more flexibility and keeps Docker images more environment-agnostic and is generally the preferred approach for configuration.
 
 
+Let's Run the container again adding --env-file .env
+
+        docker run --network tooling_app_network --env-file <.env-path> -p 8085:80 -it tooling:0.0.1
+        
+You will see the login page.
+
+
+The default email is _test@gmail.com_, the password is _12345_ or you can check users' credentials stored in the toolingdb.user table.
+
+- ![phpsite](https://github.com/user-attachments/assets/1f4140f8-588e-42d8-838e-ac0e63278045)
+
+
+- ![databaseTooling](https://github.com/user-attachments/assets/0f2bcbcf-2d14-415f-8524-b59c78cb4d57)
 
 
 
