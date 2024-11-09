@@ -212,7 +212,7 @@ So, let us _containerize_ our _Tooling application_; here is the plan:
 
 Ensure you are inside the folder that has the Dockerfile and build your container:
 
-        docker build -t tooling:0.0.1 .
+        docker build -t php-app .
 
 In the above command, we specify a parameter -t, so that the image can be tagged tooling"0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the _Dockerfile_ in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the _Dockerfile_.
 - ![dockerbuild01](https://github.com/user-attachments/assets/c7149f86-6e9d-4649-b9c1-b8299d34e714)
@@ -221,7 +221,7 @@ In the above command, we specify a parameter -t, so that the image can be tagged
 
 6. Run the container:
 
-        docker run --network tooling_app_network -p 8085:80 -it tooling:0.0.1
+        docker run --network tooling_app_network -p 8085:80 -it php-app
    
 Let us observe those flags in the command.
 
@@ -280,25 +280,61 @@ Download php-todo repository from [here](https://github.com/StegTechHub/php-todo
 
 1. Write a Dockerfile for the TODO app
 Dokerfile
+- ![docker file](https://github.com/user-attachments/assets/f2ff2dca-e044-4213-828a-73c93429884c)
+
+**Run todo app**
+
+Build the todo app
+
+        docker build -t php-todo:0.0.1 .
+
+- ![dockerlaravel](https://github.com/user-attachments/assets/4cd8babd-d0b6-4cf6-bcaf-709103ef6f4b)
+
+2. Run both database and app on your laptop Docker Engine
+Run database container
+
+            docker run --network tooling_app_network -h mysqlserverhost --name=mysql-server -e MYSQL_ROOT_PASSWORD=$MYSQL_PW  -d mysql/mysql-server:latest
+Create a script create_user.sql to create database and user
+
+Create database and user using the script
+
+            docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < ./create_user.sql
+- ![userSQL](https://github.com/user-attachments/assets/7654b51a-1bb8-4a7f-a567-e93dedac2770)
 
 
+        docker run --network tooling_app_network --rm --name php-todo --env-file .env -p 8090:8000 -it php-todo:0.0.1
+
+- ![dockerrumlaravel](https://github.com/user-attachments/assets/efc71bea-0952-4d39-98c1-d816cdfa2b74)
+
+3. Access the application from the browser
+- ![phplocalhost](https://github.com/user-attachments/assets/15b0581c-bbc6-4493-8bcb-aab6824304c7)
+
+### Part 2
+1. Create an account in [Docker Hub](https://hub.docker.com/)
+
+- ![dockerhub accnt](https://github.com/user-attachments/assets/fee435df-eec0-4de7-9a05-41d5c1f9331f)
+
+2. Create a new Docker Hub repository
+- ![php-todo-dockerhub](https://github.com/user-attachments/assets/afa73464-8e73-4b3c-9a30-d2b77ac5d622)
+
+3. Push the docker images from your PC to the repository
+- Sign in to docker and tag the docker image
+
+        docker login
+        
+        docker tag php-app willywan/php-todo-app:0.0.1
+- ![dockerLogin](https://github.com/user-attachments/assets/c8a3f476-b074-4b5d-b501-fc9f61a665c2)
+
+- Push the docker image to the repository created
+
+            docker push willywan/php-todo-app:0.0.1
 
 
+  - ![dockerpush](https://github.com/user-attachments/assets/2f903f87-900b-481e-84fc-bb2c39a1eb18)
+- ![dockpage](https://github.com/user-attachments/assets/2534736b-3501-48da-bfd0-7f43aed575f5)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### Part 3
+1. Write a Jenkinsfile that will simulate a Docker Build and a Docker Push to the registry
 
 
 
