@@ -337,31 +337,129 @@ Create database and user using the script
 1. Write a Jenkinsfile that will simulate a Docker Build and a Docker Push to the registry
 
 
+                        pipeline {
+                            agent any
+                        
+                            environment {
+                                DOCKER_REGISTRY = "docker.io"
+                                DOCKER_IMAGE = "willywan/php-todo-app"
+                            }
+                        
+                            stages {
+                                stage("Initial cleanup") {
+                                    steps {
+                                        dir("${WORKSPACE}") {
+                                            deleteDir()
+                                        }
+                                    }
+                                }
+                        
+                                stage('Checkout') {
+                                    steps {
+                                        checkout scm
+                                    }
+                                }
+                        
+                                stage('Build Docker Image') {
+                                    steps {
+                                        script {
+                                            def branchName = env.BRANCH_NAME
+                                            // Define tagName outside the script block for reuse
+                                            env.TAG_NAME = branchName == 'main' ? 'latest' : "${branchName}-0.0.${env.BUILD_NUMBER}"
+                        
+                                            // Build Docker image
+                                            sh """
+                                            docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.TAG_NAME} .
+                                            """
+                                        }
+                                    }
+                                }
+                        
+                                stage('Push Docker Image') {
+                                    steps {
+                                        script {
+                                            // Use Jenkins credentials to login to Docker and push the image
+                                            withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                                                sh """
+                                                echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin ${DOCKER_REGISTRY}
+                                                docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.TAG_NAME}
+                                                """
+                                            }
+                                        }
+                                    }
+                                }
+                        
+                                stage('Cleanup Docker Images') {
+                                    steps {
+                                        script {
+                                            // Clean up Docker images to save space
+                                            sh """
+                                            docker rmi ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.TAG_NAME} || true
+                                            """
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+
+- Launch ec2 instance for jenkins
+
+- ![Jenkins-Server](https://github.com/user-attachments/assets/1a8ce4a3-984f-4a93-9fff-bbc73258f794)
+
+2. Install docker on jenkins server
+- Set up Docker's apt repository.
+
+                # Add Docker's official GPG key:
+                sudo apt-get update
+                
+                sudo apt-get install ca-certificates curl
+                
+                sudo install -m 0755 -d /etc/apt/keyrings
+                
+                sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+                
+                sudo chmod a+r /etc/apt/keyrings/docker.asc
+                
+                # Add the repository to Apt sources:
+                echo \
+                  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+                  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+                  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                
+                sudo apt-get update
+                
+                sudo systemctl start docker
+                sudo systemctl enable docker
 
 
 
+3. Install docker plugins
+- Go to Manage Jenkins > Manage Plugins > Available.
+- Search for Docker Pipeline and install it.
+
+- ![dockerplugin](https://github.com/user-attachments/assets/b6dc5e04-7478-4fcc-92f3-4748134b6489)
 
 
+4. Add Docker credentials to Jenkins.
+- Go to Jenkins Dashboard > Manage Jenkins > Credentials. Add your Docker username and password and the credential ID (from jenkinsfile) there.
+
+- ![dockercred](https://github.com/user-attachments/assets/ebb019f9-5d2c-4734-90ea-d8709f21773a)
+- Go to Manage Jenkins > Tools, Scroll to Docker installations
 
 
+5. Connect your repo to Jenkins
+- Add a webhook to the github repo
 
+- ![wehhook](https://github.com/user-attachments/assets/14d3867c-578a-4b88-a6ad-83311cf906d8)
 
+- Install Blue Ocean plugin and Open it from dashboard
+- Select create New pipeline
+- Select Github and your Github account
+- Select the repo for the pipeline
+- Select create pipeline
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![pipeline](https://github.com/user-attachments/assets/0ced67c1-fc63-4b30-b1f2-cea3ec3ad0bd)
 
 
 
