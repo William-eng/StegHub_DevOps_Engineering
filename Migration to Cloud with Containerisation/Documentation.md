@@ -542,25 +542,49 @@ Let us fill up the entire file and test our application:
 
 - Run the command to start the containers
 
-        docker compose -f tooling.yaml  up -d
+        docker compose -f tooling.yml  up -d
+
+
+- ![dockcompoupd](https://github.com/user-attachments/assets/eda20e67-6988-4871-88bd-f786f343f1b3)
+
+- ![pageshow](https://github.com/user-attachments/assets/0a614375-d8d9-4735-8952-874e0992ebde)
+
+- ![runningps](https://github.com/user-attachments/assets/10f848b2-1d91-4048-9557-9a5de5f462b5)
+
+Verify that the compose is in the running status:
+
+        docker compose ls
+
+
+- ![Screenshot from 2024-11-11 00-44-58](https://github.com/user-attachments/assets/177dc628-fd21-4ead-8488-234c13ebda45)
+
+## Practice Task №2 - Complete Continous Integration With A Test Stage
+
+1. Document your understanding of all the fields specified in the Docker Compose file tooling.yaml
+The provided Docker Compose file defines two services: tooling_frontend and db. The tooling_frontend service builds its image from the current directory (.), maps port 5001 on the host to port 80 inside the container, and mounts a volume (tooling_frontend) to persist data at /var/www/html. It also links to the db service and connects to the custom network dbnet. The db service uses the official mysql:5.7 image, with environment variables to set up a MySQL database (tooling), user (Willie), and root password (Password123). The db service also mounts a volume (db) to persist MySQL data at /var/lib/mysql and is part of the dbnet network.
+
+The file specifies that the tooling_frontend depends on the db service, which is set up to restart automatically if it fails. Both services are placed in a custom bridge network (dbnet), allowing them to communicate using their service names. The named volumes tooling_frontend and db ensure that data persists across container restarts. The db container is configured with a random root password, but it uses a fixed password (Password123) for simplicity.
+
+Overall, this configuration sets up a frontend service with a persistent volume for web content and a MySQL database with a persistent volume for database storage. It also defines network communication between the two services using a custom bridge network. The services are linked to ensure proper communication, and automatic restarts are enabled for the database service. The use of environment variables helps initialize MySQL with necessary settings, and named volumes ensure data persistence across container restarts.
+
+2. Update your Jenkinsfile with a test stage before pushing the image to the registry.
+See repository [here](https://github.com/William-eng/tooling)
+3. What you will be testing here is to ensure that the tooling site http endpoint is able to return status code 200. Any other code will be determined a stage failure.
+- ![tooling ran](https://github.com/user-attachments/assets/f5aea01a-346d-43bf-af8d-240d57b9405d)
+
+.4.  Implement a similar pipeline for the PHP-todo app.
+
+- ![Screenshot from 2024-11-11 01-25-24](https://github.com/user-attachments/assets/ded399d1-0bf3-4a34-9f24-d43b503e950c)
 
 
 
+5. Ensure that both pipelines have a clean-up stage where all the images are deleted on the Jenkins server.
+Confirm the tooling site image in the registry
+- ![tooling image](https://github.com/user-attachments/assets/9f133ee9-7bf2-4973-a5a4-511f418df45f)
+## Conclusion
+We have migrated our application running on virtual machines into the Cloud with containerization.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+In the next project, we will expand our skills further into more advanced use cases and technologies.
 
 
 
