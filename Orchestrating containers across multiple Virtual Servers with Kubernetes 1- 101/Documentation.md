@@ -266,20 +266,10 @@ As we already know, we need some machines to run the control plane and the worke
    
 **Output:**
 
--------------------------------------------------
-|              AssociateRouteTable              |
-+----------------+------------------------------+
-|  AssociationId |  rtbassoc-060acb5d6ab6e83d1  |
-+----------------+------------------------------+
-||              AssociationState               ||
-|+----------------+----------------------------+|
-||  State         |  associated                ||
-|+----------------+----------------------------+|
---------------------
-|    CreateRoute   |
-+---------+--------+
-|  Return |  True  |
-+---------+--------+
+
+- ![A](https://github.com/user-attachments/assets/4a03bf6e-01ea-4070-88d8-f69e0ac8a74b)
+
+
 
 **Security Groups**
 
@@ -307,22 +297,8 @@ As we already know, we need some machines to run the control plane and the worke
 
 **output**:
 
-                  ----------------------------------------------------
-|           AuthorizeSecurityGroupIngress          |
-+---------------------------+----------------------+
-|  Return                   |  True                |
-+---------------------------+----------------------+
-||               SecurityGroupRules               ||
-|+----------------------+-------------------------+|
-||  CidrIpv4            |  172.31.0.0/24          ||
-||  FromPort            |  2379                   ||
-||  GroupId             |  sg-07995a7b33a618e3b   ||
-||  GroupOwnerId        |  430118841581           ||
-||  IpProtocol          |  tcp                    ||
-||  IsEgress            |  False                  ||
-||  SecurityGroupRuleId |  sgr-0c29fa914d4805c74  ||
-||  ToPort              |  2380                   ||
-|+----------------------+-------------------------+|
+- ![B](https://github.com/user-attachments/assets/115379e8-1a9f-4a79-8456-057727925cd3)
+
 
                   
                   # # Create Inbound traffic for all communication within the subnet to connect on ports used by the worker nodes
@@ -331,22 +307,8 @@ As we already know, we need some machines to run the control plane and the worke
                       --ip-permissions IpProtocol=tcp,FromPort=30000,ToPort=32767,IpRanges='[{CidrIp=172.31.0.0/24}]'
 **output:**
 
-----------------------------------------------------
-|           AuthorizeSecurityGroupIngress          |
-+---------------------------+----------------------+
-|  Return                   |  True                |
-+---------------------------+----------------------+
-||               SecurityGroupRules               ||
-|+----------------------+-------------------------+|
-||  CidrIpv4            |  172.31.0.0/24          ||
-||  FromPort            |  30000                  ||
-||  GroupId             |  sg-07995a7b33a618e3b   ||
-||  GroupOwnerId        |  430118841581           ||
-||  IpProtocol          |  tcp                    ||
-||  IsEgress            |  False                  ||
-||  SecurityGroupRuleId |  sgr-0533c8baef6eccb62  ||
-||  ToPort              |  32767                  ||
-|+----------------------+-------------------------+|
+- ![C](https://github.com/user-attachments/assets/c960f4d9-6383-4fa7-a481-ff19ab72cda5)
+
                   
                   # Create inbound traffic to allow connections to the Kubernetes API Server listening on port 6443
                   aws ec2 authorize-security-group-ingress \
@@ -356,22 +318,8 @@ As we already know, we need some machines to run the control plane and the worke
                     --cidr 0.0.0.0/0
 
 **outputs:**
-----------------------------------------------------
-|           AuthorizeSecurityGroupIngress          |
-+---------------------------+----------------------+
-|  Return                   |  True                |
-+---------------------------+----------------------+
-||               SecurityGroupRules               ||
-|+----------------------+-------------------------+|
-||  CidrIpv4            |  0.0.0.0/0              ||
-||  FromPort            |  6443                   ||
-||  GroupId             |  sg-07995a7b33a618e3b   ||
-||  GroupOwnerId        |  430118841581           ||
-||  IpProtocol          |  tcp                    ||
-||  IsEgress            |  False                  ||
-||  SecurityGroupRuleId |  sgr-04bca28441be77db8  ||
-||  ToPort              |  6443                   ||
-|+----------------------+-------------------------+|
+- ![D](https://github.com/user-attachments/assets/f300400f-93a5-4fb4-bc00-5b61090adc10)
+
                   
                   # Create Inbound traffic for SSH from anywhere (Do not do this in production. Limit access ONLY to IPs or CIDR that MUST connect)
                   aws ec2 authorize-security-group-ingress \
@@ -381,22 +329,8 @@ As we already know, we need some machines to run the control plane and the worke
                     --cidr 0.0.0.0/0
 
 **output:**
-----------------------------------------------------
-|           AuthorizeSecurityGroupIngress          |
-+---------------------------+----------------------+
-|  Return                   |  True                |
-+---------------------------+----------------------+
-||               SecurityGroupRules               ||
-|+----------------------+-------------------------+|
-||  CidrIpv4            |  0.0.0.0/0              ||
-||  FromPort            |  22                     ||
-||  GroupId             |  sg-07995a7b33a618e3b   ||
-||  GroupOwnerId        |  430118841581           ||
-||  IpProtocol          |  tcp                    ||
-||  IsEgress            |  False                  ||
-||  SecurityGroupRuleId |  sgr-06ed1ddf978b55fa7  ||
-||  ToPort              |  22                     ||
-|+----------------------+-------------------------+|
+- ![E](https://github.com/user-attachments/assets/b46782c1-e744-4636-8cea-fb2b1676c886)
+
                   
                   # Create ICMP ingress for all types
                   aws ec2 authorize-security-group-ingress \
@@ -405,46 +339,65 @@ As we already know, we need some machines to run the control plane and the worke
                     --port -1 \
                     --cidr 0.0.0.0/0
 **output:**
-----------------------------------------------------
-|           AuthorizeSecurityGroupIngress          |
-+---------------------------+----------------------+
-|  Return                   |  True                |
-+---------------------------+----------------------+
-||               SecurityGroupRules               ||
-|+----------------------+-------------------------+|
-||  CidrIpv4            |  0.0.0.0/0              ||
-||  FromPort            |  -1                     ||
-||  GroupId             |  sg-07995a7b33a618e3b   ||
-||  GroupOwnerId        |  430118841581           ||
-||  IpProtocol          |  icmp                   ||
-||  IsEgress            |  False                  ||
-||  SecurityGroupRuleId |  sgr-0779b92aa9cae035d  ||
-||  ToPort              |  -1                     ||
+- ![F](https://github.com/user-attachments/assets/d6aa0010-8502-4211-8d0c-b07a154daf97)
+
+**Network Load Balancer**
+
+11. Create a network Load balancer,
+
+            LOAD_BALANCER_ARN=$(aws elbv2 create-load-balancer \
+              --name ${NAME} \
+              --subnets ${SUBNET_ID} \
+              --scheme internet-facing \
+              --type network \
+              --output text --query 'LoadBalancers[].LoadBalancerArn')
+
+- ![k8s-lb](https://github.com/user-attachments/assets/d612c35f-d031-4f09-a18d-c6ba6bbab33b)
+
+**Tagret Group**
+
+12. Create a target group: (For now it will be unhealthy because there are no real targets yet.)
+
+            TARGET_GROUP_ARN=$(aws elbv2 create-target-group \
+              --name ${NAME} \
+              --protocol TCP \
+              --port 6443 \
+              --vpc-id ${VPC_ID} \
+              --target-type ip \
+              --output text --query 'TargetGroups[].TargetGroupArn')
+
+- ![k8s-tG](https://github.com/user-attachments/assets/fd6b30e9-cacc-4a4d-91e3-156019e7c352)
+
+13. Register targets: (Just like above, no real targets. You will just put the IP addresses so that, when the nodes become available, they will be used as targets.)
+
+            aws elbv2 register-targets \
+              --target-group-arn ${TARGET_GROUP_ARN} \
+              --targets Id=172.31.0.1{0,1,2}
+
+- ![assignedtarget](https://github.com/user-attachments/assets/3906c8f7-df97-4049-a569-60c5c6ae00b1)
+
+14. Create a listener to listen for requests and forward to the target nodes on TCP port 6443
+
+            aws elbv2 create-listener \
+              --load-balancer-arn ${LOAD_BALANCER_ARN} \
+              --protocol TCP \
+              --port 6443 \
+              --default-actions Type=forward,TargetGroupArn=${TARGET_GROUP_ARN} \
+              --output text --query 'Listeners[].ListenerArn'
 
 
+- ![LB-listener](https://github.com/user-attachments/assets/b1ac5524-9b3d-4c0e-b9fc-ea35d3077221)
+  
+**K8s Public Address**
+
+15. Get the Kubernetes Public address
+
+            KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
+              --load-balancer-arns ${LOAD_BALANCER_ARN} \
+              --output text --query 'LoadBalancers[].DNSName')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![LB-Listener](https://github.com/user-attachments/assets/472c2895-3b25-4ddd-a5d2-7c8eaa230328)
 
 
 
