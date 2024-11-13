@@ -2267,6 +2267,7 @@ In Kubernetes, the _kubelet_ process on a worker node configures each pod. Part 
 - ![Image18](https://github.com/user-attachments/assets/b1f2bf39-685f-49a5-8408-c4501a96329f)
 
 - Now you should have the worker nodes joined to the cluster, and in a READY state.
+- ![Image19](https://github.com/user-attachments/assets/7e67936e-b5ef-4746-b776-c51837907142)
 
 
 ### Troubleshooting Tips: If you have issues at this point. Consider the below:
