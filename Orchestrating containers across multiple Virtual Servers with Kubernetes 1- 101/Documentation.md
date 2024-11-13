@@ -1812,6 +1812,525 @@ The following components will be installed on each node:
 
 - ![OS dependencies](https://github.com/user-attachments/assets/5848d2eb-47e3-4d10-8cd7-1c6d8fcca537)
 
+**More about the dependencies:**
+
+- [socat](https://www.redhat.com/sysadmin/getting-started-socat). Socat is the default implementation for Kubernetes port-forwarding when using dockershim for the kubelet runtime. You will get to experience port-forwarding with Kubernetes in the next project. But what is **Dockershim**?
+  
+- _Dockershim_ was a temporary solution proposed by the Kubernetes community to add support for Docker so that it could serve as its container runtime. You should always remember that Kubernetes can use different container runtime to run containers inside its **pods**. For many years, Docker has been adopted widely and has been used as the container runtime for kubernetes. Hence the implementation that allowed docker is called the **Dockershim**. If you check the [source code of Dockershim](https://github.com/kubernetes/kubernetes/blob/770d3f181c5d7ed100d1ba43760a74093fc9d9ef/pkg/kubelet/dockershim/docker_streaming_others.go#L42), you will see that **socat** was used to implement the port-forwarding functionality.
+
+- _conntrack_ Connection tracking (“conntrack”) is a core feature of the Linux kernel's networking stack. It allows the kernel to keep track of all logical network connections or flows, and thereby identify all of the packets which make up each flow so they can be handled consistently together. It is essential for performant complex networking of Kubernetes where nodes need to track connection information between thousands of pods and services.
+
+- _ipset_ is an extension to iptables which is used to configure firewall rules on a Linux server. ipset is a module extension to iptables that allows firewall configuration on a "set" of IP addresses. Compared with how iptables does the configuration linearly, ipset is able to store sets of addresses and index the data structure, making lookups very efficient, even when dealing with large sets. Kubernetes uses ipsets to implement a distributed firewall solution that enforces network policies within the cluster. This can then help to further restrict communications across pods or namespaces. For example, if a namespace is configured with DefaultDeny isolation type (Meaning no connection is allowed to the namespace from another namespace), network policies can be configured in the namespace to whitelist the traffic to the pods in that namespace.
+
+### Quick Overview Of Kubernetes Network Policy And How It Is Implemented
+
+Kubernetes network policies are application centric compared to infrastructure/network centric standard firewalls. There are no explicit CIDR or IP used for matching source or destination IP’s. Network policies build up on labels and selectors which are key concepts of Kubernetes that are used for proper organization (for e.g dedicating a namespace to data layer and controlling which app is able to connect there). A typical network policy that controls who can connect to the database namespace will look like below:
+
+            apiVersion: extensions/v1beta1
+            kind: NetworkPolicy
+            metadata:
+              name: database-network-policy
+              namespace: tooling-db
+            spec:
+              podSelector:
+                matchLabels:
+                  app: mysql
+              ingress:
+               - from:
+                 - namespaceSelector:
+                   matchLabels:
+                     app: tooling
+                 - podSelector:
+                   matchLabels:
+                   role: frontend
+               ports:
+                 - protocol: tcp
+                 port: 3306
+
+**NOTE**: Best practice is to use solutions like RDS for database implementation. So the above is just to help you understand the concept.
+
+3. Disable Swap
+
+
+If [swap](https://opensource.com/article/18/9/swap-space-linux-systems) is not disabled, kubelet will not start. It is highly recommended to allow Kubernetes to handle resource allocation.
+
+Test if swap is already enabled on the host:
+
+      sudo swapon --show
+
+If there is no output, then you are good to go. Otherwise, run below command to turn it off
+
+            sudo swapoff -a
+
+4. Download and install a container runtime. (Docker Or Containerd)
+Before you install any container runtime, you need to understand that Docker is now deprecated, and Kubernetes no longer supports the Dockershim codebase from v1.20 release
+
+[Read more about this notice here](https://kubernetes.io/blog/2020/12/02/dockershim-faq/)
+
+If you install Docker, it will work. But be aware of this huge change.
+
+**Docker**
+
+      sudo apt update -y && \
+      sudo apt -y install apt-transport-https ca-certificates curl software-properties-common && \
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && \
+      sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" && \
+      sudo apt update -y && \
+      apt-cache policy docker-ce && \
+      sudo apt -y install docker-ce && \
+      sudo usermod -aG docker ${USER} && \
+      sudo systemctl status docker
+
+
+- ![DockerRunning](https://github.com/user-attachments/assets/b8a472e1-af90-4daf-afe9-83cb1d0ceea3)
+
+**NOTE**: exit the shell and log back in. Otherwise, you will face a permission denied error. Alternatively, you can run _newgrp_ docker without exiting the shell. But you will need to provide the password of the logged in user
+
+
+- **Containerd**
+Download binaries for runc, cri-ctl, and containerd
+
+              wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc93/runc.amd64 \
+              https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.21.0/crictl-v1.21.0-linux-amd64.tar.gz \
+              https://github.com/containerd/containerd/releases/download/v1.4.4/containerd-1.4.4-linux-amd64.tar.gz 
+
+
+- ![Screenshot from 2024-11-13 10-11-52](https://github.com/user-attachments/assets/5e88f068-2e0b-4c51-a7df-54efa4543b0c)
+
+Configure containerd:
+
+
+            {
+              mkdir containerd
+              tar -xvf crictl-v1.21.0-linux-amd64.tar.gz
+              tar -xvf containerd-1.4.4-linux-amd64.tar.gz -C containerd
+              sudo mv runc.amd64 runc
+              chmod +x  crictl runc  
+              sudo mv crictl runc /usr/local/bin/
+              sudo mv containerd/bin/* /bin/
+            }
+
+
+            sudo mkdir -p /etc/containerd/
+
+
+            cat << EOF | sudo tee /etc/containerd/config.toml
+            [plugins]
+              [plugins.cri.containerd]
+                snapshotter = "overlayfs"
+                [plugins.cri.containerd.default_runtime]
+                  runtime_type = "io.containerd.runtime.v1.linux"
+                  runtime_engine = "/usr/local/bin/runc"
+                  runtime_root = ""
+            EOF
+
+
+- ![Image7](https://github.com/user-attachments/assets/3fb4600d-f02f-4aef-9cc6-63607365ae54)
+
+Create the containerd.service systemd unit file:
+
+            cat <<EOF | sudo tee /etc/systemd/system/containerd.service
+            [Unit]
+            Description=containerd container runtime
+            Documentation=https://containerd.io
+            After=network.target
+            
+            [Service]
+            ExecStartPre=/sbin/modprobe overlay
+            ExecStart=/bin/containerd
+            Restart=always
+            RestartSec=5
+            Delegate=yes
+            KillMode=process
+            OOMScoreAdjust=-999
+            LimitNOFILE=1048576
+            LimitNPROC=infinity
+            LimitCORE=infinity
+            
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+- ![Image8](https://github.com/user-attachments/assets/b18dbde4-d840-4511-a5b9-e996d65957f0)
+
+
+5. Create directories for to configure kubelet, kube-proxy, cni, and a directory to keep the kubernetes root ca file:
+
+            sudo mkdir -p \
+              /var/lib/kubelet \
+              /var/lib/kube-proxy \
+              /etc/cni/net.d \
+              /opt/cni/bin \
+              /var/lib/kubernetes \
+              /var/run/kubernetes
+
+6. Download and Install CNI
+CNI (Container Network Interface), a [Cloud Native Computing Foundation project](https://www.cncf.io/), consists of a specification and libraries for writing plugins to configure network interfaces in Linux containers. It also comes with a number of plugins.
+
+Kubernetes uses CNI as an interface between network providers and Kubernetes Pod networking. Network providers create network plugin that can be used to implement the Kubernetes networking, and includes additional set of rich features that Kubernetes does not provide out of the box.
+
+Download the plugins available from [containernetworking's](https://github.com/containernetworking/cni) GitHub repo and read more about CNIs and why it is being developed.
+
+
+            wget -q --show-progress --https-only --timestamping \
+              https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz
+
+
+- ![Image9](https://github.com/user-attachments/assets/ca3d8bbf-25e0-4792-b2df-64654125d9ed)
+
+Install CNI into /opt/cni/bin/
+
+            sudo tar -xvf cni-plugins-linux-amd64-v0.9.1.tgz -C /opt/cni/bin/
+
+
+- ![Image10](https://github.com/user-attachments/assets/5b932d8a-da06-4c9a-bebc-64ea60bc737e)
+
+ The output shows the plugins that comes with the CNI.
+            
+            ./
+            ./macvlan
+            ./flannel
+            ./static
+            ./vlan
+            ./portmap
+            ./host-local
+            ./vrf
+            ./bridge
+            ./tuning
+            ./firewall
+            ./host-device
+            ./sbr
+            ./loopback
+            ./dhcp
+            ./ptp
+            ./ipvlan
+            ./bandwidth
+
+
+There are few other plugins that are not included in the CNI, which are also widely used in the industry. They all have their unique implementation approach and set of features.
+
+Click to read more about each of the network plugins below:
+
+- [Calico](https://www.projectcalico.org/)
+- [Weave Net](https://www.weave.works/docs/net/latest/overview/)
+- [flannel](https://github.com/flannel-io/flannel)
+
+  [source](https://rancher.com/docs/rancher/v2.x/en/faq/networking/cni-providers/)
+
+Sometimes you can combine more than one plugin together to maximize the use of features from different providers. Or simply use a CNI network provider such as canal that gives you the best of Flannel and Calico.
+
+7. Download binaries for kubectl, kube-proxy, and kubelet
+
+            wget -q --show-progress --https-only --timestamping \
+              https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl \
+              https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kube-proxy \
+              https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubelet
+8. Install the downloaded binaries
+
+            {
+              chmod +x  kubectl kube-proxy kubelet  
+              sudo mv  kubectl kube-proxy kubelet /usr/local/bin/
+            }
+
+- ![Image11](https://github.com/user-attachments/assets/5b67e6cd-9e56-4f91-8794-e000555e791b)
+
+### Configure the worker nodes components
+
+9. Configure kubelet:
+In the home directory, you should have the certificates and kubeconfig file for each node. A list in the home folder should look like below:
+
+- ![Image12](https://github.com/user-attachments/assets/4650710d-2bff-4b3c-8f69-5c2271539ed7)
+
+**Configuring the network**
+
+Get the POD_CIDR that will be used as part of network configuration
+
+      POD_CIDR=$(curl -s http://169.254.169.254/latest/user-data/ \
+        | tr "|" "\n" | grep "^pod-cidr" | cut -d"=" -f2)
+      echo "${POD_CIDR}"
+      
+In case you are wondering where this $POD_CIDR is coming from. Well, this was configured at the time of creating the worker nodes. Remember the for loop below? The _--user-data_ flag is where we specified what we want the POD_CIDR to be. It is very important to ensure that the CIDR does not overlap with EC2 IPs within the subnet. In the real world, this will be decided in collaboration with the Network team.
+
+Why do we need a network plugin? And why network configuration is crucial to implementing a Kubernetes cluster?
+
+First, let us understand the Kubernetes networking model:
+
+The networking model assumes a flat network, in which containers and nodes can communicate with each other. That means, regardless of which node is running the container in the cluster, Kubernetes expects that all the containers must be able to communicate with each other. Therefore, any network interface used for a Kubernetes implementation must follow this requirement. Otherwise, containers running in [pods](https://kubernetes.io/docs/concepts/workloads/pods/) will not be able to communicate. Of course, this has security concerns. Because if an attacker is able to get into the cluster through a compromised container, then the entire cluster can be exploited.
+
+To mitigate security risks and have a better controlled network topology, Kubernetes uses [CNI (Container Network Interface)](https://github.com/containernetworking/cni) to manage [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) which can be used to operate the Pod network through external plugins such as [Calico](https://docs.projectcalico.org/about/about-calico), [Flannel](https://github.com/flannel-io/flannel#flannel) or [Weave Net](https://www.weave.works/oss/net/) to name [a few](https://kubernetes.io/docs/concepts/cluster-administration/networking/). With these, you can set policies similar to how you would configure segurity groups in AWS and limit network communications through either cidr ipBlock, namespaceSelectors, or podSelectors, you will see more of these concepts further on.
+
+To really understand Kubernetes further, let us explore some basic concepts around its networking:
+
+### Pods:
+
+[A Pod](https://kubernetes.io/docs/concepts/workloads/pods/) is the basic building block of Kubernetes; it is the smallest and simplest unit in the Kubernetes object model that you create or deploy. A Pod represents a running process on your cluster. It encapsulates a container running an application such as the Tooling website (or, in some cases, multiple containers), storage resources, a unique network IP, and options that govern how the container(s) should run. All the containers running inside a Pod can reach each other on localhost.
+
+For example, if you deploy both Tooling and MySQL containers inside the same pod, then both of them are considered running on localhost. Although this design pattern is not ideal. Most likely they will run in separate Pods. In most cases one Pod contains just one container, but there are some design patterns that imply multi-container pods (e.g. sidecar, ambassador, adapter) - you can read more about them in this [article]https://betterprogramming.pub/understanding-kubernetes-multi-container-pod-patterns-577f74690aee().
+
+For a better understanding, of Kubernetes networking, let us assume that we have 2-containers in a single Pod and we have 2 such Pods (we can actually have as many pods of the same composition as our node resources would allow).
+
+Network configuration will look like this:
+
+
+- ![Network-Config](https://github.com/user-attachments/assets/2bc7e166-bd3e-4193-adee-cfe609418264)
+
+
+Notice, that both containers share a single virtual network interface veth0 that belongs to a virtual network within a single node. This virtual interface veth0 is used to allow communication from a pod to the outer world through a bridge cbr0 (custom bridge). This bridge is an interface that forwards the traffic from the Pods on one node to other nodes through a physical network interface eth0. Routing between the nodes is done by means of a router with the routing table.
+
+For more detailed explanation of different aspects of Kubernetes networking - watch this [video.](https://www.youtube.com/watch?v=5cNrTU6o3Fw)
+
+### Pod Network
+
+You must decide on the **Pod CIDR** per worker node. Each worker node will run multiple pods, and each pod will have its own IP address. IP address of a particular Pod on worker node 1 should be able to communicate with the IP address of another particular Pod on worker node 2. For this to become possible, there must be a bridge network with virtual network interfaces that connects them all together. Here is an interesting read that goes a little deeper into how it works Bookmark that page and [read it over and over again after you have completed this project](https://www.digitalocean.com/community/tutorials/kubernetes-networking-under-the-hood)
+
+10. Configure the bridge and loopback networks
+
+Bridge:
+
+            cat > 172-20-bridge.conf <<EOF
+            {
+                "cniVersion": "0.3.1",
+                "name": "bridge",
+                "type": "bridge",
+                "bridge": "cnio0",
+                "isGateway": true,
+                "ipMasq": true,
+                "ipam": {
+                    "type": "host-local",
+                    "ranges": [
+                      [{"subnet": "${POD_CIDR}"}]
+                    ],
+                    "routes": [{"dst": "0.0.0.0/0"}]
+                }
+            }
+            EOF
+
+[Image13](https://github.com/user-attachments/assets/291ef36e-5486-4c69-bab3-b420041bfd0a)
+
+Loopback:
+
+            cat > 99-loopback.conf <<EOF
+            {
+                "cniVersion": "0.3.1",
+                "type": "loopback"
+            }
+            EOF
+
+
+11. Move the files to the network configuration directory:
+
+            sudo mv 172-20-bridge.conf 99-loopback.conf /etc/cni/net.d/
+
+
+
+12. Store the worker's name in a variable:
+
+            NAME=k8s-cluster-from-ground-up
+            WORKER_NAME=${NAME}-$(curl -s http://169.254.169.254/latest/user-data/ \
+              | tr "|" "\n" | grep "^name" | cut -d"=" -f2)
+            echo "${WORKER_NAME}"
+
+13. Move the certificates and kubeconfig file to their respective configuration directories:
+
+            sudo mv ${WORKER_NAME}-key.pem ${WORKER_NAME}.pem /var/lib/kubelet/
+            sudo mv ${WORKER_NAME}.kubeconfig /var/lib/kubelet/kubeconfig
+            sudo mv kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
+            sudo mv ca.pem /var/lib/kubernetes/
+
+
+14. Create the kubelet-config.yaml file
+    
+Ensure the needed variables exist:
+
+            NAME=k8s-cluster-from-ground-up
+
+            WORKER_NAME=${NAME}-$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+              http://169.254.169.254/latest/user-data/ \
+              | tr "|" "\n" | grep "^name" | cut -d"=" -f2)
+            
+            echo "${WORKER_NAME}"
+
+- ![Image14](https://github.com/user-attachments/assets/d9ff164e-1718-4695-b22e-c734c47f5f81)
+
+
+            cat <<EOF | sudo tee /var/lib/kubelet/kubelet-config.yaml
+            kind: KubeletConfiguration
+            apiVersion: kubelet.config.k8s.io/v1beta1
+            authentication:
+              anonymous:
+                enabled: false
+              webhook:
+                enabled: true
+              x509:
+                clientCAFile: "/var/lib/kubernetes/ca.pem"
+            authorization:
+              mode: Webhook
+            clusterDomain: "cluster.local"
+            clusterDNS:
+              - "10.32.0.10"
+            resolvConf: "/etc/resolv.conf"
+            runtimeRequestTimeout: "15m"
+            tlsCertFile: "/var/lib/kubelet/${WORKER_NAME}.pem"
+            tlsPrivateKeyFile: "/var/lib/kubelet/${WORKER_NAME}-key.pem"
+            EOF
+
+
+- ![Image15](https://github.com/user-attachments/assets/07374867-4bde-43a3-a772-239a4fc579c4)
+
+Let us talk about the configuration file _kubelet-config.yaml_ and the actual configuration for a bit. Before creating the systemd file for **kubelet**, it is recommended to create the _kubelet-config.yaml_ and set the configuration there rather than using multiple startup flags in systemd. You will simply point to the _yaml_ file.
+
+The config file specifies where to find certificates, the DNS server, and authentication information. As you already know, _kubelet_ is responsible for the containers running on the node, regardless if the runtime is Docker or Containerd; as long as the containers are being created through Kubernetes, _kubelet_ manages them. If you run any _docker_ or _cri_ commands directly on a worker to create a container, bear in mind that Kubernetes is not aware of it, therefore kubelet will not manage those. Kubelet's major responsibility is to always watch the containers in its care, by default every 20 seconds, and ensuring that they are always running. Think of it as a process watcher.
+
+The _clusterDNS_ is the address of the DNS server. As of Kubernetes v1.12, CoreDNS is the recommended DNS Server, hence we will go with that, rather than using legacy kube-dns.
+
+**Note**: The CoreDNS Service is named kube-dns(When you see kube-dns, just know that it is using CoreDNS). This is more of a backward compatibility reasons for workloads that relied on the legacy kube-dns Service name.
+
+In Kubernetes, Pods are able to find each other using service names through the internal DNS server. Every time a service is created, it gets registered in the DNS server.
+
+In Linux, the /etc/resolv.conf file is where the DNS server is configured. If you want to use Google's public DNS server (8.8.8.8) your /etc/resolv.conf file will have following entry:
+
+_nameserver 8.8.8.8_
+
+In Kubernetes, the _kubelet_ process on a worker node configures each pod. Part of the configuration process is to create the file **/etc/resolv.conf** and specify the correct DNS server.
+
+15. Configure the _kubelet_ systemd service
+
+
+            cat <<EOF | sudo tee /etc/systemd/system/kubelet.service
+            [Unit]
+            Description=Kubernetes Kubelet
+            Documentation=https://github.com/kubernetes/kubernetes
+            After=containerd.service
+            Requires=containerd.service
+            [Service]
+            ExecStart=/usr/local/bin/kubelet \\
+              --config=/var/lib/kubelet/kubelet-config.yaml \\
+              --cluster-domain=cluster.local \\
+              --container-runtime=remote \\
+              --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
+              --image-pull-progress-deadline=2m \\
+              --kubeconfig=/var/lib/kubelet/kubeconfig \\
+              --network-plugin=cni \\
+              --register-node=true \\
+              --v=2
+            Restart=on-failure
+            RestartSec=5
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+- ![Image16](https://github.com/user-attachments/assets/6105746f-453c-4836-ac62-9a5a4893a9f7)
+
+16. Create the kube-proxy.yaml file
+
+            cat <<EOF | sudo tee /var/lib/kube-proxy/kube-proxy-config.yaml
+            kind: KubeProxyConfiguration
+            apiVersion: kubeproxy.config.k8s.io/v1alpha1
+            clientConnection:
+              kubeconfig: "/var/lib/kube-proxy/kubeconfig"
+            mode: "iptables"
+            clusterCIDR: "172.31.0.0/16"
+            EOF
+
+17. Configure the Kube Proxy systemd service
+
+            cat <<EOF | sudo tee /etc/systemd/system/kube-proxy.service
+            [Unit]
+            Description=Kubernetes Kube Proxy
+            Documentation=https://github.com/kubernetes/kubernetes
+            [Service]
+            ExecStart=/usr/local/bin/kube-proxy \\
+              --config=/var/lib/kube-proxy/kube-proxy-config.yaml
+            Restart=on-failure
+            RestartSec=5
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+18. Reload configurations and start both services
+
+            {
+              sudo systemctl daemon-reload
+              sudo systemctl enable containerd kubelet kube-proxy
+              sudo systemctl start containerd kubelet kube-proxy
+            }
+
+
+- ![Image17](https://github.com/user-attachments/assets/bd78ed3e-608f-493e-b5d8-a4e24eb19898)
+
+
+
+            sudo systemctl status containerd
+            sudo systemctl status kubelet
+            sudo systemctl status kube-proxy
+
+
+- ![Image18](https://github.com/user-attachments/assets/b1f2bf39-685f-49a5-8408-c4501a96329f)
+
+- Now you should have the worker nodes joined to the cluster, and in a READY state.
+
+
+### Troubleshooting Tips: If you have issues at this point. Consider the below:
+
+Use _journalctl -u <service name>_ to get the log output and read what might be wrong with starting up the service. You can redirect the output into a file and analyse it.
+Review your PKI setup again. Ensure that the certificates you generated have the hostnames properly configured.
+It is okay to start all over again. Each time you attempt the solution is an opportunity to learn something.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
