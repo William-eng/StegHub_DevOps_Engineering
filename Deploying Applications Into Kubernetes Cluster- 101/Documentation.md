@@ -489,20 +489,152 @@ Now that we have a service created, how can we access the app? Since there is no
 - ![Image20](https://github.com/user-attachments/assets/b4e5b605-3fb4-4e13-9026-e1e4a55a8107)
 
 
+## Expose a Service on a server's public IP address & static port
+Sometimes, it may be needed to directly access the application using the public IP of the server (when we speak of a K8s cluster we can replace 'server' with 'node') the Pod is running on. This is when the [**NodePort**](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport) service type comes in handy.
+
+A Node port service type exposes the service on a static port on the node's IP address. NodePorts are in the _30000-32767_ range by default, which means a NodePort is unlikely to match a service’s intended port (for example, 80 may be exposed as 30080).
+
+Update the nginx-service _yaml_ to use a NodePort Service.
+
+                sudo cat <<EOF | sudo tee ./nginx-service.yaml
+                apiVersion: v1
+                kind: Service
+                metadata:
+                  name: nginx-service
+                spec:
+                  type: NodePort
+                  selector:
+                    app: nginx-pod
+                  ports:
+                    - protocol: TCP
+                      port: 80
+                      nodePort: 30080
+                EOF
+
+
+- ![Image21](https://github.com/user-attachments/assets/04ccc131-bdb5-46a7-8378-31c3c6e0c052)
+
+What has changed is:
+
+ 1. Specified the type of service (Nodeport)
+ 2. Specified the NodePort number to use.
+
+To access the service, you must:
+
+- Allow the inbound traffic in your EC2's Security Group to the NodePort range 30000-32767
+- Get the public IP address of the node the Pod is running on, append the nodeport and access the app through the browser.
+Apply the service update
+
+        kubectl apply -f nginx-service.yaml
+Confirm the node the pod is running on (Check the internal IP address)
+
+        kubectl get pod nginx-pod -o wide
+You must understand that the port number 30080 is a port on the node in which the Pod is scheduled to run. If the Pod ever gets rescheduled elsewhere, that the same port number will be used on the new node it is running on. So, if you have multiple Pods running on several nodes at the same time - they all will be exposed on respective nodes' IP addresses with a static port number.
+
+### However, since we are using docker container to run our kubernetes cluster, heres how we can achieve same result.
+
+**STEPS**
+
+- Get the service NodePort by running
+
+        kubectl get svc nginx-service
+
+- Get the docker container ID of the node running in Kind
+
+         docker ps
+
+- Find the container ip address
+
+         docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_id>
+
+- ![Image22](https://github.com/user-attachments/assets/dd7a2b40-d36e-4d0c-b777-17769325cf95)
+
+- Access the service via the container IP address with the NodePort 30080
+
+- ![Image23](https://github.com/user-attachments/assets/54dab78f-13b9-4b16-a67d-8e72b7fc5e8b)
+
+
+## How Kubernetes ensures desired number of Pods is always running?
+When we define a Pod manifest and apply it - we create a Pod that is running until it's terminated for some reason (e.g., error, Node reboot or some other reason), but what if we want to declare that we always need at least 3 replicas of the same Pod running at all times? Then we must use a [**ResplicaSet (RS)**](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/) object - it's purpose is to maintain a stable set of Pod replicas running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods.
+
+Note: In some older books or documents you might find the old version of a similar object - ReplicationController (RC), it had similar purpose, but did not support set-base label selectors and it is now recommended to use ReplicaSets instead, since it is the next-generation RC.
+
+Let us delete our nginx-pod Pod:
+
+        kubectl delete -f nginx-pod.yaml
+**Output**:
+
+        pod "nginx-pod" deleted
+
+### Create a ReplicaSet
+Let us create a rs.yaml manifest for a ReplicaSet object:
+
+                cat <<EOF > rs.yaml
+                apiVersion: apps/v1
+                kind: ReplicaSet
+                metadata:
+                  name: nginx-rs
+                spec:
+                  replicas: 3
+                  selector:
+                    matchLabels:
+                      app: nginx-pod
+                  template:
+                    metadata:
+                      name: nginx-pod
+                      labels:
+                        app: nginx-pod
+                    spec:
+                      containers:
+                      - image: nginx:latest
+                        name: nginx-pod
+                        ports:
+                        - containerPort: 80
+                          protocol: TCP
+                EOF
+                
+                kubectl apply -f rs.yaml
+                
+- ![Image24](https://github.com/user-attachments/assets/4ffc051a-d673-4911-8b38-a89c6e3ef7eb)
+
+The manifest file of ReplicaSet consist of the following fields:
+
+- apiVersion: This field specifies the version of kubernetes Api to which the object belongs. ReplicaSet belongs to apps/v1 apiVersion.
+- kind: This field specify the type of object for which the manifest belongs to. Here, it is ReplicaSet.
+- metadata: This field includes the metadata for the object. It mainly includes two fields: name and labels of the ReplicaSet.
+- spec: This field specifies the label selector to be used to select the Pods, number of replicas of the Pod to be run and the container or list of containers which the Pod will run. In the above example, we are running 3 replicas of nginx container.
+  
+Let us check what Pods have been created:
+
+                kubectl get pods
+
+
+                NAME              READY   STATUS    RESTARTS   AGE     IP               NODE                                              NOMINATED NODE   READINESS GATES
+                nginx-pod-j784r   1/1     Running   0          7m41s   172.50.197.5     ip-172-50-197-52.eu-central-1.compute.internal    <none>           <none>
+                nginx-pod-kg7v6   1/1     Running   0          7m41s   172.50.192.152   ip-172-50-192-173.eu-central-1.compute.internal   <none>           <none>
+                nginx-pod-ntbn4   1/1     Running   0          7m41s   172.50.202.162   ip-172-50-202-18.eu-central-1.compute.internal    <none>           <none>
+                
+ - ![Image25](https://github.com/user-attachments/assets/0a607dc7-6c37-4912-a5c6-504c0297439b)
+
+
+Here we see three ngix-pods with some random suffixes (e.g., -j784r) - it means, that these Pods were created and named automatically by some other object (higher level of abstraction) such as ReplicaSet.
+
+Try to delete one of the Pods:
+
+                kubectl delete po nginx-pod-j784r
+**Output**:
+
+                pod "nginx-pod-j784r" deleted
+                
+                ❯ kubectl get pods
+                NAME              READY   STATUS    RESTARTS   AGE
+                nginx-rc-7xt8z   1/1     Running   0          22s
+                nginx-rc-kg7v6   1/1     Running   0          34m
+                nginx-rc-ntbn4   1/1     Running   0          34m
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+- ![Image26](https://github.com/user-attachments/assets/0929a00b-f757-4df7-8fe8-55d00a90ef65)
 
 
 
