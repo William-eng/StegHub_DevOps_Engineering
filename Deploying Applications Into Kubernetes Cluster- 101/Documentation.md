@@ -426,7 +426,6 @@ Now, let us have a look at what the Pod looks like:
         NAME        READY   STATUS    RESTARTS   AGE   LABELS
         nginx-pod   1/1     Running   0          31m   app=nginx-pod
 
-- ![Image11](https://github.com/user-attachments/assets/d15b907d-a759-451e-863e-c838ec40bbbe)
 
 
 **_Notice that the IP address of the Pod, is NOT the IP address of the server it is running on. Kubernetes, through the implementation of network plugins assigns virtual IP adrresses to each Pod_.**
@@ -439,43 +438,55 @@ Now, let us have a look at what the Pod looks like:
         Therefore, Service with IP 10.100.71.130 takes request and forwards to Pod with IP 172.50.197.236
 
 
-
-- ![Screenshot from 2024-11-15 22-09-46](https://github.com/user-attachments/assets/59259eab-4314-471b-8a42-a0132de4362d)
-
+- ![Image11](https://github.com/user-attachments/assets/d15b907d-a759-451e-863e-c838ec40bbbe)
 
 
+  
+## Self Side Task:
+1. Build the Tooling app Dockerfile and push it to Dockerhub registry
+- ![Image12](https://github.com/user-attachments/assets/59259eab-4314-471b-8a42-a0132de4362d)
 
 
+- ![Image13](https://github.com/user-attachments/assets/43b81df9-8de3-496e-be5d-816616d9e11d)
+
+2. Create a Pod yaml manifest on your master node
+- ![Image14](https://github.com/user-attachments/assets/2cfad044-9e21-486a-99e3-889ab9c2e872)
+
+- Apply the manifest with the help of kubectl
+  
+                kubectl apply -f tooling.yaml
+- Get an output of the pods running in the cluster
+  
+                kubectl get pods
+
+- ![Image15](https://github.com/user-attachments/assets/311cece4-8deb-4377-9e62-40fb4b4801ee)
 
 
+        kubectl describe pod tooling-pod
+
+- ![Image16](https://github.com/user-attachments/assets/c17724a7-be00-4d97-b76a-4d7bf580048a)
+
+- Create a Service yaml manifest file
+
+- ![Image17](https://github.com/user-attachments/assets/aea68d6f-6bed-4d1b-93d8-c46b61fb78a4)
 
 
+- Create a nginx-service resource by applying your manifest
 
+        kubectl apply -f tooling-service.yaml
 
+- Check the created service
 
+        kubectl get service
+- ![Image18](https://github.com/user-attachments/assets/c80134a6-fed8-4199-8355-04adb59e480c)
 
+Now that we have a service created, how can we access the app? Since there is no public IP address, we can leverage kubectl's port-forward functionality.
 
+        kubectl  port-forward svc/tooling-service 5001:80
 
+- ![Image19](https://github.com/user-attachments/assets/242c5c76-9724-457b-8601-7deb7984ba84)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![Image20](https://github.com/user-attachments/assets/b4e5b605-3fb4-4e13-9026-e1e4a55a8107)
 
 
 
