@@ -673,72 +673,234 @@ Let us see how we can use both to scale our Replicaset up and down:
 We can easily scale our ReplicaSet up by specifying the desired number of replicas in an imperative command, like this:
 
 
+                ❯ kubectl scale rs nginx-rs --replicas=5
+                replicationcontroller/nginx-rc scaled
+                
+                ❯ kubectl get pods
+                NAME             READY   STATUS    RESTARTS   AGE
+                nginx-rc-4kgpj   1/1     Running   0          4m30s
+                nginx-rc-4z2pn   1/1     Running   0          4m30s
+                nginx-rc-g4tvg   1/1     Running   0          6s
+                nginx-rc-kmh8m   1/1     Running   0          6s
+                nginx-rc-zlgvp   1/1     Running   0          4m30s
 
+-                 
+ Scaling down will work the same way, so scale it down to 3 replicas.
 
 
+- ![Image32](https://github.com/user-attachments/assets/c190be1a-8132-498a-a0e7-fd24920616c6)
 
+**Declarative**:
 
+Declarative way would be to open our rs.yaml manifest, change desired number of replicas in respective section
 
+                spec:
+                  replicas: 3
 
+and applying the updated manifest:
 
+                kubectl apply -f rs.yaml
+There is another method - '**ad-hoc**', it is definitely not the best practice and we do not recommend using it, but you can edit an existing ReplicaSet with following command:
 
+                kubectl edit -f rs.yaml
 
 
+## Advanced label matching
+As Kubernetes mature as a technology, so does its features and improvements to k8s objects. _ReplicationControllers_ do not meet certain complex business requirements when it comes to using selectors. Imagine if you need to select Pods with multiple _lables_ that represents things like:
 
+- Application tier: such as Frontend, or Backend
+- Environment: such as Dev, SIT, QA, Preprod, or Prod
+So far, we used a simple selector that just matches a key-value pair and check only 'equality':
 
+                  selector:
+                    app: nginx-pod
 
+But in some cases, we want ReplicaSet to manage our existing containers that match certain criteria, we can use the same simple label matching or we can use some more complex conditions, such as:
 
+                 - in
+                 - not in
+                 - not equal
+                 - etc...
 
 
+Let us look at the following manifest file:
 
 
+                cat <<EOF > rs.yaml
+                apiVersion: apps/v1
+                kind: ReplicaSet
+                metadata:
+                  name: nginx-rs
+                spec:
+                  replicas: 3
+                  selector:
+                    matchLabels:
+                      env: prod
+                    matchExpressions:
+                    - { key: tier, operator: In, values: [frontend] }
+                  template:
+                    metadata:
+                      name: nginx
+                      labels:
+                        env: prod
+                        tier: frontend
+                    spec:
+                      containers:
+                      - name: nginx-container
+                        image: nginx:latest
+                        ports:
+                        - containerPort: 80
+                          protocol: TCP
+                EOF
 
 
+- ![Image33](https://github.com/user-attachments/assets/38704164-17b5-4050-91ad-f5656cd3e517)
 
 
 
+In the above spec file, under the selector, **matchLabels** and **matchExpression** are used to specify the key-value pair. The **matchLabel** works exactly the same way as the equality-based selector, and the matchExpression is used to specify the set based selectors. This feature is the main differentiator between **ReplicaSet** and previously mentioned obsolete **ReplicationController**.
 
+Get the replication set:
 
 
+                # Delete the existing ReplicaSet and recreate it (because the selector field is immutable)
+                kubectl delete rs nginx-rs
+                kubectl apply -f rs.yaml
+                ❯ kubectl get rs nginx-rs -o wide
+                NAME       DESIRED   CURRENT   READY   AGE     CONTAINERS        IMAGES         SELECTOR
+                nginx-rs   3         3         3       5m34s   nginx-container   nginx:latest   env=prod,tier in (frontend)
 
+- ![Image34](https://github.com/user-attachments/assets/2d85d5e1-4986-4b52-b518-9042416a97b4)
 
+## Using AWS Load Balancer to access your service in Kubernetes.
+**Note**: _You will only be able to test this using AWS EKS. You don not have to set this up in current project yet. In the next project, you will update your Terraform code to build an EKS cluster_.
 
+You have previously accessed the Nginx service through **ClusterIP**, and **NodeIP**, but there is another service type - Loadbalancer. This type of service does not only create a Service object in K8s, but also provisions a real external [**Load Balancer**](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer) (e.g. Elastic Load Balancer - ELB in AWS)
 
+To get the experience of this service type, update your service manifest and use the LoadBalancer type. Also, ensure that the selector references the Pods in the replica set.
 
+                apiVersion: v1
+                kind: Service
+                metadata:
+                  name: nginx-service
+                spec:
+                  type: LoadBalancer
+                  selector:
+                    tier: frontend
+                  ports:
+                    - protocol: TCP
+                      port: 80 # This is the port the Loadbalancer is listening at
+                      targetPort: 80 # This is the port the container is listening at
 
+                      
+Apply the configuration:
 
+        kubectl apply -f nginx-service.yaml
 
+Get the newly created service :
 
+        kubectl get service nginx-service
 
+**output**:
 
+                NAME            TYPE           CLUSTER-IP      EXTERNAL-IP                                                                  PORT(S)        AGE
+                nginx-service   LoadBalancer   10.100.71.130   aab159950f39e43d39195e23c77417f8-1167953448.eu-central-1.elb.amazonaws.com   80:31388/TCP   5d18h
 
+An ELB resource will be created in your AWS console.
 
 
+        export AWS_SDK_LOAD_CONFIG=1
+This environment variable ensures that the AWS SDK checks both ~/.aws/credentials and ~/.aws/config files.
 
 
 
+An ELB resource will be created in your AWS console.
 
 
 
+A Kubernetes component in the control plane called Cloud-controller-manager is responsible for triggeriong this action. It connects to your specific cloud provider's (AWS) APIs and create resources such as Load balancers. It will ensure that the resource is appropriately tagged:
 
 
 
+Get the output of the entire yaml for the service. You will see additional information about this service in which you did not define them in the yaml manifest. Kubernetes did this for you.
 
+        kubectl get service nginx-service -o yaml
+**Output**:
 
+                apiVersion: v1
+                kind: Service
+                metadata:
+                  annotations:
+                    kubectl.kubernetes.io/last-applied-configuration: |
+                      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"nginx-service","namespace":"default"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"nginx-pod"},"type":"LoadBalancer"}}
+                  creationTimestamp: "2021-06-18T16:24:21Z"
+                  finalizers:
+                  - service.kubernetes.io/load-balancer-cleanup
+                  name: nginx-service
+                  namespace: default
+                  resourceVersion: "21824260"
+                  selfLink: /api/v1/namespaces/default/services/nginx-service
+                  uid: c12145d6-a8b5-491d-95ff-8e2c6296b46c
+                spec:
+                  clusterIP: 10.100.153.44
+                  externalTrafficPolicy: Cluster
+                  ports:
+                  - nodePort: 31388
+                    port: 80
+                    protocol: TCP
+                    targetPort: 80
+                  selector:
+                    tier: frontend
+                  sessionAffinity: None
+                  type: LoadBalancer
+                status:
+                  loadBalancer:
+                    ingress:
+                    - hostname: ac12145d6a8b5491d95ff8e2c6296b46-588706163.eu-central-1.elb.amazonaws.com
 
+A clusterIP key is updated in the manifest and assigned an IP address. Even though you have specified a Loadbalancer service type, internally it still requires a clusterIP to route the external traffic through.
 
+In the ports section, nodePort is still used. This is because Kubernetes still needs to use a dedicated port on the worker node to route the traffic through. Ensure that port range 30000-32767 is opened in your inbound Security Group configuration.
 
+More information about the provisioned balancer is also published in the .status.loadBalancer field.
 
+        status:
+          loadBalancer:
+            ingress:
+            - hostname: ac12145d6a8b5491d95ff8e2c6296b46-588706163.eu-central-1.elb.amazonaws.com
+Copy and paste the load balancer's address to the browser, and you will access the Nginx service
 
 
+# ALTERNATIVELY FOR KIND WE can use Apply MetalLB manifest
 
+- Apply MetalLB manifest
 
+          kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
 
+  - ![Image35](https://github.com/user-attachments/assets/e1f8daeb-a1fb-4a3c-9822-fa3ef4631258)
 
+- We'll check the controller that gives Ip address to services
+  
+               kubectl get deployment -n metallb-system -o wide
 
+        kubectl get daemonset -n metallb-system -o wide
 
+-  We'll create the ip address range
 
+                  kubectl apply -f metallb-addr-pool
 
+- ![Image36](https://github.com/user-attachments/assets/007f55d8-4ace-42d3-9a69-f18da4bdcba7)
+
+
+- Advertise the network to the external world in Layer 2
+
+                  kubectl apply -f metallb-advertise.yaml 
+
+Now let's apply our Nginx service and check that it has an external-IP
+
+- ![Image37](https://github.com/user-attachments/assets/440ed736-48d5-4a01-8910-d6d25273c771)
+
+## Do not Use Replication Controllers - Use Deployment Controllers Instead
 
 
 
