@@ -378,30 +378,69 @@ To make this work, you must reconfigure the Pod manifest and introduce **labels*
                 EOF
 
 
+Notice that under the metadata section, we have now introduced _labels_ with a key field called _app_ and its value _nginx-pod_. This matches exactly the selector key in the service manifest.
+
+The key/value pairs can be anything you specify. These are not Kubernetes specific keywords. As long as it matches the selector, the service object will be able to route traffic to the Pod.
+
+Apply the manifest with:
+
+                kubectl apply -f nginx-pod.yaml
+
+
+2. Run kubectl port-forward command again
+
+
+                kubectl  port-forward svc/nginx-service 8089:80
+**output**:
+
+        kubectl  port-forward svc/nginx-service 8089:80
+        Forwarding from 127.0.0.1:8089 -> 80
+        Forwarding from [::1]:8089 -> 80
+
+
+- ![Image9](https://github.com/user-attachments/assets/5d4dd52b-0396-4494-b3f7-0256b2dbf5e7)
+
+- Then go to your web browser and enter localhost:8089 - You should now be able to see the nginx page in the browser.
+
+ - ![Image10](https://github.com/user-attachments/assets/949eab55-60a7-498a-9825-9242a3f4684d)
+
+
+Let us try to understand a bit more about how the service object is able to route traffic to the Pod.
+
+If you run the below command:
+
+        kubectl get service nginx-service -o wide
+        
+You will get the output similar to this:
+
+        NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+        nginx-service   ClusterIP   10.100.71.130   <none>        80/TCP    4d    app=nginx-pod
+        
+As you already know, the service's type is ClusterIP, and in the above output, it has the IP address of _10.100.71.130 -_ This IP works just like an internal loadbalancer. It accepts requests and forwards it to an IP address of any Pod that has the respective _selector_ label. In this case, it is _app=nginx-pod_. If there is more than one Pod with that label, service will distribute the traffic to all theese pofs in a [Round Robin fashion](https://en.wikipedia.org/wiki/Round-robin_scheduling).
+Now, let us have a look at what the Pod looks like:
+
+        kubectl get pod nginx-pod --show-labels
+**Output**:
+
+
+        NAME        READY   STATUS    RESTARTS   AGE   LABELS
+        nginx-pod   1/1     Running   0          31m   app=nginx-pod
+
+- ![Image11](https://github.com/user-attachments/assets/d15b907d-a759-451e-863e-c838ec40bbbe)
+
+
+**_Notice that the IP address of the Pod, is NOT the IP address of the server it is running on. Kubernetes, through the implementation of network plugins assigns virtual IP adrresses to each Pod_.**
+
+        kubectl get pod nginx-pod -o wide
+**Output**:
+
+        NAME        READY   STATUS    RESTARTS   AGE   IP               NODE                                              NOMINATED NODE   READINESS GATES
+        nginx-pod   1/1     Running   0          57m   172.50.197.236   ip-172-50-197-215.eu-central-1.compute.internal   <none>           <none>
+        Therefore, Service with IP 10.100.71.130 takes request and forwards to Pod with IP 172.50.197.236
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![Screenshot from 2024-11-15 22-09-46](https://github.com/user-attachments/assets/59259eab-4314-471b-8a42-a0132de4362d)
 
 
 
