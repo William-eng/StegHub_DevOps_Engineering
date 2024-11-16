@@ -636,17 +636,41 @@ Try to delete one of the Pods:
 
 - ![Image26](https://github.com/user-attachments/assets/0929a00b-f757-4df7-8fe8-55d00a90ef65)
 
+You can see, that we still have all 3 Pods, but one has been recreated (can you differentiate the new one?)
+
+Explore the ReplicaSet created:
+
+        kubectl get rs -o wide
+**Output**:
+
+        NAME        DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES         SELECTOR
+        nginx-rs   3         3         3       34m   nginx-pod    nginx:latest   app=nginx-pod
+
+Notice, that ReplicaSet understands which Pods to create by using SELECTOR key-value pair.
+- ![Image27](https://github.com/user-attachments/assets/04f86480-58b5-4b0a-9b3d-4485231ccb6c)
 
 
+### Get detailed information of a ReplicaSet
+To display detailed information about any Kubernetes object, you can use 2 differen commands:
 
+                kubectl describe %object_type% %object_name% (e.g. kubectl describe rs nginx-rs)
+                kubectl get %object_type% %object_name% -o yaml (e.g. kubectl describe rs nginx-rs -o yaml)
+                
+Try both commands in action and see the difference. Also try get with -o json instead of -o yaml and decide for yourself which output option is more readable for you.
 
+- ![Image28](https://github.com/user-attachments/assets/f6e6fce1-6af7-4444-a55e-852630c22495)
+- ![Image29](https://github.com/user-attachments/assets/772a5109-9138-43d4-beb4-9f0edee75fa9)
+- ![Image30](https://github.com/user-attachments/assets/7b001703-fcd3-4fb7-aa2e-aaa8e10ab65a)
+- ![Image31](https://github.com/user-attachments/assets/c3d03460-2919-404f-984a-2d698680b4c6)
 
+## Scale ReplicaSet up and down:
+In general, there are 2 approaches of [Kubernetes Object Management](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/): imperative and declarative.
 
+Let us see how we can use both to scale our Replicaset up and down:
 
+**Imperative**:
 
-
-
-
+We can easily scale our ReplicaSet up by specifying the desired number of replicas in an imperative command, like this:
 
 
 
