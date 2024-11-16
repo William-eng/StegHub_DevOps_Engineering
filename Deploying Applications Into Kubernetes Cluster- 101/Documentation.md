@@ -1,4 +1,4 @@
-# Deploying Applications Into Kubernetes Cluster- 101
+![image-141-1024x330](https://github.com/user-attachments/assets/f48fc511-9266-4d9b-bfd4-d6b01441ab41)# Deploying Applications Into Kubernetes Cluster- 101
 
 In this project, we will build upon your knowledge of Kubernetes architecture, and begin to deploy applications on a K8s cluster. Kubernetes has a lot of moving parts; it operates with several layers of abstraction between your 
 application and host machines where it runs. So many terms, and capabilities that is not realistic to learn it all at once. Hence, you will be introduced to as many concepts as possible, but gradually.
@@ -1096,33 +1096,111 @@ Now, as we have got acquainted with most common Kubernetes workloads to deploy a
 ![image-140-1024x658](https://github.com/user-attachments/assets/3a93e4b3-bde3-4dce-8cc4-35326d47582c)
 
 
+it is time to explore how Kubernetes is able to manage persistent data.
+
+## Persisting Data for Pods
+Deployments are stateless by design. Hence, any data stored inside the Pod's container does not persist when the Pod dies.
+
+If you were to update the content of the index.html file inside the container, and the Pod dies, that content will be lost since a new Pod will replace the dead one.
+
+Let us try that:
+
+1. Scale the Pods down to 1 replica.
+
+                NAME                                READY   STATUS        RESTARTS   AGE
+                nginx-deployment-56466d4948-58nqx   0/1     Terminating   0          45m
+                nginx-deployment-56466d4948-5z4c2   1/1     Terminating   0          45m
+                nginx-deployment-56466d4948-5zdbx   0/1     Terminating   0          62m
+                nginx-deployment-56466d4948-78j9c   1/1     Terminating   0          45m
+                nginx-deployment-56466d4948-gj4fd   1/1     Terminating   0          45m
+                nginx-deployment-56466d4948-gsrpz   0/1     Terminating   0          45m
+                nginx-deployment-56466d4948-kg9hp   1/1     Terminating   0          45m
+                nginx-deployment-56466d4948-qs29b   0/1     Terminating   0          45m
+                nginx-deployment-56466d4948-sfft6   0/1     Terminating   0          45m
+                nginx-deployment-56466d4948-sg4np   0/1     Terminating   0          45m
+                nginx-deployment-56466d4948-tg9j8   1/1     Running       0          62m
+                nginx-deployment-56466d4948-ttn5t   1/1     Terminating   0          62m
+                nginx-deployment-56466d4948-vfmjx   0/1     Terminating   0          45m
+                nginx-deployment-56466d4948-vlgbs   1/1     Terminating   0          45m
+                nginx-deployment-56466d4948-xctfh   0/1     Terminating   0          45m
+
+                NAME                                READY   STATUS    RESTARTS   AGE
+                nginx-deployment-56466d4948-tg9j8   1/1     Running   0          64m
+Exec into the running container (figure out the command yourself)
+Install vim so that you can edit the file
 
 
+                kubectl exec -it nginx-deployment-687cd86b8-9bj7t -- /bin/bash
+
+                apt-get update
+                apt-get install vim
+
+- ![Image43](https://github.com/user-attachments/assets/f8a52f35-061c-4f2c-a47f-a6e35a144cd9)
 
 
+4. Update the content of the file and add the code below /usr/share/nginx/html/index.html
+   
+                vim /usr/share/nginx/html/index.html
+
+- ![Image44](https://github.com/user-attachments/assets/b956c08d-9d2c-4781-8f72-85b64e7e3f64)
+
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <title>Welcome to STEGHUB.COM!</title>
+                <style>
+                    body {
+                        width: 35em;
+                        margin: 0 auto;
+                        font-family: Tahoma, Verdana, Arial, sans-serif;
+                    }
+                </style>
+                </head>
+                <body>
+                <h1>Welcome to STEGHUB.COM!</h1>
+                <p>I love experiencing Kubernetes</p>
+                
+                <p>Learning by doing is absolutely the best strategy at
+                <a href="https://steghub.com/">www.steghub.com</a>.<br/>
+                for skills acquisition
+                <a href="https://steghub.com/">www.steghub.com</a>.</p>
+                
+                <p><em>Thank you for learning from STEGHUB.COM</em></p>
+                </body>
+                </html>
 
 
+- ![Image45](https://github.com/user-attachments/assets/8946744c-695b-43d7-b566-4a3c171ac156)
 
+###  HINT: PORT FORWARDING : Use the following command to forward a local port to the port on the NGINX pod.
 
+        kubectl port-forward nginx-deployment-7d476d754d-5bbqq 8080:80
 
+Check the browser - You should see this
 
+- ![Image46](https://github.com/user-attachments/assets/4302c9f6-a072-49d0-8cea-947e4013c4a4)
 
+6. Now, delete the only running Pod so that a new one is automatically recreated.
+   
+                kubectl delete pod nginx-deployment-687cd86b8-9bj7t
 
+Refresh the web page - You will see that the content you saved in the container is no longer there. That is because Pods do not store data when they are being recreated - that is why they are called ephemeral or stateless. (But not to worry, we will address this with persistent volumes in the next project)
 
+- ![FinalImage](https://github.com/user-attachments/assets/2e5d5965-bee1-4141-8816-ce3eb2f185a4)
 
+Storage is a critical part of running containers, and Kubernetes offers some powerful primitives for managing it. **Dynamic volume provisioning**, a feature unique to Kubernetes, which allows storage volumes to be created on-demand. Without dynamic provisioning, DevOps engineers must manually make calls to the cloud or storage provider to create new storage volumes, and then create **PersistentVolume** objects to represent them in Kubernetes. The dynamic provisioning feature eliminates the need for DevOps to pre-provision storage. Instead, it automatically provisions storage when it is requested by users.
 
+To make the data persist in case of a Pod's failure, you will need to configure the Pod to use Volumes:
 
+Clean up the deployment
 
+        kubectl delete deployment nginx-deployment
 
+In the next project,
 
-
-
-
-
-
-
-
-
+- We will understand how persistence work in Kubernetes using Volumes.
+- We will use eksctl to create a Kubernetes EKS cluster in AWS, and begin to use some powerful features such as **PV**, **PVCs**, **ConfigMaps**.
+- Experience Dynamic provisioning of volumes to make our Pods stateful, using Kubernetes Statefulset.
 
 
 
