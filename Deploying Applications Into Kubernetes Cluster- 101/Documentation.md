@@ -1,4 +1,4 @@
-![image-141-1024x330](https://github.com/user-attachments/assets/f48fc511-9266-4d9b-bfd4-d6b01441ab41)# Deploying Applications Into Kubernetes Cluster- 101
+# Deploying Applications Into Kubernetes Cluster- 101
 
 In this project, we will build upon your knowledge of Kubernetes architecture, and begin to deploy applications on a K8s cluster. Kubernetes has a lot of moving parts; it operates with several layers of abstraction between your 
 application and host machines where it runs. So many terms, and capabilities that is not realistic to learn it all at once. Hence, you will be introduced to as many concepts as possible, but gradually.
