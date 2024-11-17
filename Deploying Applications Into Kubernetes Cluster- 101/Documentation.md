@@ -873,7 +873,7 @@ Copy and paste the load balancer's address to the browser, and you will access t
 
 # ALTERNATIVELY FOR KIND WE can use Apply MetalLB manifest
 
-- Apply MetalLB manifest
+- Apply MetalLB manifest   [Reference](https://metallb.universe.tf/installation/)
 
           kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
 
@@ -896,7 +896,7 @@ Copy and paste the load balancer's address to the browser, and you will access t
 
                   kubectl apply -f metallb-advertise.yaml 
 
-Now let's apply our Nginx service and check that it has an external-IP
+Now let's apply our Nginx service and check that it has an external-IP  [Reference](https://metallb.universe.tf/configuration/)
 
 - ![Image37](https://github.com/user-attachments/assets/440ed736-48d5-4a01-8910-d6d25273c771)
 
