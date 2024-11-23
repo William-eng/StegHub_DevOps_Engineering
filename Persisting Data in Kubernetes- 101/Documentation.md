@@ -537,23 +537,97 @@ to demonstrate this, we will use the HTML file that came with Nginx. This file c
 
 Lets go through the below process so that you can see an example of a configMap use case.
 
-Remove the volumeMounts and PVC sections of the manifest and use kubectl to apply the configuration
-port forward the service and ensure that you are able to see the "Welcome to nginx" page
-exec into the running container and keep a copy of the index.html file somewhere. For example
+1. Remove the volumeMounts and PVC sections of the manifest and use kubectl to apply the configuration
+p2. ort forward the service and ensure that you are able to see the "Welcome to nginx" page
+3. exec into the running container and keep a copy of the index.html file somewhere. For example
 
 - ![Image23](https://github.com/user-attachments/assets/78a3431d-4208-4f41-a47f-f0616602a52c)
 
+ 4. Copy the output and save the file on your local pc because we will need it to create a configmap.
+
+### Persisting configuration data with configMaps
+According to the official documentation of [configMaps](https://kubernetes.io/docs/concepts/configuration/configmap/), A ConfigMap is an API object used to store non-confidential data in key-value pairs. Pods can consume ConfigMaps as environment variables, command-line arguments, or as configuration files in a volume.
+
+In our own use case here, We will use configMap to create a file in a volume.
+
+The manifest file we look like:
+
+cat <<EOF | tee ./nginx-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: website-index-file
+data:
+  # file to be mounted inside a volume
+  index-file: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <title>Welcome to nginx!</title>
+    <style>
+    html { color-scheme: light dark; }
+    body { width: 35em; margin: 0 auto;
+    font-family: Tahoma, Verdana, Arial, sans-serif; }
+    </style>
+    </head>
+    <body>
+    <h1>Welcome to nginx!</h1>
+    <p>If you see this page, the nginx web server is successfully installed and
+    working. Further configuration is required.</p>
+
+    <p>For online documentation and support please refer to
+    <a href="http://nginx.org/">nginx.org</a>.<br/>
+    Commercial support is available at
+    <a href="http://nginx.com/">nginx.com</a>.</p>
+
+    <p><em>Thank you for using nginx.</em></p>
+    </body>
+    </html>
+EOF
+
+- ![Image24](https://github.com/user-attachments/assets/b1b5a097-c533-4e8e-84f7-f7e274fbea16)
+
+- Apply the new manifest file
+
+  
+         kubectl apply -f nginx-configmap.yaml 
+- Update the deployment file to use the configmap in the volumeMounts section
 
 
-
-
-
-
-
-
-
-
-
+cat <<EOF | tee ./nginx-pod-with-cm.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: config
+            mountPath: /usr/share/nginx/html
+            readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: website-index-file
+          items:
+          - key: index-file
+            path: index.html
+EOF
 
 
 
