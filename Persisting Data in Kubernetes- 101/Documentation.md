@@ -594,73 +594,130 @@ EOF
 - Update the deployment file to use the configmap in the volumeMounts section
 
 
-cat <<EOF | tee ./nginx-pod-with-cm.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    tier: frontend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      tier: frontend
-  template:
-    metadata:
-      labels:
-        tier: frontend
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
-        volumeMounts:
-          - name: config
-            mountPath: /usr/share/nginx/html
-            readOnly: true
-      volumes:
-      - name: config
-        configMap:
-          name: website-index-file
-          items:
-          - key: index-file
-            path: index.html
-EOF
+                cat <<EOF | tee ./nginx-pod-with-cm.yaml
+                apiVersion: apps/v1
+                kind: Deployment
+                metadata:
+                  name: nginx-deployment
+                  labels:
+                    tier: frontend
+                spec:
+                  replicas: 1
+                  selector:
+                    matchLabels:
+                      tier: frontend
+                  template:
+                    metadata:
+                      labels:
+                        tier: frontend
+                    spec:
+                      containers:
+                      - name: nginx
+                        image: nginx:latest
+                        ports:
+                        - containerPort: 80
+                        volumeMounts:
+                          - name: config
+                            mountPath: /usr/share/nginx/html
+                            readOnly: true
+                      volumes:
+                      - name: config
+                        configMap:
+                          name: website-index-file
+                          items:
+                          - key: index-file
+                            path: index.html
+                EOF
+
+
+- Now the index.html file is no longer ephemeral because it is using a configMap that has been mounted onto the filesystem. This is now evident when you exec into the pod and list the _/usr/share/nginx/html_ directory
+
+- ![Image25](https://github.com/user-attachments/assets/f4e29190-4afb-4e4b-b07d-01e557162da7)
+
+
+You can now see that the index.html is now a soft link to ../data
+
+- Accessing the site will not change anything at this time because the same html file is being loaded through configmap.
+- But if you make any change to the content of the html file through the configmap, and restart the pod, all your changes will persist.
+Lets try that;
+
+- List the available configmaps. You can either use kubectl get configmap or kubectl get cm
+
+                  kubectl get cm
+                  NAME                 DATA   AGE
+                  kube-root-ca.crt     1      17d
+                  website-index-file   1      46m
+
+
+- ![Image26](https://github.com/user-attachments/assets/c07f1b21-e4cf-41fe-adf6-accf609e66cc)
+
+
+We are interested in the **website-index-file** configmap
+
+- Update the configmap. You can either update the manifest file, or the kubernetes object directly. Lets use the latter approach this time.
+
+
+        kubectl edit cm website-index-file 
+
+
+It will open up a vim editor, or whatever default editor your system is configured to use. Update the content as you like. "Only the html data section", then save the file.
+
+You should see an output like this
+
+                  configmap/website-index-file edited
+                  apiVersion: v1
+                  kind: ConfigMap
+                  metadata:
+                    name: website-index-file
+                  data:
+                    # file to be mounted inside a volume
+                    index-file: |
+                      <!DOCTYPE html>
+                      <html>
+                      <head>
+                      <title>Welcome to STEGHUB.COM!</title>
+                      <style>
+                      html { color-scheme: light dark; }
+                      body { width: 35em; margin: 0 auto;
+                      font-family: Tahoma, Verdana, Arial, sans-serif; }
+                      </style>
+                      </head>
+                      <body>
+                      <h1>Welcome to STEGHUB.COM!</h1>
+                      <p>If you see this page, It means you have successfully updated the configMap data in Kubernetes.</p>
+                  
+                      <p>For online documentation and support please refer to
+                      <a href="http://STEGHUB.COM/">STEGHUB.COM</a>.<br/>
+                      Commercial support is available at
+                      <a href="http://STEGHUB.COM/">STEGHUB.COM</a>.</p>
+                  
+                      <p><em>Thank you and WELCOME TO THE LIFE CHANGING PROGRAM.</em></p>
+                      </body>
+                      </html>
+
+- ![Image27](https://github.com/user-attachments/assets/e2fa8a9e-0e2f-4916-973d-b6c2a72788bf)
+
+Without restarting the pod, your site should be loaded automatically.
+
+                kubectl get pods
+                
+                kubectl port-forward pod/nginx-deployment-74b5dcf9f5-zqgjq  8089:80
+
+
+- ![Image28](https://github.com/user-attachments/assets/f5cebdd2-8636-4466-921f-caf29916d7eb)
+- ![Image29](https://github.com/user-attachments/assets/2a8240dc-eb94-4af3-b867-ea941c697b4a)
+
+
+If you wish to restart the deployment for any reason, simply use the command
+
+      kubectl rollout restart deploy nginx-deployment
+Output:
+
+      deployment.apps/nginx-deployment restarted
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![laastimage](https://github.com/user-attachments/assets/2c03dc19-48fd-46fd-98bd-754939a45c33)
 
 
 
