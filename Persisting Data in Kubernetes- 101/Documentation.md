@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/f713bc2f-bebf-4c2b-8eec-6ed6f9c60628)# Persisting Data in Kubernetes- 101
+# Persisting Data in Kubernetes- 101
 NOTE: Create EKS cluster first before the below section
 
 ### 1. Set up an Amazon Elastic Kubernetes Service (EKS) cluster.
@@ -148,6 +148,10 @@ Before you create a volume, lets run the nginx deployment into kubernetes withou
           kubectl exec -it $POD_NAME -- /bin/bash
 
           cd /etc/nginx/conf.d
+
+
+
+  - ![image](https://github.com/user-attachments/assets/f713bc2f-bebf-4c2b-8eec-6ed6f9c60628)
 
 
 - Open the config files to see the default configuration.
@@ -368,7 +372,7 @@ PVs are resources in the cluster. PVCs are requests for those resources and also
 2. When a PV has been provisioned in a specific availability zone, only pods running in that zone can use the PV. If a pod spec containing a PVC is created in another AZ and attempts to reuse an already bound PV, then the pod will remain in pending state and report _volume node affinity conflict_. Anytime you see this message, this will help you to understand what the problem is.
 3. PVs are not scoped to namespaces, they a clusterwide wide resource. PVCs on the other hand are namespace scoped.
    
-Learn more about the different types of [persistent volumes here] (https://kubernetes.io/docs/concepts/storage/persistent-volumes/#types-of-persistent-volumes)
+Learn more about the different types of [persistent volumes here](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#types-of-persistent-volumes)
 
 Now lets create some persistence for our nginx deployment. We will use 2 different approaches.
 
