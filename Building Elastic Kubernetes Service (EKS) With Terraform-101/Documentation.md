@@ -1,5 +1,12 @@
 # Building Elastic Kubernetes Service (EKS) With Terraform-101
+Since projects 21 and 22, we have had some fragmented experience around Kubernetes bootstrapping and deployment of containerized applications. This project seeks to solidify your skills by focusing more on real-world setups.
 
+1. We will use Terraform to create a Kubernetes EKS cluster and dynamically add scalable worker nodes
+2. We will deploy multiple applications using HELM
+3. We will experience more Kubernetes objects and how to use them with Helm. Such as Dynamic provisioning of volumes to make pods stateful
+4. We will improve upon your CI/CD skills with Jenkins
+   
+In Project 21, we created a k8s cluster from Ground-Up. That was quite painful, but very necessary to help master Kubernetes. Going forward, we will not have to do that. We will hardly ever have to do that even in the real world. given that cloud provider such as AWS have managed services for Kubernetes, they have done all the hard work, and with a few API calls to AWS, you can have a production-grade cluster ready to go in minutes. Therefore, in this project, you begin by focusing on [EKS](https://aws.amazon.com/eks/), and how to get it up and running using Terraform. Before moving on to other things.
 
 
 
