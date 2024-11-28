@@ -103,24 +103,62 @@ _If you have Terraform code from Project 16, simply update it to include EKS sta
                }
                }
 
+- ![Image02](https://github.com/user-attachments/assets/2406890e-d534-4259-aed1-2e4c2d57d5b6)
+
+**Note**: The tags added to the subnets are very important. The Kubernetes Cloud Controller Manager (cloud-controller-manager) and AWS Load Balancer Controller (aws-load-balancer-controller) need to identify the cluster. To do that, it queries the cluster’s subnets by using the tags as a filter.
+
+- For public and private subnets that use load balancer resources: each subnet must be tagged
+  
+      Key: kubernetes.io/cluster/cluster-name
+      Value: shared
+  
+- For private subnets that use internal load balancer resources: each subnet must be tagged
+
+      Key: kubernetes.io/role/internal-elb
+      Value: 1
+  
+- For public subnets that use internal load balancer resources: each subnet must be tagged
+  
+      Key: kubernetes.io/role/elb
+      Value: 1
+
+5. Create a file – _variables.tf_
+
+            # create some variables
+            variable "cluster_name" {
+            type        = string
+            description = "EKS cluster name."
+            }
+            variable "iac_environment_tag" {
+            type        = string
+            description = "AWS tag to indicate environment name of each infrastructure object."
+            }
+            variable "name_prefix" {
+            type        = string
+            description = "Prefix to be used on each infrastructure object Name created in AWS."
+            }
+            variable "main_network_block" {
+            type        = string
+            description = "Base CIDR block to be used in our VPC."
+            }
+            variable "subnet_prefix_extension" {
+            type        = number
+            description = "CIDR block bits extension to calculate CIDR blocks of each subnetwork."
+            }
+            variable "zone_offset" {
+            type        = number
+            description = "CIDR block bits extension offset to calculate Public subnets, avoiding collisions with Private subnets."
+            }
+- ![Image03](https://github.com/user-attachments/assets/cb8adadd-3a14-47c4-8289-9dea0a3be86b)
 
 
-**Note**: The tags added to the subnets is very important. The Kubernetes Cloud Controller Manager (cloud-controller-manager) and AWS Load Balancer Controller (aws-load-balancer-controller) needs to identify the cluster’s. To do that, it querries the cluster’s subnets by using the tags as a filter.
+6. Create a file – data.tf – This will pull the available AZs for use.
 
-For public and private subnets that use load balancer resources: each subnet must be tagged
-Key: kubernetes.io/cluster/cluster-name
-Value: shared
-For private subnets that use internal load balancer resources: each subnet must be tagged
-
-Key: kubernetes.io/role/internal-elb
-Value: 1
-For public subnets that use internal load balancer resources: each subnet must be tagged
-Key: kubernetes.io/role/elb
-Value: 1
-
-
-
-
+            # get all available AZs in our region
+            data "aws_availability_zones" "available_azs" {
+            state = "available"
+            }
+            data "aws_caller_identity" "current" {} # used for accesing Account ID and ARN
 
 
 
