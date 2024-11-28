@@ -24,8 +24,20 @@ _If you have Terraform code from Project 16, simply update it to include EKS sta
 
          aws s3 mb s3://ktrontech-eks-terraform-state --region us-east-1
 
+   - ![Image01](https://github.com/user-attachments/assets/036b5f44-e778-4802-b5f3-7b80554b95ae)
+
+
 3. Create a file – _backend.tf_ Task for you, ensure the backend is configured for remote state in S3
 
+             terraform {
+              backend "s3" {
+                bucket         = "your-s3-bucket-name"         # Replace with your S3 bucket name
+                key            = "path/to/your/terraform.tfstate" # Replace with your state file path
+                region         = "your-region"                # Replace with your AWS region
+                dynamodb_table = "terraform-locks"            # Replace with your DynamoDB table name
+                encrypt        = true                         # Ensures the state is encrypted
+              }
+            }
 
 
 
