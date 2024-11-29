@@ -276,43 +276,63 @@ _If you have Terraform code from Project 16, simply update it to include EKS sta
 
 10. Create a file – _variables.tfvars_ to set values for variables.
 
-cluster_name            = "tooling-app-eks"
-iac_environment_tag     = "development"
-name_prefix             = "steghub-com-eks"
-main_network_block      = "10.0.0.0/16"
-subnet_prefix_extension = 4
-zone_offset             = 8
-
-# Ensure that these users already exist in AWS IAM. Another approach is that you can introduce an iam.tf file to manage users separately, get the data source and interpolate their ARN.
-admin_users                    = ["james", "solomon"]
-developer_users                = ["leke", "david"]
-asg_instance_types             = [ { instance_type = "t3.small" }, { instance_type = "t2.small" }, ]
-autoscaling_minimum_size_by_az = 1
-autoscaling_maximum_size_by_az = 10
-
-
+            cluster_name            = "tooling-app-eks"
+            iac_environment_tag     = "development"
+            name_prefix             = "steghub-com-eks"
+            main_network_block      = "10.0.0.0/16"
+            subnet_prefix_extension = 4
+            zone_offset             = 8
+            
+            # Ensure that these users already exist in AWS IAM. Another approach is that you can introduce an iam.tf file to manage users separately, get the data source and interpolate their ARN.
+            admin_users                    = ["james", "solomon"]
+            developer_users                = ["leke", "david"]
+            asg_instance_types             = [ { instance_type = "t3.small" }, { instance_type = "t2.small" }, ]
+            autoscaling_minimum_size_by_az = 1
+            autoscaling_maximum_size_by_az = 10
 
 
 
+- ![Image06](https://github.com/user-attachments/assets/2b53f9ef-3935-4156-9ce5-53dc7f7c41c5)
+
+11. Create file – provider.tf
+
+               provider "aws" {
+                 region = "us-west-1"
+               }
+               
+               provider "random" {
+               }
 
 
+- ![Image07](https://github.com/user-attachments/assets/55f6f6b9-d432-4a14-901d-ec9dc5c8931c)
+
+Update the file – variables.tfvars to set values for variables.
+
+         autoscaling_average_cpu                  = 30
 
 
+12. Run _terraform init_
+
+- ![Image08](https://github.com/user-attachments/assets/7078a554-37ae-4201-935b-93e4834554ad)
+
+    
+13. Run Terraform plan – Your plan should have an output
+
+- ![Image09](https://github.com/user-attachments/assets/cf2d11e8-ac31-452d-b2ae-04de7aab505f)
 
 
+14. Run Terraform apply
+This will begin to create cloud resources, and fail at some point with the error
 
+               ╷
+                        │ Error: Post "http://localhost/api/v1/namespaces/kube-system/configmaps": dial tcp [::1]:80: connect: connection refused
+                        │ 
+                        │   with module.eks-cluster.kubernetes_config_map.aws_auth[0],
+                        │   on .terraform/modules/eks-cluster/aws_auth.tf line 63, in resource "kubernetes_config_map" "aws_auth":
+                        │   63: resource "kubernetes_config_map" "aws_auth" {      
+               
 
-
-
-
-
-
-
-
-
-
-
-
+That is because for us to connect to the cluster using the kubeconfig, Terraform needs to be able to connect and set the credentials correctly.
 
 
 
