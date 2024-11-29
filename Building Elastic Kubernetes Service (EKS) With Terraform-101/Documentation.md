@@ -415,6 +415,8 @@ To fix this problem
 
 - ![Image12](https://github.com/user-attachments/assets/9dcd8191-1bb4-4573-b0e5-66afcae78288)
 - ![Image13](https://github.com/user-attachments/assets/7e192dc0-da6c-46dd-bd3f-e1840b3a9b7e)
+- ![Image14](https://github.com/user-attachments/assets/2ac11d79-2c24-49cf-a1db-d0362eab5862)
+
 
 15. Create kubeconfig file using awscli.
 
