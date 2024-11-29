@@ -571,24 +571,83 @@ To get started,
 
 - ![Image17](https://github.com/user-attachments/assets/c1abaab8-e915-432a-a48b-8384f74a127d)
 
+5. Install the chart
+
+            helm install [RELEASE_NAME] jenkins/jenkins --kubeconfig [kubeconfig file]
+            helm install jenkins-server jenkins/jenkins --kubeconfig kubeconfig
+
+- ![image](https://github.com/user-attachments/assets/5a012438-c230-42eb-9dc6-9813e38eaeec)
+You should see an output like this
+
+            NAME: jenkins
+            LAST DEPLOYED: Sun Aug  1 12:38:53 2021
+            NAMESPACE: default
+            STATUS: deployed
+            REVISION: 1
+            NOTES:
+            1. Get your 'admin' user password by running:
+              kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+            2. Get the Jenkins URL to visit by running these commands in the same shell:
+              echo http://127.0.0.1:8080
+              kubectl --namespace default port-forward svc/jenkins 8080:8080
+            
+            3. Login with the password from step 1 and the username: admin
+            4. Configure security realm and authorization strategy
+            5. Use Jenkins Configuration as Code by specifying configScripts in your values.yaml file, see documentation: http:///configuration-as-code and examples: https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos
+            
+            For more information on running Jenkins on Kubernetes, visit:
+            https://cloud.google.com/solutions/jenkins-on-container-engine
+            
+            For more information about Jenkins Configuration as Code, visit:
+            https://jenkins.io/projects/jcasc/
+            
+            NOTE: Consider using a custom image with pre-installed plugins
 
 
 
+- ![Image18](https://github.com/user-attachments/assets/76c658a1-d820-406a-899f-02f12f611527)
 
 
+6. Check the Helm deployment
+
+            helm ls --kubeconfig [kubeconfig file]
 
 
+Output:
+         
+         NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+         jenkins default         1               2021-08-01 12:38:53.429471 +0100 BST    deployed        jenkins-3.5.9   2.289.3
 
 
+- ![Image19](https://github.com/user-attachments/assets/1c7efb35-6bed-4aca-94ba-4fa4acf72997)
+
+7. Check the pods
+
+            kubectl get pods --kubeconfigo [kubeconfig file]
+
+Output:
+
+      NAME        READY   STATUS    RESTARTS   AGE
+      jenkins-0   2/2     Running   0          6m14s
+
+8. Describe the running pod (review the output and try to understand what you see)
+
+         kubectl describe pod jenkins-0 --kubeconfig [kubeconfig file]
+9. Check the logs of the running pod
+
+         kubectl logs jenkins-0 --kubeconfig [kubeconfig file]
+
+ - ![Image19](https://github.com/user-attachments/assets/7e623f31-2ea0-4d93-94eb-b76367bbb7c9)
+  
+
+You will notice an output with an error
+
+         error: a container name must be specified for pod jenkins-0, choose one of: [jenkins config-reload] or one of the init containers: [init]
 
 
+This is because the pod has a [Sidecar container](https://www.godaddy.com/forsale/magalix.com?utm_source=TDFS_BINNS2&utm_medium=parkedpages&utm_campaign=x_corp_tdfs-binns2_base&traffic_type=TDFS_BINNS2&traffic_id=binns2&) alongside with the Jenkins container. As you can see fromt he error output, there is a list of containers inside the pod [jenkins config-reload] i.e jenkins and config-reload containers. The job of the config-reload is mainly to help Jenkins to reload its configuration without recreating the pod.
 
-
-
-
-
-
-
+Therefore we need to let kubectl know, which pod we are interested to see its log. Hence, the command will be updated like:
 
 
 
