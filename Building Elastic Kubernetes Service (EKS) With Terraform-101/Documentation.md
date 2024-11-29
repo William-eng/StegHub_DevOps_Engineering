@@ -766,6 +766,10 @@ Some commands was provided on the screen when Jenkins was installed with Helm. S
 
 - ![Image27](https://github.com/user-attachments/assets/06126c57-fd1b-4fa2-9464-80978e2afbfd)
 
+- ![Image28](https://github.com/user-attachments/assets/6b5f120f-b672-4a0b-bd23-9fedac4aa6ea)
+- ![Image29](https://github.com/user-attachments/assets/f9bd3c1d-8cef-4051-843a-b015816f7449)
+- ![Image30](https://github.com/user-attachments/assets/081a8ef0-2f41-4a93-93d1-6c3b4024ffa9)
+
 
 
 
