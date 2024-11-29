@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/01c4760b-a4d1-41ce-8523-07e0405776b1)# Building Elastic Kubernetes Service (EKS) With Terraform-101
+# Building Elastic Kubernetes Service (EKS) With Terraform-101
 Since projects 21 and 22, we have had some fragmented experience around Kubernetes bootstrapping and deployment of containerized applications. This project seeks to solidify your skills by focusing more on real-world setups.
 
 1. We will use Terraform to create a Kubernetes EKS cluster and dynamically add scalable worker nodes
