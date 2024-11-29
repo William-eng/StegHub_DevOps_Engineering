@@ -621,6 +621,60 @@ Output:
 
 - ![Image19](https://github.com/user-attachments/assets/1c7efb35-6bed-4aca-94ba-4fa4acf72997)
 
+
+
+**Troubleshooting**
+
+Get the cluster's OIDC provider URL
+
+       aws eks describe-cluster --name tooling-app-eks --region us-west-1 --query "cluster.identity.oidc.issuer" --output text
+
+
+Create IAM role, granting the **AssumeRoleWithWebIdentity** action.
+
+Copy the following contents to a file that's named aws-ebs-csi-driver-trust-policy.json Replace 111122223333 with your account ID. Replace EXAMPLED539D4633E53DE1B71EXAMPLE and region-code with the values returned in the oidc URL.
+
+
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "arn:aws:iam::111122223333:oidc-provider/oidc.eks.region-code.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "oidc.eks.region-code.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE:aud": "sts.amazonaws.com",
+                      "oidc.eks.region-code.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE:sub": "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+                    }
+                  }
+                }
+              ]
+            }
+
+
+
+
+Create the role, name it AmazonEKS_EBS_CSI_DriverRole
+
+            aws iam create-role \
+            --role-name AmazonEKS_EBS_CSI_DriverRole \
+            --assume-role-policy-document file://"aws-ebs-csi-driver-trust-policy.json"
+
+
+Install Amazon EBS CSI driver through the Amazon EKS add-on to improve security and reduce amount of work. (Using the eksctl)
+
+         eksctl create addon --name aws-ebs-csi-driver --cluster tooling-app-eks --region us-west-1
+
+- ![Image20](https://github.com/user-attachments/assets/8ef7a90d-1340-4e70-a211-d54d58fab049)
+
+      eksctl utils migrate-to-pod-identity --cluster tooling-app-eks --region us-west-1 --approve
+
+- ![Image21](https://github.com/user-attachments/assets/094ee028-c1ef-4d66-bc4d-cfdfab1eeb7b)
+
+
 7. Check the pods
 
             kubectl get pods --kubeconfigo [kubeconfig file]
@@ -650,34 +704,21 @@ This is because the pod has a [Sidecar container](https://www.godaddy.com/forsal
 Therefore we need to let kubectl know, which pod we are interested to see its log. Hence, the command will be updated like:
 
 
+         kubectl logs jenkins-0 -c jenkins --kubeconfig [kubeconfig file]
 
+Now lets avoid calling the [_kubeconfig file_] everytime. Kubectl expects to find the default kubeconfig file in the location _~/.kube/config_. But what if you already have another cluster using that same file? It doesn’t make sense to overwrite it. What you will do is to merge all the kubeconfig files together using a kubectl plugin called [konfig](https://github.com/corneliusweig/konfig) and select whichever one you need to be active.
 
+1. Install a package manager for kubectl called krew so that it will enable you to install plugins to extend the functionality of kubectl. Read more about it [Here](https://github.com/kubernetes-sigs/krew)
 
+- ![Image22](https://github.com/user-attachments/assets/8027facf-5d27-4d6d-bc6c-8fb71781ca83)
 
+3. Install the [konfig plugin](https://github.com/corneliusweig/konfig)
 
+            kubectl krew install konfig
 
+The Event section shows that Kubernetes is waiting for the external provisioner to create the volume, but it’s not happening. This typically means that there might be an issue with the EBS CSI (Container Storage Interface) driver or the AWS EBS service itself.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- 
 
 
 
