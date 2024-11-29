@@ -718,7 +718,78 @@ Now lets avoid calling the [_kubeconfig file_] everytime. Kubectl expects to fin
 
 The Event section shows that Kubernetes is waiting for the external provisioner to create the volume, but it’s not happening. This typically means that there might be an issue with the EBS CSI (Container Storage Interface) driver or the AWS EBS service itself.
 
-- 
+- ![Image23](https://github.com/user-attachments/assets/a8e06a2c-7891-4dfd-b631-4f657c5ee22e)
+
+2. Install the konfig plugin
+   
+         kubectl krew install konfig
+
+- ![Image24](https://github.com/user-attachments/assets/a2cff5ff-3403-4977-bbd5-46634f451fcd)
+
+3. Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
+   
+         kubectl konfig import --save kubeconfig
+
+
+4. Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
+
+
+         kubectl config get-contexts
+
+- ![Image25](https://github.com/user-attachments/assets/0e26b941-8adb-456e-bf25-fa4ea62ddcc1)
+
+
+5. Set the current context to use for all kubectl and helm commands
+   
+            kubectl config use-context [name of EKS cluster]
+            
+          
+6. Test that it is working without specifying the --kubeconfig flag
+
+   
+                     kubectl get po
+
+
+- ![Image26](https://github.com/user-attachments/assets/c120c044-133a-4660-95d2-d56251256a3f)
+
+
+7. Display the current context. This will let you know the context in which you are using to interact with Kubernetes.
+
+   
+            kubectl config current-context
+
+Now that we can use _kubectl_ without the _--kubeconfig_ flag, Lets get access to the Jenkins UI. (_In later projects we will further configure Jenkins. For now, it is to set up all the tools we need_)
+
+Some commands was provided on the screen when Jenkins was installed with Helm. See number 5 above. Get the password to the admin user
+
+            kubectl exec --namespace default -it svc/jenkins-server -c jenkins -- /bin/cat /run/secrets/additional/chart-admin-password && echo
+
+- ![Image27](https://github.com/user-attachments/assets/06126c57-fd1b-4fa2-9464-80978e2afbfd)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
