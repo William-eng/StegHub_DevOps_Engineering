@@ -1,4 +1,4 @@
-# Building Elastic Kubernetes Service (EKS) With Terraform-101
+![image](https://github.com/user-attachments/assets/01c4760b-a4d1-41ce-8523-07e0405776b1)# Building Elastic Kubernetes Service (EKS) With Terraform-101
 Since projects 21 and 22, we have had some fragmented experience around Kubernetes bootstrapping and deployment of containerized applications. This project seeks to solidify your skills by focusing more on real-world setups.
 
 1. We will use Terraform to create a Kubernetes EKS cluster and dynamically add scalable worker nodes
@@ -537,20 +537,39 @@ According to the official documentation [here](https://helm.sh/docs/intro/instal
 
          make build
    
-6. Helm binary will be in the bin folder. Simply move it to the bin directory on your system. You can check other tools to know where that is. fOr example, check where pwd the utility is being called from by running which pwd. Assuming the output is /usr/local/bin. You can move the helm binary there.
+5. Helm binary will be in the bin folder. Simply move it to the bin directory on your system. You can check other tools to know where that is. fOr example, check where pwd the utility is being called from by running which pwd. Assuming the output is /usr/local/bin. You can move the helm binary there.
 
 
+         sudo mv bin/helm /usr/local/bin/
+
+6. Check that Helm is installed
+   
+            helm version
+            
+            version.BuildInfo{Version:"v3.6+unreleased", GitCommit:"13f07e8adbc57b0e3f96b42340d6f44bdc8d5016", GitTreeState:"dirty", GoVersion:"go1.15.5"}
+
+- ![Image15](https://github.com/user-attachments/assets/95ecbd54-0291-4705-a318-3041ad59c389)
+  
+# DEPLOY JENKINS WITH HELM
+Before we start developing our own Helm charts, let's utilize publicly available charts to deploy the tools we need.
+
+One of the great features of Helm is that it allows you to deploy applications that are already packaged in a public Helm repository with minimal configuration. A good example of this is **Jenkins**.
+
+To get started, 
+1. Visit [Artifact Hub](https://artifacthub.io/packages/search) to find packaged applications as Helm charts.
+2. Search for Jenkins
+3. Add the repository to Helm, so you can easily download and deploy it.
 
 
+- ![Image16](https://github.com/user-attachments/assets/f229ed12-0cd8-45f9-8b19-7c7c5e5bbc04)
 
+         helm repo add jenkins https://charts.jenkins.io
 
+4. Update helm repo
 
+         helm repo update
 
-
-
-
-
-
+- ![Image17](https://github.com/user-attachments/assets/c1abaab8-e915-432a-a48b-8384f74a127d)
 
 
 
