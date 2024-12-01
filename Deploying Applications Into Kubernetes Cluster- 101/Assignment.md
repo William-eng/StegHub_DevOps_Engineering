@@ -11,28 +11,64 @@ This section will be quite challenging for you because you will need to spend so
 ## 1. Artifactory
 The following steps were taking to install JFrog Artifactory in the EKS (Elastic Kubernetes Service) cluster using Helm:
 
-- ![Screenshot from 2024-12-01 01-21-51](https://github.com/user-attachments/assets/c23faf93-0fe3-455e-806a-f266b8925cd1)
+- ![Image01](https://github.com/user-attachments/assets/c23faf93-0fe3-455e-806a-f266b8925cd1)
 
 
 1. Add JFrog Helm repository
-Before installing JFrog helm charts, you need to add the  to your helm client
+Before installing JFrog helm charts, you need to add them to your helm client
 
         helm repo add jfrog https://charts.jfrog.io
         helm repo update
+   
+ - ![Image02](https://github.com/user-attachments/assets/536ab7dd-0903-4af2-b59e-810949481f9d)
 
 
+2. Create a Namespace for Artifactory. It’s a good practice to create a dedicated namespace for Artifactory
+
+        kubectl create namespace artifactory
 
 
+3. Install Artifactory Using Helm
+   
+                helm install artifactory jfrog/artifactory \
+                  --namespace artifactory \
+                  --set artifactory.service.type=LoadBalancer \
+                  --set postgresql.enabled=true \
+                  --set artifactory.admin.password=admin
+   
+- artifactory: Name of the release.
+- jfrog/artifactory: Helm chart to install.
+- --namespace artifactory: Namespace where Artifactory will be installed.
+- --set artifactory.service.type=LoadBalancer: Exposes Artifactory using a LoadBalancer service.
+- --set postgresql.enabled=true: Enables PostgreSQL as the database for Artifactory.
+- --set artifactory.admin.password=: Set the admin password.
+  
+- ![Image03](https://github.com/user-attachments/assets/0f0e3f8c-d652-4ab3-8d5b-1e95624719b5)
 
 
+4. Check the status of the Helm release
+   
+                helm status artifactory -n artifactory
+
+- ![Image04](https://github.com/user-attachments/assets/1830721d-387c-449a-aad5-0838d7d56632)
 
 
+Check status of nginx service
 
+                kubectl get svc --namespace artifactory -w artifactory-artifactory-nginx
 
+- ![Image05](https://github.com/user-attachments/assets/65533fde-b175-478e-ae81-23287b736529)
 
+Check status of the service
 
+                kubectl get svc -n artifactory
 
+- ![Image06](https://github.com/user-attachments/assets/455ae078-26c3-498f-9802-ed2a4a51bd75)
 
+5. Access the Artifactory via a browser by port forwarding
+
+   
+                kubectl port-forward svc/artifactory  8082:8082 -n artifactory
 
 
 
