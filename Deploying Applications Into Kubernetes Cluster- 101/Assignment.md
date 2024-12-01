@@ -74,45 +74,92 @@ Check status of the service
 
 
 
+## 2. Hashicorp Vault
+- Install HashiCorp Vault in EKS cluster using Helm
+Add HashiCorp Helm repository to get access to the Vault Helm chart
+
+        helm repo add hashicorp https://helm.releases.hashicorp.com
+        helm repo update
+- ![Image07](https://github.com/user-attachments/assets/413cd18a-f27b-4893-8a11-069dd9b036fc)
 
 
 
+- Install Vault Using Helm
+  
+        helm install vault hashicorp/vault --namespace vault --create-namespace
+  
+  - ![Image08](https://github.com/user-attachments/assets/a5ddecdc-0fad-4c20-9cae-655574bf1c2e)
+
+
+- Check if Vault pods are running correctly in the EKS cluster.
+
+                kubectl get pods -n vault
+
+
+- ![Image09](https://github.com/user-attachments/assets/357cbcb6-1c7b-45f8-8758-65eaf4b26543)
+
+- Initialize vault-0 with one key share and one key threshold.
+
+                         kubectl exec vault-0 -n vault -- vault operator init \
+                            -key-shares=1 \
+                            -key-threshold=1 \
+                            -format=json > cluster-keys.json
+                        cat cluster-keys.json
+
+  operator init command generates a root key that it disassembles into key shares -key-shares=1
+
+-key-threshold=1then sets the number of key shares required to unseal Vault
+
+- ![Image10](https://github.com/user-attachments/assets/f38ba247-911f-4211-8807-4c5deba3bd6a)
+
+
+- Create a variable named VAULT_UNSEAL_KEY to capture the Vault unseal key
+
+        VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
+
+
+- Unseal Vault running on the vault-0 pod
+
+                 kubectl exec vault-0 -n vault -- vault operator unseal   VAULT_UNSEAL_KEY
+
+- ![Image11](https://github.com/user-attachments/assets/9a53bfe7-4b52-46fe-a626-863a103fd258)
+
+- Join the vault-1 and vault-2pods to the Raft cluster
+  
+                $ kubectl exec -ti vault-1 -n vault -- vault operator raft join http://vault-0.vault-internal:8200
+                $ kubectl exec -ti vault-2 -n vault -- vault operator raft join http://vault-0.vault-internal:8200
+
+
+- 
+
+- Use the unseal key from above to unseal vault-1 and vault-2
+Unsealing is the process of constructing the root key necessary to read the decryption key to decrypt the data, allowing access to the Vault.
+
+                        $ kubectl exec -ti vault-1 -n vault -- vault operator unseal VAULT_UNSEAL_KEY
+                        $ kubectl exec -ti vault-2 -n vault -- vault operator unseal VAULT_UNSEAL_KEY
+
+- After this unsealing process all vault pods are now in running (1/1 ready ) state
+  
+                        $ kubectl get po -n vault
+
+
+- ![Image12](https://github.com/user-attachments/assets/e6b325b3-2f78-429e-8d55-84762e4a3910)
 
 
 
+Vault service is of ClusterIP type which means we can access Vault console from browser so to access this we need to use port-forward command
+
+        $ kubectl port-forward service/vault -n vault 8200:8200
 
 
 
+- ![Image13](https://github.com/user-attachments/assets/cfa73427-5e7a-4bb0-a9bc-390bf5706146)
 
+- type http://localhost:8200 in browser and enter root token in cluster.json
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![Image14](https://github.com/user-attachments/assets/15f0466d-978c-4c5b-b24f-4734ff5060e8)
+- ![Image15](https://github.com/user-attachments/assets/01b5fdf9-afbc-42b2-b1e9-86c288c8d656)
+- ![Image16](https://github.com/user-attachments/assets/4c5910a0-900c-4a24-a1a9-aea1928789a9)
 
 
 
