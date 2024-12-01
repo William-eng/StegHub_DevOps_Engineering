@@ -1,4 +1,4 @@
-# QUICK TASK 
+![Screenshot from 2024-12-01 06-29-16](https://github.com/user-attachments/assets/ac10e7ac-d4bf-47ab-8873-4ffc26b63e84)# QUICK TASK 
 ## Now We will setup the following tools using Helm
 This section will be quite challenging for you because you will need to spend some time to research the charts, read their documentations and understand how to get an application running in your cluster by simply running a helm install command.
 
@@ -235,83 +235,215 @@ Port-forward Prometheus to local machine to access the UI
 - ![Image27](https://github.com/user-attachments/assets/44987610-7161-48c7-9851-97056af3f64b)
 
 
+## 5. Elasticsearch ELK using [ECK](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-install-helm.html)
 
+### Step 1. Install ECK Operator
+ECK (Elastic Cloud on Kubernetes) is the official way to deploy and manage Elasticsearch on Kubernetes. This will handle the deployment of Elasticsearch, Kibana, and other components.
 
+Add the Elastic Helm repository
 
+                helm repo add elastic https://helm.elastic.co
+                helm repo update
 
 
 
+- ![Image28](https://github.com/user-attachments/assets/42664a9c-662d-4cf2-ad58-679d086fbdd5)
 
 
+- Install the ECK operator:
+  
+                helm install elastic-operator elastic/eck-operator -n elastic-system --create-namespace
 
 
+- ![Image29](https://github.com/user-attachments/assets/cd3dff01-8872-40e2-acc4-d8d0db15c95b)
 
 
 
+- Open your terminal and run the above command, this will add all the repositories that we need for our Elastic stack, to confirm repos were added just search the repo we added
 
+        helm search repo elastic
 
+- ![Image30](https://github.com/user-attachments/assets/aeb7a4ac-3c49-4951-8036-f7fcd6c601f3)
 
 
+We will overwrite the default helm value file to change some configs
 
+**Filebeat**
+Create a directory for Filebeat and run this command
 
+                helm show values elastic/filebeat > values.yml 
 
+This creates a file called values.yml
+By default, Filebeat connects to Elasticsearch but we want to change this to point to Logstash.
 
+In your value.yml file change the following config;
 
+                filebeatConfig:
+                    filebeat.yml: |
+                      filebeat.inputs:
+                      - type: container
+                        paths:
+                          - /var/log/containers/*.log
+                        processors:
+                        - add_kubernetes_metadata:
+                            host: ${NODE_NAME}
+                            matchers:
+                            - logs_path:
+                                logs_path: "/var/log/containers/"
+                
+                      output.elasticsearch:
+                        host: '${NODE_NAME}'
+                        hosts: '["https://${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}"]'
+                        username: '${ELASTICSEARCH_USERNAME}'
+                        password: '${ELASTICSEARCH_PASSWORD}'
+                        protocol: https
+                        ssl.certificate_authorities: ["/usr/share/filebeat/certs/ca.crt"]
 
 
 
+To
 
+                filebeatConfig:
+                    filebeat.yml: |
+                      filebeat.inputs:
+                      - type: container
+                        paths:
+                          - /var/log/containers/*.log
+                        processors:
+                        - add_kubernetes_metadata:
+                            host: ${NODE_NAME}
+                            matchers:
+                            - logs_path:
+                                logs_path: "/var/log/containers/"
+                
+                      output.logstash:
+                        hosts: ["logstash-logstash:5044"]
 
 
 
 
+- ![Image31](https://github.com/user-attachments/assets/46c8f52c-cc47-4ed0-ac3d-898e7692fadc)
 
 
+**Logstash**
+We will do the same Logstash to get its value file;
 
+                helm show values elastic/logstash > values.yml 
 
 
+We will be connecting Logstash with Elasticsearch and these are the default configs that we will need to add
 
 
 
+                logstashPipeline:
+                  logstash.conf: |
+                    input {
+                      beats {
+                        port => 5044
+                      }
+                    }
+                
+                     output {
+                      elasticsearch {
+                        hosts => "https://elasticsearch-master:9200"
+                        cacert => "/usr/share/logstash/config/elasticsearch-master-certs/ca.crt"
+                        user => '${ELASTICSEARCH_USERNAME}'  # Elasticsearch username
+                        password => '${ELASTICSEARCH_PASSWORD}' # Elasticsearch password
+                      }
+                    }
 
 
 
+What we have done above is tell Logstash to expect its input from Filebeat on port 5044 and output it on Elasticsearch.
 
+As we discussed earlier the latest version of Elastic search has by default enabled secure communication and we need to mount the certificate in our pod to be used for secure communication
 
 
+                secretMounts:
+                  - name: "elasticsearch-master-certs"
+                    secretName: "elasticsearch-master-certs"
+                    path: "/usr/share/logstash/config/elasticsearch-master-certs"
 
 
 
 
+Elasticsearch will create secrets and one of the secrets will have ca.crt that we want in our Logstash pod that will be used to decrypt and encrypt communication between the two.
 
+By default service is not enabled, enable it by adding;
 
+                service:
+                  annotations: {}
+                  type: ClusterIP
+                  loadBalancerIP: ""
+                  ports:
+                    - name: beats
+                      port: 5044
+                      protocol: TCP
+                      targetPort: 5044
+                    - name: http
+                      port: 8080
+                      protocol: TCP
+                      targetPort: 8080
 
+This should be it for Logstash there is more but this is enough.
 
 
+- ![Image32](https://github.com/user-attachments/assets/8f4e7de2-5fca-4c28-b84e-d714704711ba)
+- ![Image33](https://github.com/user-attachments/assets/81827d55-e28d-4f3c-8c40-8e8b060604ad)
+- ![Image34](https://github.com/user-attachments/assets/b09305e0-38ee-4d74-a8ec-8fa6712ceff9)
 
 
 
+**Elasticsearch**
+We will get its value file
 
+                helm show values elastic/elasticsearch > values.yml 
+The current value works well with our setup, but it's good to have the value file in case you want to change values.
 
 
+Kibana
 
+        helm show values elastic/kibana > values.yml
+        
+We want to expose Kibana because that is how we will be able to log in to our dashboard.
 
 
 
+                type: LoadBalancer
+                  loadBalancerIP: ""
+                  port: 5601
+                  nodePort: ""
+                  labels: {}
+                  annotations: {}
 
 
 
+**Installation**.
+Now that we have all set it time we file the installation and I prefer running it, in this order;
 
+- Elasticsearch
 
+- Filebeat
 
+- Logstash
 
+- Kibana
 
+helm install elasticsearch elastic/elasticsearch -f values.yml -n monitoring
+helm install filebeat elastic/filebeat -f values.yml -n monitoring
+helm install logstash elastic/logstash -f values.yml -n monitoring
+helm install kibana elastic/kibana -f values.yml -n monitoring  
 
+- ![Image35](https://github.com/user-attachments/assets/3574ddf9-9494-44e6-8ddc-f387be944750)
 
+- ![Image36](https://github.com/user-attachments/assets/a8f9ab4b-0228-4ef3-92cb-33441d7cf30b)
 
+- 
 
+Please note to run the commands where the corresponding value file was saved.
+If all goes well the pods should be up and running.
 
-
+Kibana will generate a public URL for our case.
 
 
 
