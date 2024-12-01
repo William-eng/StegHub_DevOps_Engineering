@@ -163,40 +163,76 @@ Vault service is of ClusterIP type which means we can access Vault console from 
 
 
 
+## 3. Prometheus
+- Add the Prometheus Helm repo
+
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo update
+
+- ![Image17](https://github.com/user-attachments/assets/657cf9a5-341a-41e0-9f6e-0fd809647f3d)
+
+- Create a namespace
+  
+                kubectl create namespace monitoring
+
+- Install Prometheus
+  
+        helm install prometheus prometheus-community/prometheus --namespace monitoring
+
+- ![Image18](https://github.com/user-attachments/assets/3cf65a00-3ed8-4395-a0ce-55af26e850db)
+
+- Accessing Prometheus UI
+Port-forward Prometheus to local machine to access the UI
+
+        kubectl port-forward -n monitoring svc/prometheus-server 9090:80
 
 
 
+- ![Image19](https://github.com/user-attachments/assets/2c945b50-0bdf-4f14-9493-aff457378397)
+- ![Image20](https://github.com/user-attachments/assets/9ff6e01c-00a3-46f1-8c32-66b5eadc4b19)
+
+- ![Image21](https://github.com/user-attachments/assets/c6f5ddf6-9408-410c-bcf9-8e06ee3f994d)
 
 
 
+## 4. Grafana
+- Add the official Grafana Helm repository to Helm client
+
+                helm repo add grafana https://grafana.github.io/helm-charts
+                helm repo update
+
+- ![Image22](https://github.com/user-attachments/assets/76001a7d-91fa-4b6c-a704-1d77822bc882)
+
+- Install Grafana using Helm
+  
+                helm install grafana grafana/grafana --namespace monitoring
+
+- ![Image23](https://github.com/user-attachments/assets/363551fb-a947-4bbb-8823-20fb4c0dad97)
+
+
+- Get the Grafana admin password
+
+        kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
 
 
+### - Access Grafana UI
+
+- Get the pod and service
+
+                kubectl get svc -o wide -n monitoring
 
 
+- ![Image24](https://github.com/user-attachments/assets/1733ac36-1638-4f70-90e9-7428869a1cfd)
+
+- port-forward to the local machine
+
+                kubectl port-forward --namespace monitoring svc/grafana 3000:80
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![Image25](https://github.com/user-attachments/assets/c6cdfa1c-855e-462d-8aa3-fceb64270da0)
+- ![Image26](https://github.com/user-attachments/assets/fa3b7de6-f35e-4cd3-8951-c2b8a4ffee48)
+- ![Image27](https://github.com/user-attachments/assets/44987610-7161-48c7-9851-97056af3f64b)
 
 
 
