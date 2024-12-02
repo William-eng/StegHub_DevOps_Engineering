@@ -312,7 +312,7 @@ The output confirms the deployment of Kibana:
 
 
 
-
+REF: https://github.com/elastic/helm-charts/blob/main/elasticsearch/examples/kubernetes-kind/values.yaml
 
 
 
