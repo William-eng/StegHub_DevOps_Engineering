@@ -1,4 +1,4 @@
-![Screenshot from 2024-12-01 06-29-16](https://github.com/user-attachments/assets/ac10e7ac-d4bf-47ab-8873-4ffc26b63e84)# QUICK TASK 
+# QUICK TASK 
 ## Now We will setup the following tools using Helm
 This section will be quite challenging for you because you will need to spend some time to research the charts, read their documentations and understand how to get an application running in your cluster by simply running a helm install command.
 
@@ -70,6 +70,8 @@ Check status of the service
    
                 kubectl port-forward svc/artifactory  8082:8082 -n artifactory
 
+- ![Image](https://github.com/user-attachments/assets/baa7e59e-673f-487e-bdd5-70da0103c207)
+![Image](https://github.com/user-attachments/assets/2ca8e855-84c4-4bdb-aa1c-4b041538f6f1)
 
 
 
@@ -264,6 +266,7 @@ Add the Elastic Helm repository
         helm search repo elastic
 
 - ![Image30](https://github.com/user-attachments/assets/aeb7a4ac-3c49-4951-8036-f7fcd6c601f3)
+- ![ImageX](https://github.com/user-attachments/assets/ac10e7ac-d4bf-47ab-8873-4ffc26b63e84)
 
 
 We will overwrite the default helm value file to change some configs
