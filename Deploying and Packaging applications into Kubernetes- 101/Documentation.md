@@ -79,7 +79,8 @@ The best approach to easily get Artifactory into kubernetes is to use helm.
                 TEST SUITE: None
                 NOTES:
                 Congratulations. You have just deployed JFrog Artifactory!
-                
+              
+
                 1. Get the Artifactory URL by running these commands:
                 
                    NOTE: It may take a few minutes for the LoadBalancer IP to be available.
@@ -101,13 +102,23 @@ The best approach to easily get Artifactory into kubernetes is to use helm.
 We have used upgrade --install flag here instead of helm install artifactory jfrog/artifactory This is a better practice, especially when developing CI pipelines for helm deployments. It ensures that helm does an upgrade if there is an existing installation. But if there isn’t, it does the initial install. With this strategy, the command will never fail. It will be smart enough to determine if an upgrade or fresh installation is required.
 The helm chart version to install is very important to specify. So, the version at the time of writing may be different from what you will see from Artifact Hub. So, replace the version number to the desired. You can see all the versions by clicking on “see all” as shown in the image below.
 
+-   ![Image6](https://github.com/user-attachments/assets/455c534b-7dc6-4b1a-913d-d13d39fa28ba)
+
+- ![Image7](https://github.com/user-attachments/assets/071d2ba6-8fd7-4461-9e8f-0c3bfe1fba89)
 
 
+The output from the installation already gives some Next step directives.
 
+## Getting the Artifactory URL
+Lets break down the first Next Step.
 
+1. The artifactory helm chart comes bundled with the Artifactory software, a PostgreSQL database and an Nginx proxy which it uses to configure routes to the different capabilities of Artifactory. Getting the pods after some time, you should see something like the below.
 
+- ![Image8](https://github.com/user-attachments/assets/388c5caa-ca26-4cf7-8cd0-7c0809d225fc)
 
+This output shows that the artifactory pod and nginx pod are running but not in a Ready state.
 
+- ![Image9](https://github.com/user-attachments/assets/a3f3adf5-572c-4fd2-b308-ea7355c9baa3)
 
 
 
