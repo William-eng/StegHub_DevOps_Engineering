@@ -281,6 +281,7 @@ Using the Helm approach, according to the official guide;
                --repo https://kubernetes.github.io/ingress-nginx \
                --namespace ingress-nginx --create-namespace
 
+- ![Image16](https://github.com/user-attachments/assets/42d49b7c-01b9-4937-9603-a4e2f9f30a14)
 
 
 
@@ -292,76 +293,174 @@ This command is idempotent:
 - if the ingress controller is already installed, it will upgrade it.
 
 
+**Self Challenge Task** – Delete the installation after running the above command. Then try to re-install it using a slightly different method you are already familiar with. Ensure NOT to use the flag --repo
+**Hint** – Run the helm repo add command before installation
 
+- A few pods should start in the ingress-nginx namespace:
 
+         kubectl get pods --namespace=ingress-nginx
 
+- ![Image17](https://github.com/user-attachments/assets/cb528777-9354-4868-959c-b718eaed4393)
 
 
+- Delete the installed ingress-nginx release:
 
 
+      helm uninstall ingress-nginx -n ingress-nginx
 
+        kubectl delete namespace ingress-nginx
 
 
+- Add Helm Repository
+- Add the ingress-nginx Helm repository (this will replace the --repo flag usage):
 
 
+            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+            helm repo update
 
+- ![Image18](https://github.com/user-attachments/assets/36879689-1898-4a4e-8ff6-051743017b7c)
 
+- Reinstall ingress-nginx using the repository name instead of the --repo flag:
 
 
+         helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+           --namespace ingress-nginx --create-namespace
 
+- ![Image19](https://github.com/user-attachments/assets/144d01ae-5a22-4d5d-8321-ba4b5510a1b3)
 
+- A few pods should start in the ingress-nginx namespace:
 
+         kubectl get pods --namespace=ingress-nginx
 
 
+- ![Image20](https://github.com/user-attachments/assets/e66ac627-1b72-4e39-9aec-69dfcc4d8529)
 
 
+3. After a while, they should all be running. The following command will wait for the ingress controller pod to be up, running, and ready:
 
 
+            kubectl wait --namespace ingress-nginx \
+              --for=condition=ready pod \
+              --selector=app.kubernetes.io/component=controller \
+              --timeout=120s
 
 
 
+4. Check to see the created load balancer in AWS.
 
+         kubectl get service -n ingress-nginx
+**Output**:
 
+         NAME                                 TYPE           CLUSTER-IP      EXTERNAL-IP                                                                 PORT(S)                      AGE
+         ingress-nginx-controller             LoadBalancer   172.20.52.252   aa2d0568b5b1e4a3db37301e6c82bc2f-294794177.eu-central-1.elb.amazonaws.com   80:31882/TCP,443:30956/TCP   36m
+         ingress-nginx-controller-admission   ClusterIP      172.20.165.95   <none>                                                                      443/TCP       
 
 
+- ![Image21](https://github.com/user-attachments/assets/b5f27f14-0348-409d-aa17-2276abace9e3)
 
 
+The _ingress-nginx-controller service_ that was created is of the type _LoadBalancer_. That will be the load balancer to be used by all applications which require external access and are using this ingress controller.
 
+5. Check the IngressClass that identifies this ingress controller.
 
+         kubectl get ingressclass -n ingress-nginx
+**Output**:
 
+         NAME    CONTROLLER             PARAMETERS   AGE
+         nginx   k8s.io/ingress-nginx   <none>       36m
 
+- ![Image22](https://github.com/user-attachments/assets/04611d47-0036-4620-af4c-9ed15169d187)
 
+## Deploy Artifactory Ingress
+Now, it is time to configure the ingress so that we can route traffic to the Artifactory internal service, through the ingress controller’s load balancer.
 
+Notice the _spec_ section with the configuration that selects the Nginx ingress controller using the **ingressClassName**, and we have scheme annotation set as _internet-facing_
 
 
+             apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: artifactory-ingress
+                namespace: tools
+                annotations:
+                  service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+                  service.beta.kubernetes.io/aws-load-balancer-type: nlb
+                  service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+                labels:
+                  name: artifactory
+              spec:
+                ingressClassName: nginx
+                rules:
+                - host: tooling.artifactory.steghub.com
+                  http:
+                    paths:
+                    - path: /
+                      pathType: Prefix
+                      backend:
+                        service:
+                          name: artifactory-artifactory-nginx
+                          port:
+                            number: 8082
 
 
 
+- ![Image23](https://github.com/user-attachments/assets/c64d46d2-44ac-46c3-9d17-5edaadac7b08)
 
 
+      kubectl apply -f <filename.yaml> -n tools
 
+**Output**:
 
+         NAME                 CLASS   HOSTS                                   ADDRESS                                                                  PORTS   AGE
+         artifactory-ingress   nginx   tooling.artifactory.steghub.com   k8s-tools-artifact-0518ebb10a-2014569128.eu-central-1.elb.amazonaws.com   80      5s
 
 
+- ![Image24](https://github.com/user-attachments/assets/52446b95-fc11-4e00-9f2e-2f81630537f4)
 
 
+Now, take note of
 
+CLASS – The Nginx controller class name nginx
+HOSTS – The hostname to be used in the browser tooling.artifactory.steghub.com
+ADDRESS – The load balancer address that was created by the ingress controller
 
 
+## Configure DNS
+If anyone were to visit the tool, it would be very inconvenient to share the long load balancer address. Ideally, you would create a DNS record that is human-readable and can direct requests to the balancer. This is exactly what has been configured in the ingress object - _host: "tooling.artifactory.steghub.com"_ but without a DNS record, there is no way that the host address can reach the load balancer.
 
+The _sandbox.svc.steghub.com_ part of the domain is the configured **HOSTED ZONE** in AWS. So you will need to configure Hosted Zone in the AWS console or as part of your infrastructure as code using Terraform.
 
+If you purchased the domain directly from AWS, the hosted zone will be automatically configured for you. But if your domain is registered with a different provider such as freenon or namechaep, you will have to create the hosted zone and update the name servers.
 
+## Create Route53 record
+Within the hosted zone is where all the necessary DNS records will be created. Since we are working on Artifactory, lets create the record to point to the ingress controller’s loadbalancer. There are 2 options. You can either use the CNAME or AWS Alias
 
+## CNAME Method
 
+1. Select the **HOSTED ZONE** you wish to use, and click on the create record button
+2. Add the subdomain tooling.artifactory, and select the record type CNAME
+3. Successfully created record
+4. Confirm that the DNS record has been properly propagated. Visit https://dnschecker.org and check the record. Ensure to select CNAME. The search should return green ticks for each of the locations on the left.
 
+## AWS Alias Method
 
+1. In the create record section, type in the record name, and toggle the _alias_ button to enable an alias. An alias is of the A DNS record type which basically routes directly to the load balancer. In the _choose endpoint_ bar, select _Alias_ to _Application_ and _Classic Load Balancer_
+2. Select the region and the load balancer required. You will not need to type in the load balancer, as it will already populate.
+For detailed read on selecting between CNAME and Alias based records, read the [official documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
 
+## Visiting the application from the browser
 
+So far, we now have an application running in Kubernetes that is also accessible externally. That means if you navigate to https://tooling.artifactory.steghub.com/ _(replace the full URL with your domain), it should load up the Artifactory application._
 
+Using Chrome browser will show something like the below. It shows that the site is indeed reachable, but insecure. It is insecure because it either does not have a trusted TLS/SSL certificate, or it doesn’t have any at all.
 
+Nginx Ingress Controller does configure a default TLS/SSL certificate. However, it is not trusted because it is a self-signed certificate that browsers are not aware of.
 
+To confirm this,
 
-
+1. Click on the Not Secure part of the browser.
+2. Select the Certificate is not valid menu
+3. You will see the details of the certificate. There you can confirm that yes indeed there is encryption configured for the traffic, the browser is just not cool with it.
 
 
 
