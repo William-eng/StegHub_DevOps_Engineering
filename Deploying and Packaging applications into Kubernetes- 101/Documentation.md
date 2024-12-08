@@ -200,33 +200,96 @@ A huge benefit of using the ingress controller is that we will be able to use a 
 For now, we will leave Artifactory, move on to the next phase of configuration (Ingress, DNS(Route53) and Cert Manager), and then return to Artifactory to complete the setup so that it can serve as a private docker registry and repository for private helm charts.
 
 
+# DEPLOYING INGRESS CONTROLLER AND MANAGING INGRESS RESOURCES
+
+Before we discuss what **ingress** controllers are, it will be important to start off understanding about the Ingress resource.
+
+An ingress is an API object that manages external access to the services in a kubernetes cluster. It is capable to provide load balancing, SSL termination and name-based virtual hosting. In otherwords, Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
+
+Here is a simple example where an Ingress sends all its traffic to one Service:
+
+- ![Image18](https://github.com/user-attachments/assets/931ebbf9-d214-4bfe-aa76-885dd721e820)
+
+An ingress resource for Artifactory would like below
+
+               apiVersion: networking.k8s.io/v1
+               kind: Ingress
+               metadata:
+                 name: artifactory-ingress
+                 namespace: tools
+                 labels:
+                   name: artifactory-ingress
+               spec:
+                 ingressClassName: nginx
+                 rules:
+                 - host: tooling.artifactory.steghub.com
+                   http:
+                     paths:
+                     - pathType: Prefix
+                       path: "/"
+                       backend:
+                         service:
+                           name: artifactory-artifactory-nginx
+                           port: 
+                             number: 80
+
+
+
+- An Ingress needs apiVersion, kind, metadata and spec fields
+- The name of an Ingress object must be a valid DNS subdomain name
+- Ingress frequently uses annotations to configure some options depending on the Ingress controller.
+- Different Ingress controllers support different annotations. Therefore it is important to be up to date with the ingress controller’s specific documentation to know what annotations are supported.
+- It is recommended to always specify the ingress class name with the spec _ingressClassName: nginx_. This is how the Ingress controller is selected, especially when there are multiple configured ingress controllers in the cluster.
+- The domain _steghub.com_ should be replaced with your own domain.
+
+## Ingress controller
+If you deploy the yaml configuration specified for the ingress resource without an ingress controller, it will not work. In order for the Ingress resource to work, the cluster must have an ingress controller running.
+
+Unlike other types of controllers which run as part of the kube-controller-manager. Such as the **Node Controller**, **Replica Controller**, **Deployment Controller**, **Job Controller**, or **Cloud Controller**. Ingress controllers are not started automatically with the cluster.
+
+Kubernetes as a project supports and maintains [AWS](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/), [GCE](https://github.com/kubernetes/ingress-gce/blob/master/README.md#readme), and [NGINX](https://github.com/kubernetes/ingress-nginx/blob/main/README.md#readme) ingress controllers.
+
+There are many other 3rd party Ingress controllers that provide similar functionalities with their own unique features, but the 3 mentioned earlier are currently supported and maintained by Kubernetes. Some of these other 3rd party Ingress controllers include but not limited to the following;
+
+- [AKS Application Gateway Ingress Controller (Microsoft Azure)](https://docs.microsoft.com/en-gb/azure/application-gateway/tutorial-ingress-controller-add-on-existing)
+- [Istio](https://istio.io/latest/docs/tasks/traffic-management/ingress/kubernetes-ingress/)
+- [Traefik](https://doc.traefik.io/traefik/providers/kubernetes-ingress/)
+- [Ambassador](https://www.getambassador.io/)
+- [HA Proxy Ingress](https://haproxy-ingress.github.io/)
+- [Kong](https://docs.konghq.com/kubernetes-ingress-controller/)
+- [Gloo](https://docs.solo.io/gloo-edge/latest/)
+
+An example comparison matrix of some of the controllers can be found [here](https://kubevious.io/blog/post/comparing-top-ingress-controllers-for-kubernetes#comparison-matrix). Understanding their unique features will help businesses determine which product works well for their respective requirements.
+
+It is possible to deploy any number of ingress controllers in the same cluster. That is the essence of an **ingress class**. By specifying the spec ingressClassName field on the ingress object, the appropriate ingress controller will be used by the ingress resource.
+
+Lets get into action and see how all of these fits together.
+
+
+## Deploy Nginx Ingress Controller
+In this project, we will deploy and use the Nginx Ingress Controller. It is always the default choice when starting with Kubernetes projects. It is reliable and easy to use.
+
+Since Kubernetes maintain this controller, there is an official guide to the installation process. Hence, we won't be using artifacthub.io here. Even though you can still find ready-to-go charts
+there, it just makes sense to always use the [official guide](https://kubernetes.github.io/ingress-nginx/) in this scenario.
+
+Using the Helm approach, according to the official guide;
+
+1. Install Nginx Ingress Controller in the ingress-nginx namespace
+
+
+               helm upgrade --install ingress-nginx ingress-nginx \
+               --repo https://kubernetes.github.io/ingress-nginx \
+               --namespace ingress-nginx --create-namespace
 
 
 
 
+**Notice**:
 
+This command is idempotent:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- if the ingress controller is not installed, it will install it,
+- if the ingress controller is already installed, it will upgrade it.
 
 
 
