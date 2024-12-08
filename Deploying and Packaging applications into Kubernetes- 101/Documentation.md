@@ -1,4 +1,4 @@
-# DEPLOYING AND PACKAGING APPLICATIONS INTO KUBERNETES WITH HELM
+![image](https://github.com/user-attachments/assets/2f52de15-845b-47de-adf3-e25872aef7cb)# DEPLOYING AND PACKAGING APPLICATIONS INTO KUBERNETES WITH HELM
 
 In the previous project, you explored Helm as a powerful tool for deploying applications into Kubernetes and expanded your experience by installing additional tools beyond Jenkins.
 
@@ -448,6 +448,7 @@ Within the hosted zone is where all the necessary DNS records will be created. S
 2. Select the region and the load balancer required. You will not need to type in the load balancer, as it will already populate.
 For detailed read on selecting between CNAME and Alias based records, read the [official documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
 
+ - ![Image25](https://github.com/user-attachments/assets/bebbf9e1-97ef-4e12-ba95-b8ef456c84f0)
 ## Visiting the application from the browser
 
 So far, we now have an application running in Kubernetes that is also accessible externally. That means if you navigate to https://tooling.artifactory.steghub.com/ _(replace the full URL with your domain), it should load up the Artifactory application._
@@ -462,41 +463,78 @@ To confirm this,
 2. Select the Certificate is not valid menu
 3. You will see the details of the certificate. There you can confirm that yes indeed there is encryption configured for the traffic, the browser is just not cool with it.
 
+  
+
+
+## Explore Artifactory Web UI
+Now that we can access the application externally, although insecure, it's time to log in for some exploration. Afterwards, we will make it a lot more secure and access our web application on any browser.
+
+1. Get the default username and password – Run a helm command to output the same message after the initial install
+
+            helm test artifactory -n tools
 
 
 
+**Output**:
+            
+            NAME: artifactory
+            LAST DEPLOYED: Thu Sep 26 01:37:01 2024
+            NAMESPACE: tools
+            STATUS: deployed
+            REVISION: 1
+            TEST SUITE: None
+            NOTES:
+            Congratulations. You have just deployed JFrog Artifactory!
+            
+            1. Get the Artifactory URL by running these commands:
+            
+               NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+                     You can watch the status of the service by running 'kubectl get svc --namespace tools -w artifactory-artifactory-nginx'
+               export SERVICE_IP=$(kubectl get svc --namespace tools artifactory-artifactory-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+               echo http://$SERVICE_IP/
+            
+            2. Open Artifactory in your browser
+               Default credential for Artifactory:
+               user: admin
+               password: password
 
 
+- ![Image27](https://github.com/user-attachments/assets/f132be77-a357-49b9-b517-765fa04af5a4)
 
 
+- Insert the username and password to load the Get Started page
+
+3. Reset the admin password
+
+4. Activate the Artifactory License. You will need to purchase a license to use Artifactory enterprise features.
+- ![Image29](https://github.com/user-attachments/assets/0e92e255-142d-4b59-b50d-ba2b77bf54bd)
 
 
+5. For learning purposes, you can apply for a free trial license. [Simply fill the form here](https://jfrog.com/start-free/) and a license key will be delivered to your email in few minutes.
 
+- ![Image30](https://github.com/user-attachments/assets/8994ff71-1fc5-41c5-90b6-161f095fb8d4)
 
+- ![Image31](https://github.com/user-attachments/assets/85fa1e1d-efd4-428e-b456-e5e054a3ed3c)
 
+- ![Image32](https://github.com/user-attachments/assets/c8563581-e604-41b6-bdaa-0144e4d2eefb)
+- ![Image33](https://github.com/user-attachments/assets/570e5e16-9ccb-4cce-bd05-c918105212d9)
+- ![Image34](https://github.com/user-attachments/assets/a3847651-71d2-41bf-9632-78ec20f0cd26)
 
+- 7. Set the Base URL. Ensure to use _https_
+- ![Image35](https://github.com/user-attachments/assets/2e403b58-7176-400d-a136-8752a4cfd6dd)
+8. Skip the Proxy setting
+- ![Image36](https://github.com/user-attachments/assets/a72381ce-18cc-4e27-97b9-9c412f5511c6)
 
+9. Skip creation of repositories for now. You will create them yourself later on.
 
+- ![Image37](https://github.com/user-attachments/assets/4dd6dc73-fdc7-4f69-b5d1-20184298b154)
 
+10. finish the setup
 
+- ![Image38](https://github.com/user-attachments/assets/d3ce0c49-7ee9-4258-8b0a-0569949fbc72)
+- ![Image39](https://github.com/user-attachments/assets/957fb960-c3db-4741-953d-939f90c65b7e)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Next, its time to fix the TLS/SSL configuration so that we will have a trusted **HTTPS** URL
 
 
 
