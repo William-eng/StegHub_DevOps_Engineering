@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/2f52de15-845b-47de-adf3-e25872aef7cb)# DEPLOYING AND PACKAGING APPLICATIONS INTO KUBERNETES WITH HELM
+# DEPLOYING AND PACKAGING APPLICATIONS INTO KUBERNETES WITH HELM
 
 In the previous project, you explored Helm as a powerful tool for deploying applications into Kubernetes and expanded your experience by installing additional tools beyond Jenkins.
 
@@ -116,9 +116,6 @@ Lets break down the first Next Step.
 
 - ![Image8](https://github.com/user-attachments/assets/388c5caa-ca26-4cf7-8cd0-7c0809d225fc)
 
-This output shows that the artifactory pod and nginx pod are running but not in a Ready state.
-
-- ![Image9](https://github.com/user-attachments/assets/a3f3adf5-572c-4fd2-b308-ea7355c9baa3)
 
 
 
@@ -526,7 +523,7 @@ Now that we can access the application externally, although insecure, it's time 
 - ![Image36](https://github.com/user-attachments/assets/a72381ce-18cc-4e27-97b9-9c412f5511c6)
 
 9. Skip creation of repositories for now. You will create them yourself later on.
-
+- ![image](https://github.com/user-attachments/assets/2f52de15-845b-47de-adf3-e25872aef7cb)
 - ![Image37](https://github.com/user-attachments/assets/4dd6dc73-fdc7-4f69-b5d1-20184298b154)
 
 10. finish the setup
