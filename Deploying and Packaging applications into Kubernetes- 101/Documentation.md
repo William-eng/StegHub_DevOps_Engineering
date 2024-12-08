@@ -125,6 +125,41 @@ This output shows that the artifactory pod and nginx pod are running but not in 
 
 
 
+- ![Image6](https://github.com/user-attachments/assets/f4339d97-2c17-484f-90e5-255c13222946)
+
+
+
+2. Each of the deployed application have their respective services. This is how you will be able to reach either of them.
+
+
+- ![Image7](https://github.com/user-attachments/assets/f621aeaa-dea4-4f53-b5ff-8536a75c59a6)
+
+3. Notice that, the Nginx Proxy has been configured to use the service type of LoadBalancer. Therefore, to reach Artifactory, we will need to go through the Nginx proxy’s service. Which happens to be a load balancer created in the cloud provider. Run the kubectl command to retrieve the Load Balancer URL.
+
+
+            kubectl get svc artifactory-artifactory-nginx -n tools
+
+- ![Image8](https://github.com/user-attachments/assets/3d82d5c7-5806-4b2b-80a8-66c159db4a10)
+
+4. Copy the URL and paste in the browser
+
+
+- ![Image9](https://github.com/user-attachments/assets/2b156311-0529-4006-aba3-7bf17dd482a8)
+
+
+5. The default username is _admin_
+6. The default password is _password_
+
+- ![Image10](https://github.com/user-attachments/assets/3cea9c21-1632-47f0-87b5-90b7bbe705ac)
+
+## How the Nginx URL for Artifactory is configured in Kubernetes
+Without clicking further on the **Get Started** page, lets dig a bit more into Kubernetes and Helm. How did Helm configure the URL in kubernetes?
+
+Helm uses the values.yaml file to set every single configuration that the chart has the capability to configure. THe best place to get started with an off the shelve chart from artifacthub.io is to get familiar with the **DEFAULT VALUES**
+
+click on the DEFAULT VALUES section on Artifact hub
+
+
 
 
 
