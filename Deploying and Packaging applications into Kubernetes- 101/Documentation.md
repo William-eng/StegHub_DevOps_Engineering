@@ -157,35 +157,47 @@ Without clicking further on the **Get Started** page, lets dig a bit more into K
 
 Helm uses the values.yaml file to set every single configuration that the chart has the capability to configure. THe best place to get started with an off the shelve chart from artifacthub.io is to get familiar with the **DEFAULT VALUES**
 
-click on the DEFAULT VALUES section on Artifact hub
+- click on the DEFAULT VALUES section on Artifact hub
+
+- ![Image11](https://github.com/user-attachments/assets/031507ca-860c-4848-a249-fdbb144c0803)
 
 
+- Here you can search for key and value pairs
+
+- ![Image12](https://github.com/user-attachments/assets/ae7ffc15-9b42-45e6-a27a-da57cb430d0e)
+
+For example, when you type nginx in the search bar, it shows all the configured options for the nginx proxy.
+
+- ![Image13](https://github.com/user-attachments/assets/668b5ffb-be3f-434b-a406-2e77969e0892)
 
 
+- Selecting nginx.enabled from the list will take you directly to the configuration in the YAML file.
+
+- ![Image14](https://github.com/user-attachments/assets/3102a906-310a-4700-96ba-94d23283da72)
+
+- Search for nginx.service and select nginx.service.type
+
+- ![Image15](https://github.com/user-attachments/assets/a6920616-7d4b-4dc5-ba68-ed0382907887)
+
+- You will see the confired type of Kubernetes service for Nginx. As you can see, it is LoadBalancer by default
 
 
+- ![Image16](https://github.com/user-attachments/assets/cea79748-b81f-4273-aec5-dd917171b647)
 
 
+- To work directly with the values.yaml file, you can download the file locally by clicking on the download icon.
+
+- ![Image17](https://github.com/user-attachments/assets/33b335d1-369e-4120-ba9f-a91ebd8545df)
+
+## Is the Load Balancer Service type the Ideal configuration option to use in the Real World?
+Setting the service type to **Load Balancer** is the easiest way to get started with exposing applications running in kubernetes externally. But provisioning load balancers for each application can become very expensive over time, and more difficult to manage. Especially when tens or even hundreds of applications are deployed.
+
+The best approach is to use [Kubernetes Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) instead. But to do that, we will have to deploy an [Ingress Controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/).
+
+A huge benefit of using the ingress controller is that we will be able to use a single load balancer for different applications we deploy. Therefore, Artifactory and any other tools can reuse the same load balancer. Which reduces cloud cost, and overhead of managing multiple load balancers. more on that later.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+For now, we will leave Artifactory, move on to the next phase of configuration (Ingress, DNS(Route53) and Cert Manager), and then return to Artifactory to complete the setup so that it can serve as a private docker registry and repository for private helm charts.
 
 
 
