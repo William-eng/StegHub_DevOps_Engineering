@@ -10,41 +10,101 @@ Cert-manager creates TLS certificates for workloads in your Kubernetes cluster a
 - Domain name configured with DNS pointing to your Ingress Controller's load balancer
 - Nginx Ingress Controller installed (from the previous project)
 
+## Step 1: Install Cert-Manager
+
+1. Add the Jetstack Helm repository:
+
+          helm repo add jetstack https://charts.jetstack.io
+   
+2. Update your local Helm chart repository cache:
+
+          helm repo update
+
+
+- ![Image1](https://github.com/user-attachments/assets/4afcb5ce-cdc0-4763-bea6-ec154e74b8d6)
+
+
+3. Follow the URL below to set up an EKS IAM role for a service account for cert-manager:
+https://cert-manager.io/docs/configuration/acme/dns01/route53/#eks-iam-role-for-service-accounts-irsa
+
+Steps for _3_ above include :
+
+A. Retrieve IAM OIDC Provider for Your EKS Cluster
+
+    aws eks describe-cluster --name <EKS_CLUSTER_NAME> --query "cluster.identity.oidc.issuer" --output text
+
+- ![Image2](https://github.com/user-attachments/assets/e9fad379-73e5-4efb-a2d7-9ac69a44550b)
+
+B. Create the IAM policy required by cert-manager for managing Route53 records. Save the following policy document in a file called cert-manager-policy.json
+
+            {
+             "Version": "2012-10-17",
+             "Statement": [
+                 {
+                     "Effect": "Allow",
+                     "Action": [
+                         "route53:GetChange",
+                         "route53:ChangeResourceRecordSets",
+                         "route53:ListHostedZones",
+                         "route53:ListResourceRecordSets"
+                     ],
+                        "Resource": "*"
+                  }
+               ]
+            }
 
 
 
+      aws iam create-policy --policy-name CertManagerRoute53Policy --policy-document file://cert-manager-policy.json
 
 
+- ![Image3](https://github.com/user-attachments/assets/b7d60181-3c60-4497-a5ee-cfad5989ae82)
 
 
+C. Create an IAM Role for the cert-manager ServiceAccount
+
+-  In the IAM console, go to Roles and click on Create role.
+-  Select trust entity and select Web Identity and below it, select the oidc of your eks cluster
+-  Set the audience and click next.
+- Search for the policy you created in Step 2 (CertManagerRoute53Policy) and select it.
+- Create role.
+- Now edit the trust policy for your newly created role and add the following below
+
+- ![Image4](https://github.com/user-attachments/assets/ea901f85-3932-4a6c-a964-d338450ad88f)
+- ![Image5](https://github.com/user-attachments/assets/8088e822-3747-4fa9-b71f-5054899af1d1)
+- ![Image6](https://github.com/user-attachments/assets/7d202990-dcc4-4ca0-9898-9db7c62ea1e3)
+- ![Image7](https://github.com/user-attachments/assets/807f4efa-808a-420e-a222-3cd957512f81)
+- ![Image8](https://github.com/user-attachments/assets/e5f1d870-433b-4901-ac3e-0c34e23adaaa)
 
 
+D. Create namespace cert-manager
+
+      kubectl create namespace cert-manager
+
+- ![Image9](https://github.com/user-attachments/assets/7c5401dc-c952-4b3e-b453-1aa2dc63fd64)
+
+E. Annotate the cert-manager ServiceAccount in Kubernetes
 
 
+      touch cert-manager-sa.yaml
 
 
+          apiVersion: v1
+          automountServiceAccountToken: true
+          kind: ServiceAccount
+          metadata:
+          annotations:
+             eks.amazonaws.com/role-arn: arn:aws:iam::312973238800:role/cert_manager_role
+          name: cert-manager
+          namespace: cert-manager
+          
+Replace with your actual AWS account ID.
 
+- ![Image10](https://github.com/user-attachments/assets/cb6fdee5-86b2-4358-a559-9cceb82da78f)
 
+F. Apply the manifest:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      kubectl apply -f cert-manager-sa.yaml
 
 
 
