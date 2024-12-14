@@ -98,32 +98,61 @@ E. Annotate the cert-manager ServiceAccount in Kubernetes
           name: cert-manager
           namespace: cert-manager
           
+ Modify Cert-manager Deployment with correct file system permissions. This will allow the pod to read the ServiceAccount token.
+
+          spec:
+            template:
+              securityContext:
+                fsGroup: 1001
+ 
 Replace with your actual AWS account ID.
 
-- ![Image10](https://github.com/user-attachments/assets/cb6fdee5-86b2-4358-a559-9cceb82da78f)
+- ![Image10](https://github.com/user-attachments/assets/e8a62261-458f-4478-bde2-3f43f72c799c)
+
 
 F. Apply the manifest:
 
       kubectl apply -f cert-manager-sa.yaml
 
+- ![Image11](https://github.com/user-attachments/assets/ed127f30-9af5-4cb7-a052-eab4c40ec666)
+
+G. Configure RBAC for Cert-Manager ServiceAccount
+- Create a new file cert-manager-rbac.yaml
+
+ - ![Image12](https://github.com/user-attachments/assets/c2426a4b-6974-48be-a4b4-0e554629bee7)
+
+- Apply the configuration
+
+          kubectl apply -f cert-manager-rbac.yaml
+
+- ![Image12](https://github.com/user-attachments/assets/c5a31a66-3b04-45b8-8cbd-ee0d2e896eb3)
+
+- Add role AWS to your Kubernetes Service Account annotation.
+
+H. Verify the ServiceAccount Configuration
+
+          kubectl describe serviceaccount cert-manager -n cert-manager
+
+
+
+
+- ![Image13](https://github.com/user-attachments/assets/306ef935-382b-4947-bb9f-9d07708b86d2)
+
+4. Install Cert-Manager using Helm:
+
+         helm install cert-manager jetstack/cert-manager \
+            --namespace cert-manager \
+            --create-namespace \
+            --version v1.15.3 \
+            --set crds.enabled=true
 
 
 
 
 
+5. Verify the Cert-Manager installation:
 
-
-
-
-
-
-
-
-
-
-
-
-
+          kubectl get pods --namespace cert-manager
 
 
 
