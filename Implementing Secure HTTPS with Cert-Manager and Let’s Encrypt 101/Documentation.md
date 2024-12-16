@@ -146,14 +146,31 @@ H. Verify the ServiceAccount Configuration
             --version v1.15.3 \
             --set crds.enabled=true
 
+- ![Image14](https://github.com/user-attachments/assets/d755f936-9470-4608-a87a-2b64ca015f92)
+
+- Modify Cert-manager Deployment with correct file system permissions. This will allow the pod to read the ServiceAccount token.
+
+                    spec:
+                      template:
+                        securityContext:
+                          fsGroup: 1001
+
+                    helm upgrade --install cert-manager jetstack/cert-manager \
+                      --namespace cert-manager \
+                      --create-namespace \
+                      --version v1.15.3 \
+                      --set installCRDs=true \
+                      --set securityContext.fsGroup=1001
 
 
+  - ![Image15](https://github.com/user-attachments/assets/e7959e28-516e-4db3-ac8b-67a1eb747e7e)
 
 
 5. Verify the Cert-Manager installation:
 
           kubectl get pods --namespace cert-manager
 
+- ![Image16](https://github.com/user-attachments/assets/e6d89575-a138-48df-aa6b-c05f39b2aa3c)
 
 
 
