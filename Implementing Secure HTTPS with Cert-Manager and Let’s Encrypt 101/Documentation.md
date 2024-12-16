@@ -1,4 +1,4 @@
-![svgviewer-output](https://github.com/user-attachments/assets/2ea9a7da-286c-413d-8c53-914cff0adf15)# Implementing Secure HTTPS with Cert-Manager and Let’s Encrypt 101
+# Implementing Secure HTTPS with Cert-Manager and Let’s Encrypt 101
 In this project, we'll enhance the security of our Artifactory deployment by implementing HTTPS using [Cert-Manager](https://cert-manager.io) to request and manage TLS certificates from Let's Encrypt automatically. 
 Cert-manager creates TLS certificates for workloads in your Kubernetes cluster and renews the certificates before they expire. This will provide a trusted HTTPS URL for our application.
 
@@ -175,7 +175,7 @@ H. Verify the ServiceAccount Configuration
 - ![Image17](https://github.com/user-attachments/assets/f472fe93-ec41-4840-a3a8-6db4f3ea1ad2)
 
 This diagram illustrates the main components of Cert-Manager:
-
+- ![svgviewer-output](https://github.com/user-attachments/assets/2ea9a7da-286c-413d-8c53-914cff0adf15)
 - Cert-Manager Controller: Manages the certificate lifecycle
 - Webhook: Validates and mutates resources
 - CA Injector: Injects CA bundles into resources
@@ -288,13 +288,21 @@ Please make a note of the following information:
 
 - ![Image21](https://github.com/user-attachments/assets/df55b087-5f9e-42be-99a5-2f3c3e00925a)
 
+- 
 
+## Step 4: Verify Certificate Issuance
+1. Check the status of the Certificate:
 
+          kubectl get certificate -n tools
 
+- ![Image22](https://github.com/user-attachments/assets/a67d5cea-b81f-49c3-9155-0e1983c6b567)
 
+2. Describe the Certificate for more details:
+   
+          kubectl describe certificate artifactory-tls -n tools
 
-
-
+- ![Image23](https://github.com/user-attachments/assets/e8efba40-319e-4d94-b530-d47b8322b1d6)
+- ![Image24](https://github.com/user-attachments/assets/b52881dc-af57-40a2-92c8-faa038a92a1d)
 
 
 
