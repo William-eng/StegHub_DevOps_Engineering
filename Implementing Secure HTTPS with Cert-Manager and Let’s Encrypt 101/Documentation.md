@@ -1,4 +1,4 @@
-# Implementing Secure HTTPS with Cert-Manager and Let’s Encrypt 101
+![svgviewer-output](https://github.com/user-attachments/assets/2ea9a7da-286c-413d-8c53-914cff0adf15)# Implementing Secure HTTPS with Cert-Manager and Let’s Encrypt 101
 In this project, we'll enhance the security of our Artifactory deployment by implementing HTTPS using [Cert-Manager](https://cert-manager.io) to request and manage TLS certificates from Let's Encrypt automatically. 
 Cert-manager creates TLS certificates for workloads in your Kubernetes cluster and renews the certificates before they expire. This will provide a trusted HTTPS URL for our application.
 
@@ -172,41 +172,121 @@ H. Verify the ServiceAccount Configuration
 
 - ![Image16](https://github.com/user-attachments/assets/e6d89575-a138-48df-aa6b-c05f39b2aa3c)
 
+- ![Image17](https://github.com/user-attachments/assets/f472fe93-ec41-4840-a3a8-6db4f3ea1ad2)
+
+This diagram illustrates the main components of Cert-Manager:
+
+- Cert-Manager Controller: Manages the certificate lifecycle
+- Webhook: Validates and mutates resources
+- CA Injector: Injects CA bundles into resources
+- Custom Resource Definitions (CRDs): Define custom resources like Certificate, Issuer, and ClusterIssuer
+
+## Step 2: Configure Let's Encrypt Issuer
+1. Create a file named _lets-encrypt-issuer.yaml_ and add the following content:
+
+                    apiVersion: cert-manager.io/v1
+                    kind: ClusterIssuer
+                    metadata:
+                      name: letsencrypt-prod
+                    spec:
+                      acme:
+                        server: https://acme-v02.api.letsencrypt.org/directory
+                        email: devops@steghub.com
+                        privateKeySecretRef:
+                          name: letsencrypt-prod
+                        solvers:
+                        - selector:
+                            dnsZones:
+                              - "steghub.com"
+                          dns01:
+                            route53:
+                              region: us-east-1
+                              role: "arn:aws:iam::123456789012:role/cert_manager_role" # This must be set so cert-manager what role to attempt to authenticate with
+                              auth:
+                                kubernetes:
+                                  serviceAccountRef:
+                                    name: "cert-manager" # The name of the service account created
 
 
 
 
+Replace devops@steghub.com with your actual email addres and the role ARN to you one you created. Update serviceAccount name if necessary.
+
+- ![Image18](https://github.com/user-attachments/assets/e433c9cc-e203-4335-a681-0747bf706d44)
+
+This ClusterIssuer is set up to use Let's Encrypt for SSL/TLS certificates, solving ACME challenges using DNS-01 with Amazon Route 53, and authenticating via a Kubernetes service account.
+
+
+2. Apply the ClusterIssuer:
+   
+          kubectl apply -f lets-encrypt-issuer.yaml
+
+
+- ![Image19](https://github.com/user-attachments/assets/2ce535a0-05d2-464e-be04-4895f6f580af)
+
+3. Verify the ClusterIssuer:
+
+   
+          kubectl get clusterissuer
+
+
+- ![Image20](https://github.com/user-attachments/assets/0af3f6e1-ffe2-4720-a8fc-642391f2ab1a)
+
+## Step 3: Update Ingress for Artifactory
+
+1. Update your Artifactory Ingress to include TLS configuration:
+
+                    apiVersion: networking.k8s.io/v1
+                    kind: Ingress
+                    metadata:
+                      name: artifactory-ingress
+                      namespace: tools
+                      annotations:
+                        nginx.ingress.kubernetes.io/proxy-body-size: 500m
+                        service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+                        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+                        service.beta.kubernetes.io/aws-load-balancer-backend-protocol: ssl
+                        service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+                        cert-manager.io/cluster-issuer: letsencrypt-prod
+                        cert-manager.io/private-key-rotation-policy: Always
+                      labels:
+                        name: artifactory
+                    spec:
+                      ingressClassName: nginx
+                      tls:
+                      - hosts:
+                        - tooling.artifactory.steghub.com
+                        secretName: tooling.artifactory.steghub.com
+                      rules:
+                      - host: tooling.artifactory.steghub.com
+                        http:
+                          paths:
+                          - path: /
+                            pathType: Prefix
+                            backend:
+                              service:
+                                name: artifactory
+                                port:
+                                  number: 8082
 
 
 
+Please make a note of the following information:
+
+- metadata.annotations: We have a cert-manager cluster issuer annotation, which points to the ClusterIssuer we previously created. If Cert-Manager observes an Ingress with annotations described in the [Supported Annotations](https://cert-manager.io/docs/usage/ingress/#supported-annotations) section, it will ensure that a Certificate resource with the name provided in the _tls.secretName_ field and configured as described on the Ingress exists in the namespace.
+
+- spec.tls: We added the tls block, which determines what ends up in the cert's configuration. The tls.hosts will be added to the cert's subjectAltNames.
+
+- proxy-body-size: This is used to set the maximum size of a file we want to allow in our Artifactory. The initial value is lower, so you won't be able to upload a larger size artifact unless you add this annotation. A 413 error will be returned when the size in a request exceeds the maximum allowed size of the client request body.
 
 
 
+2. Apply the updated Ingress:
+   
+          kubectl apply -f artifactory-ingress.yaml -n tools
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![Image21](https://github.com/user-attachments/assets/df55b087-5f9e-42be-99a5-2f3c3e00925a)
 
 
 
