@@ -304,19 +304,31 @@ Please make a note of the following information:
 - ![Image23](https://github.com/user-attachments/assets/e8efba40-319e-4d94-b530-d47b8322b1d6)
 - ![Image24](https://github.com/user-attachments/assets/b52881dc-af57-40a2-92c8-faa038a92a1d)
 
+Which will later change to Ready after your certificate requests has been validated:
 
 
+ 
+                    NAME                                                          READY   SECRET                            AGE
+                    certificate.cert-manager.io/tooling.artifactory.steghub.com   True    tooling.artifactory.steghub.com   10m
+
+- ![Image25](https://github.com/user-attachments/assets/d7063e16-5450-4a68-a6b4-76bc23621847)
 
 
+## Step 5: Test HTTPS Access
 
+1. Open a web browser and navigate to https://tooling.artifactory.fnc.dns-dynamic.net
 
+- ![Image26](https://github.com/user-attachments/assets/2ca2b08a-e952-45a0-ae49-d482d4f2b45e)
 
+2. Verify that the connection is secure and the certificate is valid.
+- Click on the padlock icon in the address bar
 
+- ![Image27](https://github.com/user-attachments/assets/4645f767-1d8b-431a-94d6-021336c33547)
 
-
-
-
-
+3. View the certificate details
+- Confirm that Let's Encrypt issues it
+   
+   - ![Image28](https://github.com/user-attachments/assets/aea4ca8f-084a-43f4-9933-8c73e76cd03c)
 
 
 
