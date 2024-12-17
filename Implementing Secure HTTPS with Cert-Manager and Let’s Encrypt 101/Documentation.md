@@ -332,19 +332,29 @@ Which will later change to Ready after your certificate requests has been valida
 
 
 
+- ![Image29](https://github.com/user-attachments/assets/b07b5ac0-3337-4da3-83f8-241c0bc13241)
 
 
+This diagram illustrates the flow of HTTPS traffic and certificate issuance:
+
+1. User sends an HTTPS request to the Ingress Controller
+2. Cert-Manager requests a certificate from Let's Encrypt
+3. Let's Encrypt validates the request and issues the certificate
+4. Cert-Manager configures the Ingress Controller with the new certificate
+5. Ingress Controller serves HTTPS traffic to the user
+6. Requests are routed to the Artifactory service
+
+**Conclusion**: In this project, we've successfully implemented HTTPS for our Artifactory deployment with a trusted SSL/TLS certificate from Let's Encrypt using Cert-Manager. This setup provides automatic certificate management and renewal, ensuring our application remains secure with minimal manual intervention.
 
 
+## Additional Task:
+Automate the entire process you performed using Terraform with the Helm Provider and Kubernetes Provider.
+
+Implement SSL/TLS certificates for the previously deployed DevOps tools.
 
 
-
-
-
-
-
-
-
+Click below to see the automation of entire process and implementation of SSL/TLS certificate.
+Automation with Terraform and Helm
 
 
 
