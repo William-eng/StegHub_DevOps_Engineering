@@ -28,39 +28,156 @@ It is a configuration management solution that leverages layering to preserve th
 
 Kustomize relies on the following system of configuration management layering to achieve reusability:
 
-- Base Layer - Specifies the most common resources
-- Patch Layers - Specifies use of case-specific resources
+- **Base Layer** - Specifies the most common resources
+- **Patch Layers** - Specifies use of case-specific resources
 
 Let’s step through how Kustomize works using a deployment scenario involving 3 different environments: **dev**, **sit**, and **prod**. In this example, we’ll use Service, Deployment, and Namespace resources. For the 
 dev environment, there won't be any specific changes as it will use the same configuration from the base setting. In sit and prod environments, the replica settings will be different.
 
+Using the tooling app for this example, create a folder structure as below.
+
+## Project Structure
 
 
+            └── tooling-app-kustomize
+                ├── base
+                │   ├── deployment.yaml
+                │   ├── kustomization.yaml
+                │   └── service.yaml
+                └── overlays
+                    ├── dev
+                    │   ├── deployment.yaml
+                    │   ├── kustomization.yaml
+                    │   └── namespace.yaml
+                    ├── prod
+                    │   ├── deployment.yaml
+                    │   ├── kustomization.yaml
+                    │   └── namespace.yaml
+                    └── sit
+                        ├── deployment.yaml
+                        ├── kustomization.yaml
+                        └── namespace.yaml
+
+- ![Image00](https://github.com/user-attachments/assets/4f54639b-5dba-40c0-af14-35184d6a2db2)
 
 
+Now, let's walk through the content of each file.
+
+# Base directory
+
+## deployment.yaml
+
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: tooling-deployment
+            labels:
+              app: tooling
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: tooling
+            template:
+              metadata:
+                labels:
+                  app: tooling
+              spec:
+                containers:
+                - name: tooling
+                  image: steghub/tooling-app:1.0.2
+                  ports:
+                  - containerPort: 80
+                  resources:
+                    requests:
+                      memory: "64Mi"
+                      cpu: "250m"
+                    limits:
+                      memory: "128Mi"
+                      cpu: "500m"
 
 
+- ![Image01](https://github.com/user-attachments/assets/cf78e038-997c-403a-b2c2-f3ada77b441b)
 
 
+### service.yaml
+
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: tooling-service
+              labels:
+                app: tooling
+            spec:
+              ports:
+              - port: 80
+                protocol: TCP
+                targetPort: 80
+                name: http
+              type: ClusterIP
+              selector:
+                app: tooling
 
 
+- ![Image03](https://github.com/user-attachments/assets/c722dc06-c02c-42dd-90a9-ca6e9f1a7e9a)
+
+### kustomization.yaml
+        
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          resources:
+          - deployment.yaml
+          - service.yaml
 
 
+- ![Image04](https://github.com/user-attachments/assets/6d5478f6-b7a8-45b3-9321-f37eabdc77c9)
+
+The resources being monitored here are **deployment** and **services**. You can simply add more to the list as you wish.
+
+It is assumed that we will need to deploy Kubernetes resources across multiple environments, as a standard practice in most cases. Hence, to deploy resources into the Dev environment, let's see what the layout and file contents will look like.
+
+# DEV Environment
+In the **overlays** folder - This is where you manage multiple environments. In each environment, there is a Kustomize file that tells Kustomize where to find the base setting, and how to **patch** the environment using the **base** as the starting point.
 
 
+In the **dev** environment for example, the namespace for dev is created, and the deployment is patched to use a replica count of "**3**" different from the base setting of "**1**". So Kustomize will simply create all the resources in the base, in addition to whatever is specified in the dev directory. We will discuss patching a little further in the following section.
+
+Let's have a look at what each file contains.
+
+### tooling-app-kustomize/overlays/dev/namespace.yaml
+
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: dev-tooling
+
+- ![Image05](https://github.com/user-attachments/assets/bcfed32d-5bf3-4c58-bf5e-8ed064092905)
+
+### tooling-app-kustomize/overlays/dev/deployment.yaml
 
 
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: tooling-deployment
+        spec:
+          replicas: 3
 
 
+- ![Image06](https://github.com/user-attachments/assets/7e37b327-7a5e-4bf2-91bd-08fd39f0743c)
 
+### tooling-app-kustomize/overlays/dev/kustomization.yaml
 
-
-
-
-
-
-
-
+      apiVersion: kustomize.config.k8s.io/v1beta1
+      kind: Kustomization
+      namespace: dev-tooling
+      labels:
+      - pairs:
+          env: dev-tooling
+      resources:
+      - ../../base
+      - namespace.yaml
+The Kustomization file for dev here specifies that the base configuration should be applied, and include the YAML file(s) specified in the resources section. It also indicates what namespace the configuration should be applied to.
 
 
 
