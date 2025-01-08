@@ -180,7 +180,34 @@ Let's have a look at what each file contains.
 The Kustomization file for dev here specifies that the base configuration should be applied, and include the YAML file(s) specified in the resources section. It also indicates what namespace the configuration should be applied to.
 
 
+In summary, it specifies the following:
 
+- The apiVersion
+- The Kind of resource (Kustomization)
+- The namespace where this Kustomizaton will create or patch resources
+- The location of the base folder, where the base configuration can be found.
+- The resource(s) to be created - Such as a namespace or deployment
+- The labels field ensures that Kubernetes labels and selectors are automatically injected into the resources being created. such as below;
+Generally, A Kustomization file contains fields falling into four categories (although not all have been used in the example above):
+
+**resources** - what existing resources are to be customized. Example fields: k8s resources, crds.
+**generators** - what new resources should be created. Example fields: configMapGenerator (legacy), secretGenerator (legacy), generators (v2.1).
+**transformers** - what to do to the aforementioned resources. Example fields: namePrefix, nameSuffix, images, labels, etc., and the more general transformers (v2.1) field.
+**meta** - fields which may influence all or some of the above. Example fields: vars, namespace, apiVersion, kind, etc.
+
+# Patching configuration with Kustomize
+
+With Kustomize, you can now begin to patch your environments with extra configurations that overwrite the base setting either by
+
+- creating new resources, or
+- patching existing resources.
+
+This is all achieved through the overlays configuration. The overlays/dev/kustomization.yaml example above only creates a new resource. What if we wanted to patch an existing resource? For example, increase the pod replica from the default 1 to 3 as shown in the overlays/dev/deployment.yaml file
+
+## Applying Configurations
+To apply the configuration:
+
+            kubectl apply -k overlays/dev
 
 
 
