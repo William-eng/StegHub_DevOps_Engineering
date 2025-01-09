@@ -476,25 +476,51 @@ For business applications, you can choose to package your applications in Helm a
 
 
 
+Go ahead and initialize the terraform project, as well as run terraform apply.
+
+            terraform init
+            terraform validate
+            terraform plan 
+            terraform apply -auto-approve
+
+- ![Image09](https://github.com/user-attachments/assets/8b62ff7b-5b45-4c0f-b0a0-1f2f61b5e907)
+
+Confirm from AWS console
+
+- ![Image10](https://github.com/user-attachments/assets/e0cf75b4-c15e-49ef-b223-13e4d662271d)
+
+
+## Step 2: Create a bash script to automate loading of the database schema.
+
+            touch load_tooling_db.sh
+            chmod +x load_tooling_db.sh
 
 
 
+### Run The Script
+
+     ./load_tooling_db.sh
+     
+
+- ![Image11](https://github.com/user-attachments/assets/83f199c4-e561-4eed-a179-69387665bba8)
 
 
+confirm that the database has been imported
+
+            sudo mysql -h <aurora-db-endpoint> -u <db-username> -p
+            SHOW DATABASES;
 
 
+- ![Image12](https://github.com/user-attachments/assets/7a8ede80-efef-4883-9cfc-7e7ec4b1b43b)
 
+- ![Imae13](https://github.com/user-attachments/assets/4e068021-1e60-429e-b95b-68fadd0f90c0)
 
+3. Create a Kubernetes secret in each environment (e.g., Dev, SIT, PROD) to store the database credentials.
+   
+- first, encode your db username and password and copy the encoded output.
 
-
-
-
-
-
-
-
-
-
+              echo -n "your-username" | base64
+              echo -n "your-password" | base64
 
 
 
