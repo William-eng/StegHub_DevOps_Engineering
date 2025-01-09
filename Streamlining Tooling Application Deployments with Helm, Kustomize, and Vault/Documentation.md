@@ -523,26 +523,97 @@ confirm that the database has been imported
               echo -n "your-password" | base64
 
 
+### overlays/dev/database-secret.yaml
+
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: aurora-db-credentials
+              namespace: dev-tooling
+            type: Opaque
+            data:
+              DB_USERNAME: <base64-encoded-username>
+              DB_PASSWORD: <base64-encoded-password>
+
+
+- Repeat same thing for SIT and PROD env.
+
+- For each environment, deploy the secret to Kubernetes using:
+
+            kubectl apply -f overlays/dev/database-secret.yaml
+            kubectl apply -f overlays/sit/database-secret.yaml
+            kubectl apply -f overlays/prod/database-secret.yaml
+
+
+- ![Image14](https://github.com/user-attachments/assets/eb4ed89a-f4b3-4597-9876-2428d7e3cd48)
+
+
+4. patch the different env deployment.yaml to include environment variables for the database connection, using the values stored in the Kubernetes Secret.
+
+### base/deployment.yaml
+
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: tooling-deployment
+              labels:
+                app: tooling
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: tooling
+              template:
+                metadata:
+                  labels:
+                    app: tooling
+                spec:
+                  containers:
+                    - name: tooling
+                      image: steghub/tooling-app:1.0.2
+                      ports:
+                        - containerPort: 80
+                      resources:
+                        requests:
+                          memory: "64Mi"
+                          cpu: "250m"
+                        limits:
+                          memory: "128Mi"
+                          cpu: "500m"
+                      env:
+                        - name: DB_HOST
+                          value: "db-endpoint"  
+                        - name: DB_PORT
+                          value: "3306"
+                        - name: DB_NAME
+                          value: "your-database-name"        
+                        - name: DB_USERNAME
+                          valueFrom:
+                            secretKeyRef:
+                              name: aurora-db-credentials    
+                              key: DB_USERNAME              
+                        - name: DB_PASSWORD
+                          valueFrom:
+                            secretKeyRef:
+                              name: aurora-db-credentials
+                              key: DB_PASSWORD  
+            
 
 
 
+- Repeat same thing for overlay deployment.yaml
+
+**Apply the deployment**
+
+            kubectl apply -k base
+            kubectl apply -k overlays/dev
+            kubectl apply -k overlays/prod
+            kubectl apply -k overlays/sit
 
 
+- ![Image15](https://github.com/user-attachments/assets/936eafc3-fe3d-4727-92e6-d6ad770f1f1b)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
 
 
 
