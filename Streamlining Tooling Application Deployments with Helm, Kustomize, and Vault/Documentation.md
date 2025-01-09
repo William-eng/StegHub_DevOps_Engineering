@@ -209,33 +209,131 @@ To apply the configuration:
 
             kubectl apply -k overlays/dev
 
+**Output**:
+
+            namespace/dev-tooling created
+            service/tooling-service created
+            deployment.apps/tooling-deployment created
+
+
+- ![Image07](https://github.com/user-attachments/assets/9afcd15c-94a9-4c4c-8970-b0f131ba480e)
+
+# Side Tasks
+With your understanding of how kustomize can patch resources per environment, now configure both SIT and PROD environments with their respective overlays and set different configuration values for
+
+- Pod replica
+- Resource limit and requests
+- Image tag
+
+### prod/kustomization.yaml
+
+            apiVersion: kustomize.config.k8s.io/v1beta1
+            kind: Kustomization
+            namespace: prod-tooling
+            commonLabels:
+                  env: prod-tooling
+            resources:
+              - ../../base
+              - namespace.yaml
+
+
+### prod/deployment.yaml
+
+              selector:
+                matchLabels:
+                  app: tooling
+              template:
+                metadata:
+                  labels:
+                    app: tooling
+                spec:
+                  containers:
+                  - name: tooling
+                    image: willywan/toolingapp:test-0.0.4
+                    ports:
+                    - containerPort: 80
+                    resources:
+                      requests:
+                        memory: "64Mi"
+                        cpu: "250m"
+                      limits:
+                        memory: "128Mi"
+                        cpu: "500m"
+
+### prod/namespace.yaml
+
+
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: prod-tooling
+
+
+
+### sit/deployment.yaml
+
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: tooling-deployment  
+            spec:
+              replicas: 3
+              selector:
+                matchLabels:
+                  app: tooling
+              template:
+                metadata:
+                  labels:
+                    app: tooling
+                spec:
+                  containers:
+                  - name: tooling
+                    image: willywan/toolingapp:test-0.0.4
+                    ports:
+                    - containerPort: 80
+                    resources:
+                      requests:
+                        memory: "64Mi"
+                        cpu: "250m"
+                      limits:
+                        memory: "128Mi"
+                        cpu: "500m"
+
+
+
+### sit/kustomization.yaml
+
+            apiVersion: kustomize.config.k8s.io/v1beta1
+            kind: Kustomization
+            namespace: sit-tooling
+            commonLabels:
+                  env: sit-tooling
+            resources:
+              - ../../base
+              - namespace.yaml
+
+### sit/namespaces.yaml
+
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: sit-tooling
 
 
 
 
 
 
+## Applying Configurations
+
+To apply the configuration:
+
+            kubectl apply -k overlays/prod
+            kubectl apply -k overlays/sit
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![Image08](https://github.com/user-attachments/assets/f655084a-7d5f-4074-a9fe-545f1f7df5c1)
 
 
 
