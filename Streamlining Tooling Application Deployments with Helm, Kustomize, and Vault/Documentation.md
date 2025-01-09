@@ -615,62 +615,187 @@ confirm that the database has been imported
 
   
 
+## Integrate Vault with Kubernetes
+Before we integrate Vault with our Kubernetes cluster, we will have will use Helm and Kustomize for the installation. The [vault helm chart](https://artifacthub.io/packages/helm/hashicorp/vault) is the recommended way to install Vault in a Kubernetes cluster and configure it. In this project, we will configure Vault to use [High Availability Mode](https://www.vaultproject.io/docs/concepts/ha) with **Integrated storage (Raft)**, This is recommended for production-ready deployment. This installs a StatefulSet of Vault server Pods with either Integrated Storage or a Consul storage backend. The Vault Helm chart can also configure Vault to run in standalone mode or [dev](https://www.vaultproject.io/docs/concepts/dev-server).
+
+Create the folder structure as below:
+
+            vault
+            ├── base
+            │   ├── kustomization.yaml
+            │   └── namespace.yaml
+            └── overlays
+                ├── dev
+                │   ├── .env
+                │   ├── kustomization.yaml
+                │   ├── namespace.yaml
+                │   └── values.yaml
+                ├── sit
+                │   ├── .env
+                │   ├── kustomization.yaml
+                │   ├── namespace.yaml
+                │   └── values.yaml
+                └── prod
+                    ├── .env
+                    ├── kustomization.yaml
+                    ├── namespace.yaml
+                    └── values.yaml
+
+## Base Files
+
+### namespace.yaml
+
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: vault
+
+
+### kustomization.yaml
+
+            apiVersion: kustomize.config.k8s.io/v1beta1
+            kind: Kustomization
+            resources:
+            - "namespace.yaml"
+
+
+## Dev Environment Files
+
+### namespace.yaml
+
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: vault
+              labels:
+                env: vault-dev
+
+
+### kustomization.yaml
+
+            apiVersion: kustomize.config.k8s.io/v1beta1
+            kind: Kustomization
+            namespace: vault
+            resources:
+            - ../../base
+            patches:
+            - path: namespace.yaml
+            helmCharts:
+            - name: vault
+              namespace: vault
+              repo: https://helm.releases.hashicorp.com
+              releaseName: vault
+              version: 0.28.1
+              valuesFile: values.yaml
+            secretGenerator:
+            - name: vault-kms
+              env: .env
+            generatorOptions:
+              disableNameSuffixHash: true
 
 
 
+### .env
+
+            VAULT_SEAL_TYPE=awskms
+            VAULT_AWSKMS_SEAL_KEY_ID=<arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab>
+            
+
+**Note**: Replace the kms key arn with the one created by terraform
+
+
+## Terraform Configuration
+
+### file Structure
+
+            terraform
+            ├── main.tf
+            ├── providers.tf
+            ├── variables.tf
 
 
 
+### providers.tf
+
+            terraform {
+              required_providers {
+                aws = {
+                  source  = "hashicorp/aws"
+                  version = "5.74.0"
+                }
+              }
+            }
+            
+            provider "aws" {
+              region = "us-west-1"
+            }
+
+
+### main.tf
+
+            module "vault_iam_role" {
+              source      = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+              version     = "5.47.1"
+              role_name   = "vaultKMS"
+              create_role = true
+              role_policy_arns = {
+                AWSKeyManagementServicePowerUser = "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser"
+              }
+            
+              oidc_providers = {
+                main = {
+                  provider_arn               = "arn:aws:iam::012345678901:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/5C54DDF35ER19312844C7333374CC09D"
+                  namespace_service_accounts = ["vault:vault-kms"]
+                }
+              }
+            
+              tags = var.tags
+            }
+            
+            module "vault_kms_key" {
+              source                  = "terraform-aws-modules/kms/aws"
+              version                 = "3.1.1"
+              description             = "Vault Cluster KMS Key"
+              deletion_window_in_days = 7
+              enable_key_rotation     = true
+              is_enabled              = true
+              key_usage               = "ENCRYPT_DECRYPT"
+              multi_region           = false
+            
+              enable_default_policy = true
+              key_owners           = [module.vault_iam_role.iam_role_arn]
+              key_administrators   = [module.vault_iam_role.iam_role_arn]
+            
+              aliases                 = ["dev-vault-kms"]
+              aliases_use_name_prefix = true
+            
+              grants = {}
+            
+              tags = var.tags
+            }
 
 
 
+### variables.tf
+
+            variable "tags" {
+              type = map(any)
+              default = {
+                Terraform   = "true"
+                Environment = "dev"
+              }
+            }
 
 
 
+To initialize and apply Terraform configuration:
 
+            cd terraform
+            terraform init
+            terraform plan -out tfplan
+            terraform apply tfplan
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- ![Imag16](https://github.com/user-attachments/assets/569a0a7d-9cd4-4f9b-bef1-c8ea509277d2)
 
 
 
