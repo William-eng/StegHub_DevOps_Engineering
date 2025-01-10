@@ -1015,9 +1015,23 @@ Apply the changes to your cluster
             kubectl kustomize --enable-helm overlays/dev | kubectl apply -f -
 
 
+- ![Image18](https://github.com/user-attachments/assets/532ed1ef-20df-4aee-88ce-50308e47d557)
 
 
 
+We use the command above instead of _kubectl apply -k overlays/dev_ due to a current limitation in Kustomize when working with Helm charts. The direct -k flag doesn't automatically enable Helm chart processing, which is required for our deployment. While this is a known limitation in Kustomize, this alternative command serves our purpose effectively by explicitly enabling Helm support using the _--enable-helm_ flag and piping the output to kubectl apply.
+
+- Follow the next steps to initialize the Vault cluster.
+
+- Run the command below to view all pods in vault namespace
+
+              kubectl get po -n vault
+
+  - ![Image19](https://github.com/user-attachments/assets/6ed1225e-a84d-44ad-a7d2-018f23dd6bdc)
+ 
+pod/vault-0 is the pod in running status in this image
+
+- Check the status of the vault cluster vault status, you should get an output similar to this:
 
 
 
