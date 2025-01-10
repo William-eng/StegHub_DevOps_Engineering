@@ -1033,67 +1033,214 @@ pod/vault-0 is the pod in running status in this image
 
 - Check the status of the vault cluster vault status, you should get an output similar to this:
 
+            ---                      -----
+            Recovery Seal Type       awskms
+            Initialized              false
+            Sealed                   true
+            Total Recovery Shares    0
+            Threshold                0
+            Unseal Progress          0/0
+            Unseal Nonce             n/a
+            Version                  1.11.3
+            Storage Type             raft
+            HA Enabled               true
+
+
+- ![Image20](https://github.com/user-attachments/assets/9a1b3de7-100d-4011-b056-ef9d76fe9f70)
+
+- To initialize the Vault cluster you will run:
+
+               vault operator init
+You should get something similar to this after initializing the Vault cluster:
+
+              Recovery Key 1: 4QY2/CbUeORpS......2Ek4jWk5HJF0sk/rb
+              Recovery Key 2: EZrZw6BTsbD7m....../uqmRtPudLAWDWGfT
+              Recovery Key 3: 4+wkqRbaJXosL......i4xENfUPlfm3lpr8t
+              Recovery Key 4: GpbUXhbyt9TUm......Dy/rXhkOWC+2CcrQT
+              Recovery Key 5: RzCAwLhMlWz1v......KV1I5inAU25S+gzhL
+            
+              Initial Root Token: hvs.JNGtNK.....Z8H7KqerwUNWL
+            
+              Success! Vault is initialized
+            
+              Recovery key initialized with 5 key shares and a key threshold of 3. Please
+              securely distribute the key shares printed above.
+
+
+| Copy the output into a file and save it.
+
+- Check the status after when the vault cluster is unsealed vault status:
+- ![Image22](https://github.com/user-attachments/assets/a0912105-8ba4-4715-824b-bb9663f86dcf)
+
+From the vault status output, before you initialize the Vault cluster, you will see that the seal type is awskms, but after initializing the vault cluster you will get the recovery keys because some of the Vault operations still require Shamir keys. The Recovery keys generated after running vault operator init can be used to unseal the cluster when it is sealed manually or to regenerate a root token.
+
+- Lastly, exit the vault-* pod.
 
 
 
+**NB**: After initializing your vault cluster, some vault pods might not start running. This is because the current configuration uses pod affinity to spread pods across multiple nodes, but your cluster might have fewer nodes than required. You may need to either add more nodes or modify the pod affinity settings in the values.yaml file if you want all the pods to be running for High Availability.
+
+The **awskms** key type is used for **auto unseal**, using the **awskms** key type, you don't have to manually unseal the pod if it gets recreated. Move to the next page to see how you can inject secrets from the Vault cluster into an application.
+
+## Dynamically inject secrets into the tooling app container
+In this session, we will see how we can securely inject the tooling application database credentials from the vault cluster into the tooling application. This method can be used to pass secret credentials like passwords, tokens, and other secret credentials into an application without the application being aware of the vault cluster.
+
+To store the secrets we need to create a Vault secret of type **KV Version 2**, this is a versioned Key-Value store. You can exit out of the vault pod and install Vault on your local machine from [here](https://developer.hashicorp.com/vault/downloads) if you don't have Vault installed on your system. Export the vault address and login.
+
+            export VAULT_ADDR="https://tooling.vault.steghub.com"
+            
+            vault login
 
 
+- ![Image24](https://github.com/user-attachments/assets/4b5e7eed-2fd2-4e4d-8037-1c10c2cae7aa)
+
+- Enable the kv-v2 secrets at the path app.
+
+              vault secrets enable -path=app kv-v2
+
+- ![Image25](https://github.com/user-attachments/assets/ee680101-2690-426c-a6d7-69d12e24126d)
 
 
+- Create the tooling application database credentials at the path app/database/config/dev.
+
+              vault kv put app/database/config/dev username=db password=password host=http://<aurora-db-endpoint>
+
+- Verify that the secret is defined at the path app/database/config/dev.
+
+              vault kv get app/database/config/dev
+
+## Configure Kubernetes Authentication
+Enable the Kubernetes auth method at the default path.
+
+            vault auth enable kubernetes
+
+- Configure Vault to talk to Kubernetes with the /config path. This will require the Kubernetes host address, use _kubectl cluster-info_ to get the Kubernetes host address and TCP port and replace it with the kubernetes_host in the command below.
+
+              vault write auth/kubernetes/config \
+              kubernetes_host=https://1758918D244B7C9FF1D1.gr7.eu-central-1.eks.amazonaws.com
+
+You will get something like this:
+
+            Success! Data written to: auth/kubernetes/config
 
 
+- ![Image25](https://github.com/user-attachments/assets/b95cc65c-d753-4d52-a021-03b65a60275d)
+
+- For the tooling application to read the database credentials, it needs the read capability to the path _app/data/database/config_. We can do this by creating a policy and attaching it to the Kubernetes authentication role we will create.
 
 
+              vault policy write tooling-db - <<EOF
+            path "app/data/database/config/*" {
+              capabilities = ["read"]
+            }
+            EOF
+
+- ![Image26](https://github.com/user-attachments/assets/733ee529-cceb-44e1-b308-845bb4d78c25)
 
 
+- Create a Kubernetes authentication role named tooling-role
+
+            vault write auth/kubernetes/role/tooling-role \
+              ttl=6h \
+              policies=tooling-db \
+              bound_service_account_names=tooling-sa \
+              bound_service_account_namespaces=dev-tooling
+From the command above we are passing the service account name and namespace to _bound_service_account_names_ and _bound_service_account_namespaces_ respectively. You should get an output like this:
+
+            Success! Data written to: auth/kubernetes/role/tooling-role
 
 
+- ![Image27](https://github.com/user-attachments/assets/01123c8c-a191-483e-8caa-25af92578504)
+
+## Inject Secrets into the Tooling Application
+To inject secrets into the tooling application you will create a service account with the same name configured in the Kubernetes role and attach it to the tooling application pod. This will create a sidecar which is the Vault agent and it will do the authentication and inject the secrets into the application.
+
+In the _tooling-app-kustomize/overlays_ directory where you have your Kubernetes manifest files, create a file _service-account.yaml_ and add:
+
+### _tooling-app-kustomize/overlays/dev/service-account.yaml_
+
+            apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: tooling-sa
 
 
+- ![Image26](https://github.com/user-attachments/assets/e5d55dd8-e1e5-4c8d-8692-07d34cb2c7c9)
+
+### tooling-app-kustomize/overlays/dev/deployment.yaml
+replace the content with:
+
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: tooling-deployment
+            spec:
+              replicas: 3
+              template:
+                metadata:
+                  annotations:
+                    vault.hashicorp.com/agent-inject: 'true'
+                    vault.hashicorp.com/role: 'tooling-role'
+                    vault.hashicorp.com/agent-inject-status: 'update'
+                    vault.hashicorp.com/agent-inject-secret-database-cred.txt: 'app/data/database/config/dev'
+                    vault.hashicorp.com/agent-inject-template-database-cred.txt: |
+                      {{- with secret "app/data/database/config/dev" -}}
+                      export db-username={{ .Data.data.username }}
+                      export db-password={{ .Data.data.password }}
+                      export db-host={{ .Data.data.password }}
+                      {{- end -}}
+                spec:
+                  serviceAccountName: tooling-sa
+
+- ![Image27](https://github.com/user-attachments/assets/e1800ce8-1e90-4cc7-97d0-388b8be8fbc1)
+
+- Add the _service-account.yaml_ file under the **resources** field of your Kustomization file in the dev directory. The Kustomization file should look like this:
+
+            apiVersion: kustomize.config.k8s.io/v1beta1
+            kind: Kustomization
+            namespace: dev-tooling
+            resources:
+              - ../../base
+              - namespace.yaml
+              - service-account.yaml
+            
+            labels:
+              - pairs:
+                  env: dev-tooling
+            
+            patches:
+              - path: deployment.yaml
+
+- Now lets apply the configuration.
+
+              kubectl apply -k overlays/dev
+
+  - ![Image28](https://github.com/user-attachments/assets/d11f1d43-a5d9-42de-a4bc-28fa85459e87)
 
 
+You can inspect the tooling application pod, you will find out that the new pod now launches two containers. The application container, named tooling, and the Vault Agent container, named vault-agent.
+
+- You can inspect the tooling application pod, you will find out that the new pod now launches two containers. The application container, named tooling, and the Vault Agent container, named vault-agent.
+
+  
+Vault Agent manages the token lifecycle and the secret retrieval. The database credentials will be saved at the path _/vault/secrets/database-cred.txt_ in the tooling application container. Run the command below to check the content of the file.
 
 
+            kubectl exec -it deployment/tooling-deployment -n dev-tooling 
+              -c tooling -- cat /vault/secrets/database-cred.txt
+
+- To export the Database credentials in the tooling application you can run the command below:
+
+              kubectl exec -it deployment/tooling-deployment -n dev-tooling -c tooling -- cat /vault/secrets/database-cred.txt
 
 
+- ![Image28](https://github.com/user-attachments/assets/ae982945-6ccd-404c-965e-bf8a671fee8a)
+
+You can work on passing the credentials file as an environment variable so that your tooling application can automatically ingest the credentials without having to manually run the command above. You can also change the credential path to the dotenv file in the application tooling workspace and change the file format.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## Working with the Vault UI
+We have been using the **Vault CLI** for our vault configurations but you can also use the **vault UI** to do some of the configurations. To view the vault UI, copy and paste the vault address on your browser, and then you will see the login page.
 
 
 
