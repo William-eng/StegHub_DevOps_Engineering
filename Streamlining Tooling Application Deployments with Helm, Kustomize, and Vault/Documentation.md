@@ -1243,13 +1243,38 @@ You can work on passing the credentials file as an environment variable so that 
 We have been using the **Vault CLI** for our vault configurations but you can also use the **vault UI** to do some of the configurations. To view the vault UI, copy and paste the vault address on your browser, and then you will see the login page.
 
 
+- ![Image29](https://github.com/user-attachments/assets/0e3799bb-a7f5-4a19-8457-5731c9fe997b)
+
+- You can log in using the token you got after initializing the vault cluster. Check the database KV secret created before which is at the path app/database/config/dev.
+
+- ![Image30](https://github.com/user-attachments/assets/4c9f7f14-9366-41d6-809c-332cbce07cd3)
+
+- ![Image31](https://github.com/user-attachments/assets/8098f552-faaf-460b-9567-26ec4984afec)
+
+Check the tooling-role Kubernetes auth method role.
+
+- ![Image32](https://github.com/user-attachments/assets/0996d0ba-01f5-4f5c-ac7d-4381277296be)
+- ![Image33](https://github.com/user-attachments/assets/3966f8db-67d7-4295-a65e-1660520ff5b9)
+- ![Image34](https://github.com/user-attachments/assets/8f829f31-33e9-4142-9d75-0eb73517a082)
 
 
 
+- Navigate to the vault policy. attached to the tooling-role Kubernetes auth method.
+
+- ![Image35](https://github.com/user-attachments/assets/615da71a-018a-44e1-8527-5762e213de62)
 
 
 
+Congratulations! You have completed this project. By completing this project, you've gained valuable experience in implementing a robust and secure Kubernetes deployment strategy using a powerful combination of Helm, Kustomize, and Vault.
 
+Here's a recap of the key skills you've developed:
+1. Efficient Environment Management: You learned how to leverage Kustomize to create a base configuration for your application and then tailor it for different environments (dev, sit, prod) using overlays. This promotes code reusability and reduces the risk of configuration drift.
+
+2. Streamlined Complex Deployments: You used Helm to simplify the installation and management of Vault, a complex application with its own set of configurations. This demonstrates the power of Helm for handling pre-packaged applications.
+
+3. Secrets Management Best Practices: You successfully integrated Vault into your Kubernetes workflow to securely store and dynamically inject database credentials into your application. This eliminates the need for hardcoding secrets and significantly enhances the security posture of your deployments.
+
+4. Kubernetes Authentication and Authorization: You configured Vault to authenticate with your Kubernetes cluster and defined fine-grained access control policies to restrict which applications and services can access sensitive secrets.
 
 
 
