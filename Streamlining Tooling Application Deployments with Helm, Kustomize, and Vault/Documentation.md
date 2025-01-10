@@ -797,17 +797,222 @@ To initialize and apply Terraform configuration:
 
 - ![Imag16](https://github.com/user-attachments/assets/569a0a7d-9cd4-4f9b-bef1-c8ea509277d2)
 
+Before we add the content of the values file, we need to install the Ingress Controller and Cert-Manager. If you don't have those tools installed in your cluster, you can reference the last two projects for this.
+
+- Ingress Controller: For this ingress controller you can use the [Nginx ingress controller](https://kubernetes.github.io/ingress-nginx/deploy/) helm chart for the installation. You can deploy the ingress controller with the following command:
+
+  
+            helm upgrade --install ingress-nginx ingress-nginx \
+              --repo https://kubernetes.github.io/ingress-nginx \
+              --namespace ingress-nginx --create-namespace
 
 
+  This will install the controller in the ingress-nginx namespace, creating that namespace if it doesn't already exist.
+
+- Cert-Manager: This is a Kubernetes addon to automate the management and issuance of TLS certificates from various issuing sources. It will ensure certificates are valid and up to date periodically, and attempt to renew certificates at an appropriate time before expiry. Visit the [last project documentation](https://github.com/William-eng/StegHub_DevOps_Engineering/blob/main/Implementing%20Secure%20HTTPS%20with%20Cert-Manager%20and%20Let%E2%80%99s%20Encrypt%20101/Documentation.md) for the installation.
+
+- ![Image17](https://github.com/user-attachments/assets/ffeede11-b587-4632-a88c-c0640f7b7af6)
+
+After the installation of the Cert-manager and Ingress controller, the next step is to configure the Vault cluster from the values file and then deploy it.
+
+_vault/overlays/dev/values.yaml_
 
 
+            server:
+              enabled: "-"
+              image:
+                repository: "hashicorp/vault"
+                tag: "1.17.2"
+                # Overrides the default Image Pull Policy
+                pullPolicy: IfNotPresent
+            
+              # Configure the Update Strategy Type for the StatefulSet
+              updateStrategyType: "OnDelete"
+            
+              # Ingress allows ingress services to be created to allow external access
+              # from Kubernetes to access Vault pods.
+              ingress:
+                enabled: true
+                labels: {}
+                annotations:   
+                  nginx.ingress.kubernetes.io/proxy-body-size: 500m
+                  service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+                  service.beta.kubernetes.io/aws-load-balancer-type: nlb
+                  service.beta.kubernetes.io/aws-load-balancer-backend-protocol: ssl
+                  service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+                  cert-manager.io/cluster-issuer: letsencrypt-prod
+                  cert-manager.io/private-key-rotation-policy: Always
+                  
+                ingressClassName: "nginx"
+                pathType: Prefix
+            
+                activeService: true
+                hosts:
+                  - host: "tooling.vault.steghub.com"
+                    paths: [/]
+                tls:
+                 - secretName: tooling.vault.steghub.com
+                   hosts:
+                     - tooling.vault.steghub.com
+            
+              terminationGracePeriodSeconds: 10
+            
+              # extraSecretEnvironmentVars is a list of extra environment variables to set with the stateful set.
+              # These variables take value from existing Secret objects.
+              extraSecretEnvironmentVars:
+                - envName: VAULT_SEAL_TYPE
+                  secretName: vault-kms
+                  secretKey: VAULT_SEAL_TYPE
+                - envName: VAULT_AWSKMS_SEAL_KEY_ID
+                  secretName: vault-kms
+                  secretKey: VAULT_AWSKMS_SEAL_KEY_ID
+            
+              # Enables a headless service to be used by the Vault Statefulset
+              service:
+                enabled: true
+            
+                # Port on which Vault server is listening
+                port: 8200
+                # Target port to which the service should be mapped to
+                targetPort: 8200
+                # Extra annotations for the service definition.
+                annotations: {}
+            
+              # This configures the Vault Statefulset to create a PVC for data
+              # storage when using the file or raft backend storage engines.
+              dataStorage:
+                enabled: true
+                # Size of the PVC created
+                size: 2Gi
+                # Location where the PVC will be mounted.
+                mountPath: "/vault/data"
+                # Name of the storage class to use.  If null it will use the
+                # configured default Storage Class.
+                storageClass: null
+                # Access Mode of the storage device being used for the PVC
+                accessMode: ReadWriteOnce
+                annotations: {}
+            
+              # Run Vault in "HA" mode. There are no storage requirements unless the audit log
+              # persistence is required.  In HA mode Vault will configure itself to use Consul
+              # for its storage backend.
+              ha:
+                enabled: true
+                replicas: 3
+            
+                # If set to null, this will be set to the Pod IP Address
+                apiAddr: null
+                clusterAddr: null
+            
+                # Enables Vault's integrated Raft storage.
+                raft:
+                  # Enables Raft integrated storage
+                  enabled: true
+                  # Set the Node Raft ID to the name of the pod
+                  setNodeId: true
+            
+                  config: |
+                    ui = true
+            
+                    listener "tcp" {
+                      tls_disable = 1
+                      address = "[::]:8200"
+                      cluster_address = "[::]:8201"
+                    }
+            
+                    storage "raft" {
+                      path = "/vault/data"
+            
+                      retry_join {
+                        leader_api_addr = "http://vault-0.vault-internal:8200"
+                      }
+            
+                      retry_join {
+                        leader_api_addr = "http://vault-1.vault-internal:8200"
+                      } 
+            
+                      retry_join {
+                        leader_api_addr = "http://vault-2.vault-internal:8200"
+                      }
+            
+                      autopilot {
+                        cleanup_dead_servers = "true"
+                        last_contact_threshold = "200ms"
+                        last_contact_failure_threshold = "10m"
+                        max_trailing_logs = 250000
+                        min_quorum = 5
+                        server_stabilization_time = "10s"
+                      }
+                    }
+            
+                    # cluster_addr = "http://vault:8200"
+            
+                    service_registration "kubernetes" {}
+            
+            
+                # config is a raw string of default configuration when using a Stateful
+                # deployment. Default is to use a Consul for its HA storage backend.
+                # This should be HCL.
+                config: |
+                  ui = true
+            
+                  listener "tcp" {
+                    tls_disable = 1
+                    address = "[::]:8200"
+                    cluster_address = "[::]:8201"
+                  }
+            
+                  seal "awskms" {
+                  }
+            
+                  service_registration "kubernetes" {}
+            
+                  log_requests_level = "trace"
+            
+              # Definition of the serviceAccount used to run Vault.
+              # These options are also used when using an external Vault server to validate
+              # Kubernetes tokens.
+              serviceAccount:
+                # Specifies whether a service account should be created
+                create: true
+                # The name of the service account to use.
+                name: "vault-kms"
+                # Extra annotations for the serviceAccount definition. This can either be
+                # YAML or a YAML-formatted multi-line templated string map of the
+                # annotations to apply to the serviceAccount.
+                annotations: 
+                  eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/vaultKMS ## Update role for new AWS account
+            
+            
+            # Vault UI
+            ui:
+              # True if you want to create a Service entry for the Vault UI.
+              #
+              # serviceType can be used to control the type of service created. For
+              # example, setting this to "LoadBalancer" will create an external load
+              # balancer to access the UI.
+              enabled: true
+              publishNotReadyAddresses: true
+              # The service should only contain selectors for active Vault pod
+              activeVaultPodOnly: false
+              serviceType: "ClusterIP"
+              serviceNodePort: null
+              externalPort: 8200
+              targetPort: 8200
+
+**Install Vault**: Update the ServiceAccount annotations with _jsonpath="{server.serviceAccount.annotations}_" with your account ID. Change your directory to the vault directory and run the comand below to install the vault in your cluster. Replace the URL _tooling.vault.steghub.com_ with your domain name and update the record on your hosted zone.
+
+From the values file above, we are using **ingress annotation** under the **server** field to configure the ingress. The ingress is configured with a TLS certificate, and the certificate is managed by **Cert-manager**, as you can see below.
+
+            ingress:
+              annotations: 
+                cert-manager.io/cluster-issuer: letsencrypt-prod
+                cert-manager.io/private-key-rotation-policy: Always
 
 
+Apply the changes to your cluster
 
-
-
-
-
+            kubectl kustomize --enable-helm overlays/dev | kubectl apply -f -
 
 
 
