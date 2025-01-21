@@ -1,9 +1,53 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="26.0.6">
   <diagram name="Page-1" id="WRZJSX2U--DWj_nEl1-p">
-    <mxGraphModel>
+    <mxGraphModel dx="880" dy="1496" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-13" value="Kibana" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="-10" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-10" value="ElasticSearch" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="179.98" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-3" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-1" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;fillColor=#FF6A00;strokeColor=none;shape=mxgraph.alibaba_cloud.elasticsearch;" vertex="1" parent="1">
+          <mxGeometry x="480" y="199.95" width="36.69" height="40.05" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-2" value="" style="image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/Kubernetes.svg;" vertex="1" parent="1">
+          <mxGeometry x="50" y="40" width="50" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="aRPLy6r_gRBBBa90EwLA-4" target="aRPLy6r_gRBBBa90EwLA-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-4" value="tooling-app pod" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="53" width="50" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-5" value="tooling-app pod" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="53" width="50" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="aRPLy6r_gRBBBa90EwLA-8" target="aRPLy6r_gRBBBa90EwLA-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-19" value="Logs" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="aRPLy6r_gRBBBa90EwLA-18">
+          <mxGeometry x="0.1231" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-8" value="Filebeat" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="110" width="190" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-9" value="" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://cdn0.iconfinder.com/data/icons/business-startup-10/50/66-128.png" vertex="1" parent="1">
+          <mxGeometry x="760" y="-7" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.595;entryY=1.025;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="aRPLy6r_gRBBBa90EwLA-10" target="aRPLy6r_gRBBBa90EwLA-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aRPLy6r_gRBBBa90EwLA-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.537;entryY=1.038;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="aRPLy6r_gRBBBa90EwLA-3" target="aRPLy6r_gRBBBa90EwLA-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
