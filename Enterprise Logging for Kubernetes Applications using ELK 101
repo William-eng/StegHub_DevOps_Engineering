@@ -1,0 +1,10 @@
+# Enterprise Logging for Kubernetes Applications using ELK 101
+In this project, you'll architect and implement a production-grade logging infrastructure using the Elastic Stack (formerly ELK Stack) for applications running on Kubernetes.
+
+## Key Goals
+- Design and implement a scalable logging architecture for Kubernetes
+- Make informed decisions about resource allocation
+- Implement security best practices for logging infrastructure
+- Create meaningful visualizations of your application using Kibana dashboards
+- Handle high-volume log ingestion efficiently
+
