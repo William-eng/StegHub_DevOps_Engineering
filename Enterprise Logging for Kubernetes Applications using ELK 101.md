@@ -84,3 +84,276 @@ we will plan for at least 500 MB of storage to account for:
 - Additional metadata and indexes
 - Future component scaling
 
+## Elastic Stack Deployment
+
+The ELK stack is composed of Elastic Search, Kibana, and Logstash, and its primary role is log aggregation. As microservices architecture becomes increasingly popular, the need for an efficient method to collect and search logs for debugging has grown. The ELK stack addresses this need by gathering logs and enabling their exploration. The key components of the ELK stack include:
+
+- Elastic Search: A database designed to store and index logs.
+- Kibana: A visualization tool that allows users to create queries and analyze data stored in Elastic Search.
+- Logstash: A data processing pipeline that collects logs from various sources, processes them, and sends them to Elastic Search.
+- Filebeat: A lightweight log forwarding agent that exports logs from their source and delivers them to Logstash.
+
+The directory for the default yaml file for the Elastic-search is [here](https://github.com/elastic/helm-charts)
+
+Now create a directory similar to 
+
+            ├── elasticsearch.yaml
+            ├── kibana.yaml
+            └── filebeat.yaml
+            └── logstash.yaml
+
+
+**Deploy ElasticSearch:**
+
+Now, we will create a custom values file for Kibana helm chart. Create a file values-2.yaml with the following content:
+edit the default config file 
+
+Fine-tune the resource settings to ensure the DaemonSet operates efficiently
+
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "1Gi"
+              limits:
+                cpu: "1"
+                memory: "512Mi"
+
+Validate the readiness and liveness probes to ensure they align with Filebeat behavior. Use:
+
+
+            livenessProbe:
+              httpGet:
+                path: /status
+                port: 5066
+              initialDelaySeconds: 30
+              periodSeconds: 10
+            
+            readinessProbe:
+              exec:
+                command:
+                  - filebeat
+                  - test
+                  - output
+              initialDelaySeconds: 10
+              periodSeconds: 5
+
+
+
+
+Now execute the following commands to add the Elastic Search helm repo:
+
+            helm repo add elastic https://helm.elastic.co
+            helm repo update
+- ![Image9](https://github.com/user-attachments/assets/1751d84c-e04d-44d6-a693-166ac27acb80)
+
+
+Now to deploy the elastic search, execute the command:
+
+            helm install elk-elasticsearch elastic/elasticsearch -f elasticsearch.yaml --namespace logging --create-namespace
+
+- ![Image10](https://github.com/user-attachments/assets/65ba6acc-467b-43c4-a4a3-619ef4524dcc)
+
+**Deploy Kibana**:
+
+Now, we will create a custom values file for Kibana helm chart. In the kibana.yaml, edit the default yaml with the following content:
+
+
+            daemonset:
+              enabled: true
+              filebeatConfig:
+                filebeat.yml: |
+                  filebeat.inputs:
+                  - type: container
+                    paths:
+                      - /var/log/containers/*.log
+                    processors:
+                    - add_kubernetes_metadata:
+                        in_cluster: true
+            
+                  setup.ilm.enabled: true
+                  setup.ilm.rollover_alias: "filebeat"
+                  setup.ilm.pattern: "{now/d}-000001"
+            
+                  output.elasticsearch:
+                    hosts: ["https://${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}"]
+                    username: "${ELASTICSEARCH_USERNAME}"
+                    password: "${ELASTICSEARCH_PASSWORD}"
+                    ssl.certificate_authorities: ["/usr/share/filebeat/certs/ca.crt"]
+            
+              resources:
+                requests:
+                  cpu: "200m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "1"
+                  memory: "512Mi"
+              secretMounts:
+                - name: elasticsearch-master-certs
+                  secretName: elasticsearch-master-certs
+                  path: /usr/share/filebeat/certs/
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+                fsGroup: 0
+
+
+
+Now, to deploy the helm chart use the command:
+
+      helm install elk-kibana elastic/kibana -f kibana.yaml
+
+- ![Image10](https://github.com/user-attachments/assets/7ba0bf8b-f19e-4d55-81ba-ae1f435a8b8b)
+
+**Deploy the logstash:**
+
+Now to deploy the logstash, execute the following command:
+
+            helm install elk-logstash elastic/logstash -f logstash.yaml
+
+- ![Image11](https://github.com/user-attachments/assets/97101699-e4eb-40f7-8f69-fcb2e915fe16)
+
+
+**Deploy the filebeat**:
+
+Now, we will create a custom values file for Logstash helm chart. Create a file _filebeat.yaml_ with the following content:
+
+Now, to deploy the filebeat use the following command:
+
+            helm install elk-filebeat elastic/filebeat -f filebeat.yaml
+
+- ![Image12](https://github.com/user-attachments/assets/c1f7148e-be35-4faf-8b19-d1fd3e6ecc1c)
+
+  After successful deployment, run the command below:
+
+              kubectl get all -n logging
+
+
+
+- ![Image13](https://github.com/user-attachments/assets/d84756ca-2638-4e62-8750-179679d44c52)
+
+- ![Image14](https://github.com/user-attachments/assets/3988acd6-2b50-4c18-bcb1-545c87f87cb6)
+
+
+  Open the Kibana dashboard on port 5601 using portforwarding
+
+
+  - ![Image15](https://github.com/user-attachments/assets/c8a1950f-0a0a-470b-85c5-0513a22ab16c)
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
