@@ -117,26 +117,9 @@ Fine-tune the resource settings to ensure the DaemonSet operates efficiently
               limits:
                 cpu: "1"
                 memory: "512Mi"
+            antiAffinity: "soft"
 
-Validate the readiness and liveness probes to ensure they align with Filebeat behavior. Use:
-
-
-            livenessProbe:
-              httpGet:
-                path: /status
-                port: 5066
-              initialDelaySeconds: 30
-              periodSeconds: 10
-            
-            readinessProbe:
-              exec:
-                command:
-                  - filebeat
-                  - test
-                  - output
-              initialDelaySeconds: 10
-              periodSeconds: 5
-
+_antiAffinity: "soft"_: Configures soft anti-affinity, allowing pods to be scheduled on the same node if necessary, but preferring to spread them across nodes when possible.
 
 
 
@@ -157,45 +140,20 @@ Now to deploy the elastic search, execute the command:
 
 Now, we will create a custom values file for Kibana helm chart. In the kibana.yaml, edit the default yaml with the following content:
 
+            service:
+              type: NodePort
+              port: 5601
+            
+            resources:
+              requests:
+                cpu: "200m"
+                memory: "200Mi"
+              limits:
+                cpu: "1000m"
+                memory: "2Gi"
 
-            daemonset:
-              enabled: true
-              filebeatConfig:
-                filebeat.yml: |
-                  filebeat.inputs:
-                  - type: container
-                    paths:
-                      - /var/log/containers/*.log
-                    processors:
-                    - add_kubernetes_metadata:
-                        in_cluster: true
-            
-                  setup.ilm.enabled: true
-                  setup.ilm.rollover_alias: "filebeat"
-                  setup.ilm.pattern: "{now/d}-000001"
-            
-                  output.elasticsearch:
-                    hosts: ["https://${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}"]
-                    username: "${ELASTICSEARCH_USERNAME}"
-                    password: "${ELASTICSEARCH_PASSWORD}"
-                    ssl.certificate_authorities: ["/usr/share/filebeat/certs/ca.crt"]
-            
-              resources:
-                requests:
-                  cpu: "200m"
-                  memory: "256Mi"
-                limits:
-                  cpu: "1"
-                  memory: "512Mi"
-              secretMounts:
-                - name: elasticsearch-master-certs
-                  secretName: elasticsearch-master-certs
-                  path: /usr/share/filebeat/certs/
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
-                fsGroup: 0
-
+- service.type: NodePort: Exposes Kibana on a specific port on all nodes in the Kubernetes cluster. This makes it accessible from outside the cluster for development and testing purposes.
+- port: 5601: The default port for Kibana, which is exposed for accessing the Kibana web interface.
 
 
 Now, to deploy the helm chart use the command:
@@ -206,6 +164,77 @@ Now, to deploy the helm chart use the command:
 
 **Deploy the logstash:**
 
+Logstash processes and transforms logs before indexing them in Elasticsearch. We’ll set up Logstash to receive logs from Filebeat and send them to Elasticsearch.
+In the C logstash.yaml file with the following content
+
+
+                  extraEnvs:
+                    - name: "ELASTICSEARCH_USERNAME"
+                      valueFrom:
+                        secretKeyRef:
+                          name: elasticsearch-master-credentials
+                          key: username
+                    - name: "ELASTICSEARCH_PASSWORD"
+                      valueFrom:
+                        secretKeyRef:
+                          name: elasticsearch-master-credentials
+                          key: password
+                  
+                  logstashConfig:
+                    logstash.yml: |
+                      http.host: 0.0.0.0
+                      xpack.monitoring.enabled: false
+                  
+                  logstashPipeline:
+                    logstash.conf: |
+                      input {
+                        beats {
+                          port => 5044
+                        }
+                      }
+                  
+                      output {
+                        elasticsearch {
+                          hosts => ["https://elasticsearch-master:9200"]
+                          cacert => "/usr/share/logstash/config/elasticsearch-master-certs/ca.crt"
+                          user => '${ELASTICSEARCH_USERNAME}'
+                          password => '${ELASTICSEARCH_PASSWORD}'
+                        }
+                      }
+                  
+                  secretMounts:
+                    - name: "elasticsearch-master-certs"
+                      secretName: "elasticsearch-master-certs"
+                      path: "/usr/share/logstash/config/elasticsearch-master-certs"
+                  
+                  service:
+                    type: ClusterIP
+                    ports:
+                      - name: beats
+                        port: 5044
+                        protocol: TCP
+                        targetPort: 5044
+                      - name: http
+                        port: 8080
+                        protocol: TCP
+                        targetPort: 8080
+                  
+                  resources:
+                    requests:
+                      cpu: "200m"
+                      memory: "200Mi"
+                    limits:
+                      cpu: "1000m"
+                      memory: "1536Mi" 
+
+
+- extraEnvs: Sets environment variables for Elasticsearch authentication using Kubernetes secrets.
+- logstashConfig: Configures Logstash settings, including enabling HTTP and disabling monitoring.
+- logstashPipeline: Configures Logstash to listen on port 5044 for incoming logs from Filebeat and forward them to Elasticsearch.
+- secretMounts: Mounts the Elasticsearch CA certificate for secure communication between Logstash and Elasticsearch.
+- service: Configures Logstash’s service type as ClusterIP, making it accessible only within the cluster.
+
+
 Now to deploy the logstash, execute the following command:
 
             helm install elk-logstash elastic/logstash -f logstash.yaml
@@ -215,7 +244,29 @@ Now to deploy the logstash, execute the following command:
 
 **Deploy the filebeat**:
 
-Now, we will create a custom values file for Logstash helm chart. Create a file _filebeat.yaml_ with the following content:
+Filebeat is a lightweight shipper for forwarding and centralizing log data. We’ll configure Filebeat to collect logs from the logging application and forward them to Logstash.
+In the _filebeat-values.yaml_ file we will add with the following content:
+
+
+            filebeatConfig:
+              filebeat.yml: |
+                filebeat.inputs:
+                - type: container
+                  paths:
+                    - /var/log/containers/*.log
+                  processors:
+                  - add_kubernetes_metadata:
+                      host: ${NODE_NAME}
+                      matchers:
+                      - logs_path:
+                          logs_path: "/var/log/containers/"
+            
+              output.logstash:
+                hosts: ["logstash-logstash:5044"]
+                
+- filebeat.inputs: Configures Filebeat to collect logs from container directories. The path /var/log/containers/*.log is where Kubernetes stores container logs.
+- processors: Adds Kubernetes metadata to the logs to provide context, such as pod names and namespaces.
+- output.logstash: Configures Filebeat to send logs to Logstash at port 5044.
 
 Now, to deploy the filebeat use the following command:
 
