@@ -285,10 +285,30 @@ Now, to deploy the filebeat use the following command:
 - ![Image14](https://github.com/user-attachments/assets/3988acd6-2b50-4c18-bcb1-545c87f87cb6)
 
 
-  Open the Kibana dashboard on port 5601 using portforwarding
+Now that Kibana is installed and running, you can access it to visualize and analyze the logs collected by Filebeat and processed by Logstash.
 
+Find the NodePort assigned to Kibana:
 
-  - ![Image15](https://github.com/user-attachments/assets/c8a1950f-0a0a-470b-85c5-0513a22ab16c)
+      kubectl get svc elk-kibana-kibana -n elk -o jsonpath="{.spec.ports[0].nodePort}"
+
+- ![Image15](https://github.com/user-attachments/assets/4176d582-050d-44f1-8ead-988cc1587b5d)
+
+  Open your web browser and navigate to:
+
+            http://<EXTERNAL-IP>:<NODE-PORT>
+
+  Replace _<EXTERNAL-IP>_ with the IP address of your Kubernetes cluster and _<NODE-PORT>_ with the NodePort value 
+
+- ![Imaage16](https://github.com/user-attachments/assets/ef4c68a9-1a43-4866-b33a-dbbdb71a09f9)
+
+Once you access Kibana, you can start exploring your log data.
+
+- ![Image17](https://github.com/user-attachments/assets/a592edfb-68b2-4fa2-b59f-fef3e6cba61b)
+
+Access the logs
+- ![Image18](https://github.com/user-attachments/assets/c29433f7-e1b6-4888-a717-464f40780c29)
+
+  - ![Image19](https://github.com/user-attachments/assets/c8a1950f-0a0a-470b-85c5-0513a22ab16c)
 
 
 
