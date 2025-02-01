@@ -397,12 +397,18 @@ now we can see the running configurations with the command
 
             kubectl get all -n <namespace>
 
+- ![image25](https://github.com/user-attachments/assets/72e445e1-e429-443e-b06f-bcb10c48e895)
+
+
 we can see the services, deployments and statefulsets created by our little configuration file
 
 let's get the user name and password for the elastic searcch to populate our fluent bit agent
 
             kubectl get secrets -n observer | grep elastic 
             kubectl get secrets -n observer quickstart-es-es-elastic-user -o yaml
+
+- ![Image26](https://github.com/user-attachments/assets/c7f0d74f-40ae-41b1-a926-b2e0daa7c4fb)
+
 
 decode the base64 secret with the command:
 
@@ -411,7 +417,12 @@ decode the base64 secret with the command:
 now let's check the elastic search service IP-adress so we can implement it in our fluentbit yaml file:
 
       kubectl get svc -n observer | grep es
+      
+- ![Image27](https://github.com/user-attachments/assets/ba23e446-cb5a-45af-8a9d-5e905e7fc5b6)
 
+## Data Ingestion
+### 4. Configure Fluent Bit values file
+Populate the ConfigMap section of the Fluent Bit values file for Fluent Bit output configuration:
 
 edit the flentbit yaml file with this in this configuration:
 
@@ -971,19 +982,24 @@ edit the flentbit yaml file with this in this configuration:
                 pullPolicy: IfNotPresent
               resources: {}
 
+- ![Image27](https://github.com/user-attachments/assets/a500f020-44c5-43d6-9c37-5ded981f086c)
 
+- ![image28](https://github.com/user-attachments/assets/dd12169b-02ca-4846-93c1-0bb12470bc30)
 
 After editing that, we can deploy our  fluentbit with the command
 
 
       helm install fluent-bit fluent/fluent-bit  -f fluentbit.yml -n observer 
 
+- ![Image29](https://github.com/user-attachments/assets/120df1ef-97cb-4f78-9497-d504a29f3bbd)
+
 
 Notice an error here in pod creation  why this error? let's check it out
 
             kubectl logs <fluentbit-pod -n observer>
 
-            
+- ![Image30](https://github.com/user-attachments/assets/8eee2bcc-eb9d-4670-9112-278b3626adf5)
+        
 
 
 here we see _could not create TLS backend_, this is because we have referenced tls-cert, but we have not mounted the secret to the volume
@@ -1005,16 +1021,39 @@ edit the mountpath by adding this:
         secret:
           secretName: quickstart-es-http-certs-public
 
+-  ![Image31](https://github.com/user-attachments/assets/f1a23654-671c-43b7-ab57-02e329c8fb38)
+-  ![Image32](https://github.com/user-attachments/assets/86de68f7-7a97-4e5c-8458-33f2e61be103)
+
 
 
 now let's confirm the pods are running:
 
+- ![Image33](https://github.com/user-attachments/assets/eb154040-f7a9-4486-9e57-6723f8c3c8ca)
+
+
  let's now get the Password for the fluentbit so we can query the logs sent to elastic search
+ 
+- ![Image24](https://github.com/user-attachments/assets/a17e9473-315f-468b-8bd7-4cd80181223d)
+- ![Image25](https://github.com/user-attachments/assets/be3fb05f-9de5-4b4e-9a63-0fe0f9dff871)
+- 
+
+
 
  ## Now let's visulaise our kibana
 First let's set the elastic search to cluster IP and leave only the kibana as Nodeport
 
+- ![Image26](https://github.com/user-attachments/assets/75ecb821-de3c-49bb-a238-025985569363)
+- ![Image27](https://github.com/user-attachments/assets/805d0d23-3bb5-4e4d-acf8-ec206209f5d2)
+
+
 Then we access the kibana on port 31896 as shown 
+
+- ![Image28](https://github.com/user-attachments/assets/d52df05a-809c-44f8-bf7a-6e752bbf1f68)
+- ![Image29](https://github.com/user-attachments/assets/49b2d9aa-8046-4b1d-a80f-3959be85874c)
+- ![Image30](https://github.com/user-attachments/assets/5384897f-e09f-4a00-93e5-fe3541cbe5ed)
+- ![Image31](https://github.com/user-attachments/assets/ce6e79b1-1bc0-4780-8798-d9603c86ed0c)
+- ![Image32](https://github.com/user-attachments/assets/2bc5c7d6-5218-492b-adc4-895b02468046)
+- ![Image33](https://github.com/user-attachments/assets/2ce8e057-8261-4c6b-b43c-6432c83365de)
 
  
 
