@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/a895538d-0bc4-42a6-861e-1e962b6ef3b2)# Enterprise Logging for Kubernetes Applications using ELK 101
+# Enterprise Logging for Kubernetes Applications using ELK 101
 In this project, you'll architect and implement a production-grade logging infrastructure using the Elastic Stack (formerly ELK Stack) for applications running on Kubernetes.
 
 ## Key Goals
@@ -337,7 +337,7 @@ check the operator with the command
 
 - ![Image22](https://github.com/user-attachments/assets/f82fee12-2f91-490a-8da7-17d43f487dff)
 
-
+![image](https://github.com/user-attachments/assets/a895538d-0bc4-42a6-861e-1e962b6ef3b2)
 Now create the elastic search  with yaml file 
 
             apiVersion: elasticsearch.k8s.elastic.co/v1
